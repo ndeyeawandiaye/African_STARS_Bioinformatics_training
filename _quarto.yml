@@ -1,0 +1,72 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - course/*.qmd
+    - exercises/*.md
+
+website:
+  title: "From FASTQ to Outbreak 2026"
+  page-navigation: true
+  bread-crumbs: true
+  search:
+    location: sidebar
+  navbar:
+    background: primary
+    search: true
+    tools:
+      - icon: github
+        menu:
+          - text: Source code
+            href: https://github.com/YOUR-ORG/fastq-to-genome
+          - text: Report an issue
+            href: https://github.com/YOUR-ORG/fastq-to-genome/issues
+  sidebar:
+    style: docked
+    collapse-level: 1
+    contents:
+      - href: index.qmd
+        text: Home
+      - section: "Preparations"
+        contents:
+          - exercises/00_setup.md
+          - course/git-github.qmd
+      - section: "FASTQ → consensus genome"
+        contents:
+          - course/01-concepts.qmd
+          - exercises/01_fastq_and_qc.md
+          - exercises/02_mapping.md
+          - exercises/03_coverage_consensus.md
+          - exercises/04_genome_qc_verdict.md
+      - section: "Alignment, lineage & reference selection"
+        contents:
+          - course/02-reference-selection.qmd
+          - course/02-alignment.qmd
+          - course/02-lineage.qmd
+      - section: "Build and read a phylogenetic tree"
+        contents:
+          - course/03-build-tree.qmd
+          - course/03-read-tree.qmd
+      - section: "Communicating genomic evidence"
+        contents:
+          - course/04-evidence.qmd
+          - course/04-brief-template.qmd
+      - section: "Mini outbreak investigation"
+        contents:
+          - course/05-scenario.qmd
+          - course/05-workflow.qmd
+          - course/05-deliverable.qmd
+  page-footer:
+    left: "African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only"
+    right: "Built with [Quarto](https://quarto.org)"
+
+format:
+  html:
+    theme: [cosmo, custom.scss]
+    toc: true
+    toc-title: "On this page"
+    toc-depth: 3
+    code-copy: true
+    smooth-scroll: true
+    link-external-newwindow: true

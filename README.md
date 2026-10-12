@@ -15,7 +15,22 @@ for phylogenetics (Day 4).
 | `exercises/` | step-by-step instructions and `answer_sheet.tsv` |
 | `precomputed/` | plan B: BAM, coverage, consensus and QC summary |
 | `solutions/` | instructor material (answers, truth) — **remove or publish only after the session** |
-| `tools/` | data simulator and tools to regenerate `precomputed/` |
+| `course/`, `index.qmd`, `_quarto.yml` | the **Quarto website** with all the lessons (modules 1–5) |
+| `tools/` | data simulators (`simulate_data.py`, `simulate_outbreak.py`) and tools to regenerate `precomputed/` |
+
+## Course website
+
+All lessons (FASTQ → consensus genome; alignment, lineage & reference selection; build and read a tree;
+communicating genomic evidence; mini outbreak investigation) are in a Quarto site.
+
+```bash
+quarto preview     # local preview
+quarto render      # builds _site/
+```
+
+Publishing: push to GitHub, then **Settings → Pages → Source: GitHub Actions** (`.github/workflows/publish.yml`).
+Replace `YOUR-ORG` in `_quarto.yml`, `index.qmd` and `course/git-github.qmd` by your GitHub organisation.
+`solutions/` is never rendered into the site.
 
 ## Quick start
 
@@ -72,8 +87,8 @@ Each participant (or pair) returns `exercises/answer_sheet.tsv` filled in: one v
 - Test the whole pipeline once on your own machine before the session. The shell scripts were written to be
   standard, but **they were not run end-to-end with the real tools during preparation**; `precomputed/` comes from a
   Python stand-in. Then run `tools/refresh_precomputed.sh` so plan B matches plan A.
-- Regenerate the data (deterministic, seed 20261012): `python3 tools/simulate_data.py`, then
+- Regenerate the data (deterministic): `python3 tools/simulate_data.py`, `python3 tools/simulate_outbreak.py`, then
   `pip install -r tools/requirements.txt && python3 tools/make_precomputed.py`.
 - Keep `solutions/` out of the participants' copy (private branch, or delete before sharing), and publish it afterwards.
 - Choose a licence (e.g. MIT for code, CC BY 4.0 for the material) and add a `LICENSE` file.
-- Day 4 and 5 can be added as `exercises/05_*.md` modules in the same repository.
+- Modules 2–5 (scripts `10`–`15`) were tested only with their Python plan-B versions here (MAFFT and IQ-TREE were not available); run `scripts/11_align.sh` and `12_tree.sh` once before teaching.

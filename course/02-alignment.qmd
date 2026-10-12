@@ -1,0 +1,34 @@
+---
+title: "Multiple sequence alignment"
+subtitle: "Module 2 — 45 min"
+---
+
+## Idea
+
+A **multiple sequence alignment** puts homologous positions in the same column, so that each column can be compared
+between genomes. Phylogenetics and SNP counting both start from it.
+
+- Consensus genomes from mapping are already on the same coordinates (the reference), but real data also contain indels and different lengths.
+- **MAFFT** is a fast, standard aligner for viral genomes.
+- Check the alignment visually (AliView, Jalview or the igv.org-based tools) — never trust it blindly.
+- Columns full of `N` or gaps carry no information; sites in problematic regions (e.g. primer sites) are sometimes masked.
+
+## Exercise
+
+1. Build the dataset (reference + 27 outbreak genomes + your S01) and align:
+   ```bash
+   bash scripts/11_align.sh                       # MAFFT
+   # plan B (no indels in the toy data):
+   python3 scripts/11b_align_fallback.py
+   ```
+2. How many sequences and how many alignment columns?
+3. Open `results/phylo/aln.fasta` in an alignment viewer. Find the 8 columns where S01 differs from the reference.
+4. Which outbreak genome has a long block of `N`? Would you keep it in the analysis?
+
+## SNP distances
+
+```bash
+python3 scripts/15_snp_matrix.py results/phylo/aln.fasta --ids S01,OB10,OB15,OB22,OB25,OB01
+```
+
+N positions are ignored in each pair. Which genome is the closest to S01?

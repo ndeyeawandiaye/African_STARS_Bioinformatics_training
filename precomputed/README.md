@@ -14,3 +14,9 @@ thresholds as the shell pipeline (depth ≥ 10, base quality ≥ 20, frequency �
 iVar are possible. Instructors: replace them with a real run using `tools/refresh_precomputed.sh`.
 
 Use them with: `python3 scripts/07_summary.py --results precomputed`
+
+## precomputed/phylo/ (Days 4–5)
+
+`aln.fasta`, `tree.nwk` (neighbour-joining from SNP distances), `lineages.tsv`, `snp_matrix.tsv`, and the tree
+figures coloured by region and lineage. Generated with `scripts/11b_align_fallback.py`, `12b_tree_fallback.py`,
+`13_lineage.py`, `14_plot_tree.py`, `15_snp_matrix.py`.

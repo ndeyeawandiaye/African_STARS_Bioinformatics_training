@@ -1,0 +1,38 @@
+---
+title: "Communicating genomic evidence"
+subtitle: "Module 4 — 45 min"
+---
+
+## Principles
+
+1. **Start with the question** the decision maker asks, and answer it first.
+2. **Combine** genomic and epidemiological evidence (dates, places, contacts). Genomes alone rarely prove transmission.
+3. **Say how sure you are**, and why.
+4. **Show limits**: sampling bias, low resolution, missing data, excluded genomes.
+5. **Make it reproducible**: versions, parameters, files.
+
+## Language of certainty
+
+| Evidence | Wording |
+|---|---|
+| Identical or nearly identical genomes, compatible dates and places | "genomic data are **consistent with** a common source" |
+| Same lineage, no finer resolution | "**cannot distinguish** between local transmission and repeated introductions" |
+| Different lineages | "**not consistent with** a single chain of transmission" |
+| Low coverage / many N | "**insufficient data** to conclude" |
+
+Avoid: "proves", "confirms", "patient X infected patient Y".
+
+## A good figure
+
+- one message per figure (a tree, a timeline, a map…), with the title stating the message;
+- colour = a variable the reader cares about (region, lineage), with a legend;
+- label the sample(s) of interest; state the number of genomes and the method in the caption;
+- readable in grayscale and for colour-blind readers.
+
+## Exercise (20 min)
+
+Rewrite these statements so that they are supported by the data:
+
+1. "The Region C genomes prove the outbreak came from Region A."
+2. "S03 is negative for the virus."
+3. "The tree shows that S01 infected OB10."

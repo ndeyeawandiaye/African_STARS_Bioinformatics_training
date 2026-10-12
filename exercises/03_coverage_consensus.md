@@ -1,4 +1,7 @@
-# 03 — Coverage and consensus (45 min)
+---
+title: "Coverage and consensus"
+subtitle: "45 min"
+---
 
 1. Compute coverage statistics:
    ```bash

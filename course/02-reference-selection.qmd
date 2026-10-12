@@ -1,0 +1,41 @@
+---
+title: "Reference selection"
+subtitle: "Module 2 — 30 min"
+---
+
+## Why it matters
+
+Reads are mapped to **one** reference, and the consensus is built from that mapping. A reference that is too
+divergent causes reads to map badly (or not at all), hides real variants and biases the consensus towards the reference.
+
+| Criterion | Question |
+|---|---|
+| Same species/genotype | is it the right virus, and the right segment/genotype? |
+| Close to your samples | few differences = better mapping |
+| Complete and good quality | no gaps or ambiguous bases |
+| Well annotated, traceable | accession, source, date |
+| Consistent across the study | use **the same** reference for all samples being compared |
+
+## Exercise
+
+Three candidate references are in `data/reference/candidates/`: `TOYV1_TV1` (root genotype), `TOYV1_TV2`
+(a genotype that appeared later) and `TOYV2_divergent` (another, more distant virus).
+
+1. Compare your S01 consensus with each candidate:
+   ```bash
+   python3 scripts/10_pick_reference.py results/consensus/S01.fa
+   ```
+   (plan B: `precomputed/consensus/S01.fa`)
+2. Which reference is the closest? How many mismatches? Does it match what you expect from the lineage story?
+3. Re-map S01 on a farther candidate and compare the % mapped and mean depth:
+   ```bash
+   REF=data/reference/candidates/TOYV2_divergent.fasta RESULTS=results_div bash scripts/run_all.sh S01
+   ```
+
+::: {.callout-note}
+## In real life
+The choice is made with databases (e.g. NCBI Virus, GISAID-type resources, Nextclade datasets) and a quick
+identity search. Small differences between close references matter less than choosing the wrong genotype.
+:::
+
+**Question:** why should all samples of an outbreak be mapped to the same reference?

@@ -1,0 +1,32 @@
+---
+title: "From FASTQ to Outbreak"
+subtitle: "Genomic surveillance training — African STARS Fellowship · CARE · Institut Pasteur"
+---
+
+This site gathers the whole hands-on course, from raw sequencing reads to an outbreak brief.
+Everything runs on a **synthetic** toy virus (`TOYV1`, 10 kb): no real patient data, nothing sensitive.
+
+## The learning path
+
+| # | Module | You will learn to… |
+|---|---|---|
+| 1 | [FASTQ → consensus genome](course/01-concepts.qmd) | read FASTQ files, do QC, map reads, inspect coverage, build a consensus and decide if it is usable |
+| 2 | [Alignment, lineage & reference selection](course/02-reference-selection.qmd) | choose a reference, align genomes, assign a lineage |
+| 3 | [Build and read a phylogenetic tree](course/03-build-tree.qmd) | infer a tree, root it, read clades, support and branch lengths |
+| 4 | [Communicating genomic evidence](course/04-evidence.qmd) | turn results into clear, honest statements for decision makers |
+| 5 | [Mini outbreak investigation](course/05-scenario.qmd) | put everything together on a three-region outbreak |
+
+Module 1 is the 3-hour bridge session (talk + dry lab); modules 2–3 are Day 4 (phylogenetics) and modules 4–5 are Day 5 (capstone).
+
+## How to work
+
+1. Do the [setup](exercises/00_setup.md) once.
+2. Follow the pages in the order of the left menu; each exercise ends with a question to discuss.
+3. If a tool will not install, use the **plan B** files in `precomputed/` (each page tells you when).
+4. Fill in your answer sheet and, on Day 5, your one-page brief.
+
+::: {.callout-tip}
+## Data at a glance
+Five sequencing samples (S01–S05) for module 1, 27 outbreak genomes (OB01–OB27) for modules 2–5.
+All files are in the [repository](https://github.com/YOUR-ORG/fastq-to-genome) under `data/`.
+:::

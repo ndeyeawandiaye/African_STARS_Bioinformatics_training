@@ -1,0 +1,28 @@
+---
+title: "Deliverable and assessment"
+subtitle: "Module 5 — capstone"
+---
+
+## What to hand in
+
+A **one-page brief** (PDF or doc) containing:
+
+- a key message of two sentences;
+- the data and quality section (genomes analysed / excluded, and why);
+- **one figure** (tree or timeline) with a self-explanatory caption;
+- an interpretation with an explicit confidence level;
+- limits and recommendations.
+
+## Presentation
+
+Five minutes per pair, then questions.
+
+## Grid
+
+| Criterion | Points |
+|---|---|
+| Data quality handled correctly (exclusions justified) | 2 |
+| Correct lineages and relationships | 3 |
+| Figure clear and honest | 2 |
+| Wording matches evidence, limits stated | 2 |
+| Useful, concrete recommendations | 1 |

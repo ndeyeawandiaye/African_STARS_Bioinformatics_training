@@ -12,3 +12,7 @@ dependencies:
   - samtools
   - bcftools
   - ivar
+  - mafft
+  - iqtree
+  - biopython
+  - matplotlib

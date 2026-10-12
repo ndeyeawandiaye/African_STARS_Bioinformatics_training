@@ -1,0 +1,80 @@
+---
+title: "Sequencing, file formats and assembly strategies"
+subtitle: "Bridge talk — module 1"
+---
+
+## The big picture
+
+```{mermaid}
+flowchart TD
+  A[Sample] --> B[Library prep]
+  B --> C[Sequencer]
+  C --> D[FASTQ]
+  D --> E[QC + trimming]
+  E --> F[Mapping or de novo assembly]
+  F --> G[BAM / contigs]
+  G --> H[Consensus + variants]
+  H --> I[Genome QC]
+  I --> J[Alignment, lineage, tree]
+```
+
+## Sequencing technologies
+
+| | Illumina (short reads) | Oxford Nanopore (long reads) |
+|---|---|---|
+| Read length | typically 50–300 bp | from hundreds of bp to tens of kb |
+| Accuracy | very high per base | lower per read, improving with chemistry and basecalling |
+| Output | paired-end reads (R1 + R2) | single long reads, available in real time |
+| Strengths | accurate SNPs, high throughput | structural variation, repeats, portable devices, fast turnaround |
+| Typical weakness | repeats and structural variants | errors in homopolymers, need for polishing |
+
+## Library preparation approaches (viruses)
+
+| | WGS / metagenomics | Amplicon (e.g. ARTIC) | Probe capture |
+|---|---|---|---|
+| Principle | sequence everything | amplify the virus in overlapping tiles | enrich with probes |
+| Best when | you do not know what you look for | routine viral surveillance | low viral load |
+| Watch out for | most reads are not from the virus | amplicon dropout when primer sites mutate | probes must match the virus |
+
+## File formats
+
+| Format | Content | Companion |
+|---|---|---|
+| FASTA | sequences (reference, consensus) | `.fai` index |
+| FASTQ | reads + base qualities (4 lines per read) | – |
+| SAM / BAM / CRAM | alignments (text / binary / compressed) | `.bai` index (BAM must be sorted) |
+| VCF | variants | `.tbi` index when bgzipped |
+| BED | intervals (e.g. low-depth regions) | – |
+| `depth` table | depth per position | – |
+
+### A FASTQ record
+
+```
+@read_name
+ACGTACGT...            sequence
++
+IIIIHHHHGGGG...        quality, one character per base
+```
+
+Phred score **Q = −10·log10(P error)**: Q20 → 1 error in 100, Q30 → 1 in 1,000. The character encodes Q + 33.
+
+## Mapping or de novo assembly?
+
+| | Mapping to a reference | De novo assembly | Hybrid |
+|---|---|---|---|
+| Principle | align reads to a known genome | rebuild the genome without reference | combine short and long reads |
+| Tools | minimap2, BWA, iVar, bcftools | SPAdes, MEGAHIT; Flye, Canu | Unicycler |
+| Choose when | known, little-divergent virus; amplicon data | new/divergent pathogen, bacteria, rearrangements | both read types available |
+
+Three questions to decide: *Do I have a good reference? Are my reads long? Is my coverage sufficient?*
+For amplicon viral data, **mapping is the default** — it is what we do in the dry lab.
+
+## Pitfalls to remember
+
+- Cross-contamination and barcode bleed between samples (always read the negative control).
+- Amplicon dropout when a mutation falls in a primer site.
+- Wrong reference or unsuitable lineage.
+- Primers not trimmed → false mutations towards the reference.
+- Nanopore indels in homopolymers.
+
+**Next:** [FASTQ and quality control](../exercises/01_fastq_and_qc.md).

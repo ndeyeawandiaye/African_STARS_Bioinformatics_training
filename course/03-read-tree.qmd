@@ -1,0 +1,35 @@
+---
+title: "Read a phylogenetic tree"
+subtitle: "Module 3 — 45 min"
+---
+
+## Anatomy
+
+- **Tips** = the genomes you sequenced. **Internal nodes** = inferred common ancestors.
+- **Branch length** = amount of change (substitutions per site), not time (unless the tree is time-scaled).
+- **Clade** = an ancestor and *all* its descendants. Rotating branches around a node does not change the tree.
+- **Root** = where the tree starts; without a root you cannot say who is ancestral.
+- **Support** (bootstrap) = how robust a branch is. Be careful with low support.
+
+## What a tree can and cannot tell
+
+| It can show | It cannot prove |
+|---|---|
+| which genomes are closely related | who infected whom |
+| whether cases form one cluster or several introductions | the direction of transmission |
+| whether a lineage is spreading across regions | that two similar genomes are epidemiologically linked |
+
+## Exercise: read the tree
+
+![Tree coloured by region (plan B figure, neighbour-joining)](../precomputed/phylo/tree_region.png){width=85%}
+
+1. Where is S01? Which genomes are its closest relatives?
+2. How many clusters do you see, and in which regions?
+3. Which part of the tree is the *oldest* (check the dates in `data/outbreak/metadata.tsv`)?
+4. Compare with the lineage colouring:
+
+![Same tree coloured by lineage](../precomputed/phylo/tree_lineage.png){width=85%}
+
+5. Do the Region C cases form one cluster or several? What does that suggest?
+
+**Question:** two genomes are identical. List three explanations other than "A infected B".

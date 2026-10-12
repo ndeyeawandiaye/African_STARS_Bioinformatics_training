@@ -1,4 +1,7 @@
-# 01 — FASTQ and quality control (30 min)
+---
+title: "FASTQ and quality control"
+subtitle: "30 min"
+---
 
 1. Look at the first read of S01 (4 lines per read):
    ```bash

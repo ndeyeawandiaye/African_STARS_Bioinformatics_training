@@ -1,2 +1,4 @@
 mappy
 pysam
+biopython
+matplotlib

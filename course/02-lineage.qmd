@@ -1,0 +1,37 @@
+---
+title: "Lineage assignment"
+subtitle: "Module 2 — 30 min"
+---
+
+## What is a lineage?
+
+A lineage is a named group of genomes sharing a common ancestor, defined by **mutations specific to the group**
+(e.g. Pango lineages, Nextstrain clades). Names are hierarchical: `TV.2.1` is a descendant of `TV.2`.
+
+The table `data/outbreak/lineage_definitions.tsv` is a miniature nomenclature:
+
+| Lineage | Parent | Defining SNPs |
+|---|---|---|
+| TV.1 | root | – |
+| TV.2 | TV.1 | 8 SNPs |
+| TV.2.1 | TV.2 | + 3 SNPs |
+| TV.2.2 | TV.2 | + 3 other SNPs |
+| TV.3 | TV.1 | 6 SNPs |
+
+## Exercise
+
+1. Assign lineages from the alignment:
+   ```bash
+   python3 scripts/13_lineage.py results/phylo/aln.fasta
+   ```
+2. What lineage is S01, and what evidence supports it?
+3. One genome has a masked defining SNP. What does the "evidence" column say? Is the call still reliable?
+4. Make a table: number of genomes per lineage and per region.
+
+::: {.callout-note}
+## Real tools
+Pangolin and Nextclade do the same with far larger designations, and also report QC (missing data, private mutations,
+mixed sites). The principle — defining mutations and the most specific complete match — is identical.
+:::
+
+**Question:** can two genomes of the same lineage still be unrelated cases? Why?

@@ -1,0 +1,33 @@
+---
+title: "Scenario and data"
+subtitle: "Module 5 — capstone"
+---
+
+## The situation
+
+Between January and April 2026 a febrile illness caused by a TOYV1-like virus is reported in several regions.
+The first cluster of the year in **Region A** was sequenced in early March (your sample **S01**).
+Cases then appear in **Region C**, while **Region B** reports older, unrelated cases.
+
+The ministry asks you three questions:
+
+1. Are the Region C cases linked to the Region A outbreak, or are they independent?
+2. Are the older Region B cases part of the same outbreak?
+3. How confident are you, and what should be done next?
+
+## Data
+
+| File | Content |
+|---|---|
+| `data/outbreak/sequences.fasta` | 27 consensus genomes (OB01–OB27) |
+| `data/outbreak/metadata.tsv` | collection date and region |
+| `data/outbreak/lineage_definitions.tsv` | the lineage nomenclature |
+| `data/reference/TOYV1.fasta` | the reference |
+| your `S01` consensus | from module 1 (`precomputed/consensus/S01.fa` as plan B) |
+
+## Rules
+
+- Work in pairs, 3 hours in total.
+- You may use any script from the course.
+- Explain every exclusion.
+- The deliverable is a [one-page brief with one figure](05-deliverable.qmd).

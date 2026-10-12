@@ -1,4 +1,7 @@
-# 04 — Is this genome good enough? (30 min)
+---
+title: "Is this genome good enough?"
+subtitle: "30 min"
+---
 
 1. Build the summary table:
    ```bash

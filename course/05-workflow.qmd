@@ -1,0 +1,42 @@
+---
+title: "Suggested workflow"
+subtitle: "Module 5 — capstone"
+---
+
+Adapt it freely — the order matters more than the exact commands.
+
+## 1. Quality filter
+
+Count `N` in each outbreak genome and decide which to keep (the course threshold is **≤ 10 % N**).
+
+```bash
+python3 - <<'PY'
+for l in open("data/outbreak/sequences.fasta").read().split(">")[1:]:
+    name, *seq = l.split("\n"); s = "".join(seq)
+    print(name, f"{100*s.count('N')/len(s):.1f}% N")
+PY
+```
+
+## 2. Align, assign lineages
+
+```bash
+bash scripts/11_align.sh              # or: python3 scripts/11b_align_fallback.py
+python3 scripts/13_lineage.py results/phylo/aln.fasta
+```
+
+## 3. Tree and distances
+
+```bash
+bash scripts/12_tree.sh               # or: python3 scripts/12b_tree_fallback.py
+python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region
+python3 scripts/15_snp_matrix.py results/phylo/aln.fasta
+```
+
+## 4. Put epidemiology next to genomics
+
+Sort genomes by date and region. For each lineage: where and when does it first appear? Does any genome appear
+**out of place** (a lineage in an unexpected region)?
+
+## 5. Interpret and write
+
+Use the [certainty wording](04-evidence.qmd) and the [brief template](04-brief-template.qmd).

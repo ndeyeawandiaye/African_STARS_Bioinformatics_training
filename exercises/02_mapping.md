@@ -1,4 +1,7 @@
-# 02 — Mapping (30 min)
+---
+title: "Mapping"
+subtitle: "30 min"
+---
 
 1. Map the trimmed reads to the reference:
    ```bash

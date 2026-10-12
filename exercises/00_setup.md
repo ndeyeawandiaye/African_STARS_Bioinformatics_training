@@ -1,4 +1,7 @@
-# 00 — Setup (15 min)
+---
+title: "Setup"
+subtitle: "15 min"
+---
 
 1. Get the repository and enter it.
    ```bash

@@ -1,0 +1,38 @@
+---
+title: "Build a phylogenetic tree"
+subtitle: "Module 3 — 60 min"
+---
+
+## Choosing a method
+
+| Method | Idea | Use |
+|---|---|---|
+| Distance (NJ) | tree from pairwise distances | very fast first look |
+| Maximum likelihood (IQ-TREE, RAxML) | tree that makes the alignment most probable under a substitution model | standard choice |
+| Bayesian / time-scaled (BEAST, TreeTime) | adds time and uncertainty | dating, advanced analyses |
+
+Key choices: **substitution model** (IQ-TREE tests them with `-m MFP`), **support** (ultrafast bootstrap `-B 1000`),
+and the **root** (an outgroup — here the reference `TOYV1_ref`).
+
+## Exercise
+
+1. Build the maximum-likelihood tree:
+   ```bash
+   bash scripts/12_tree.sh            # results/phylo/tree.treefile
+   ```
+   Plan B (neighbour-joining, no IQ-TREE):
+   ```bash
+   python3 scripts/12b_tree_fallback.py     # results/phylo/tree.nwk
+   ```
+2. Draw it, coloured by region and by lineage:
+   ```bash
+   python3 scripts/13_lineage.py results/phylo/aln.fasta
+   python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color lineage --out results/phylo/tree_lineage.png
+   python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region  --out results/phylo/tree_region.png
+   ```
+   You can also open the Newick file in FigTree, iTOL or Microreact.
+3. Exclude the low-quality genome (more than 10 % N) and rebuild. Does the tree change?
+
+::: {.callout-warning}
+Few variable sites give little resolution and short branches. A tree is only as good as the alignment and the data behind it.
+:::
