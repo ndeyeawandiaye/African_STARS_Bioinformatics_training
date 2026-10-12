@@ -8,27 +8,104 @@ subtitle: "Module 2 — 45 min"
 A **multiple sequence alignment** puts homologous positions in the same column, so that each column can be compared
 between genomes. Phylogenetics and SNP counting both start from it.
 
-- Consensus genomes from mapping are already on the same coordinates (the reference), but real data also contain indels and different lengths.
+- Consensus genomes obtained by mapping are already on the reference coordinates, but real data also contain indels and different lengths.
 - **MAFFT** is a fast, standard aligner for viral genomes.
-- Check the alignment visually (AliView, Jalview or the igv.org-based tools) — never trust it blindly.
-- Columns full of `N` or gaps carry no information; sites in problematic regions (e.g. primer sites) are sometimes masked.
+- Always look at the alignment (AliView, Jalview): never trust it blindly.
+- Columns full of N or gaps carry no information.
 
-## Exercise
+## Step 1 — Put all the genomes in one file
 
-1. Build the dataset (reference + 27 outbreak genomes + your S01) and align:
-   ```bash
-   bash scripts/11_align.sh                       # MAFFT
-   # plan B (no indels in the toy data):
-   python3 scripts/11b_align_fallback.py
-   ```
-2. How many sequences and how many alignment columns?
-3. Open `results/phylo/aln.fasta` in an alignment viewer. Find the 8 columns where S01 differs from the reference.
-4. Which outbreak genome has a long block of `N`? Would you keep it in the analysis?
+The dataset has the reference, the 27 outbreak genomes (OB01–OB27) and your S01. The `sed` command renames the reference header.
 
-## SNP distances
+```bash
+mkdir -p results/phylo
+```
+```bash
+sed 's/^>.*/>TOYV1_ref/' data/reference/TOYV1.fasta > results/phylo/all.fasta
+```
+```bash
+cat data/outbreak/sequences.fasta >> results/phylo/all.fasta
+```
+```bash
+cat results/consensus/S01.fa >> results/phylo/all.fasta
+```
+```bash
+grep -c '>' results/phylo/all.fasta
+```
+
+**Question:** how many sequences are there?
+
+::: {.callout-tip collapse="true"}
+## Answer
+**29** sequences: 1 reference + 27 outbreak genomes + S01.
+:::
+
+## Step 2 — Align with MAFFT
+
+```bash
+mafft --auto --preservecase --thread 2 results/phylo/all.fasta > results/phylo/aln.fasta
+```
+
+(`--preservecase` keeps our upper-case letters. Plan B without MAFFT: the toy genomes have no insertion or deletion, so
+`python3 scripts/11b_align_fallback.py` just checks that all lengths are equal and writes the same file.)
+
+Check the number of sequences and columns:
+
+```bash
+seqkit stats results/phylo/aln.fasta
+```
+
+**Question:** how many sequences and how many alignment columns?
+
+::: {.callout-tip collapse="true"}
+## Answer
+**29 sequences × 10,000 columns** (no insertion/deletion, so the length of the reference).
+:::
+
+## Step 3 — Inspect the alignment
+
+Open `results/phylo/aln.fasta` in AliView or Jalview (<https://www.jalview.org>), or print the content of one column with:
+
+```bash
+seqkit subseq -r 553:553 results/phylo/aln.fasta | seqkit fx2tab | cut -f1,2 | head -10
+```
+
+**Questions**
+
+1. S01 differs from the reference at which positions?
+2. Which outbreak genome has a long block of N? Would you keep it?
+
+To answer the second question, compute the percentage of N in each genome:
+
+```bash
+awk '/^>/{if(name) printf "%s\t%.1f%%\n", name, 100*n/len; name=substr($0,2); n=0; len=0; next} {n+=gsub(/N/,"N"); len+=length($0)} END{printf "%s\t%.1f%%\n", name, 100*n/len}' results/phylo/aln.fasta | sort -k2 -n -r | head -5
+```
+
+::: {.callout-tip collapse="true"}
+## Answers
+1. **10 positions**: the 8 lineage-defining SNPs (553, 3299, 5753, 6605, 6663, 7748, 9419, 9784) plus 2 private SNPs (269 and 7782).
+2. **OB24**: about 23 % N (a block of ~2,300 N around positions 4,100–6,400, plus scattered N). Its tree position is unreliable.
+   It should be **excluded** (the course threshold is 10 % N) — and the reason written in the report.
+:::
+
+## Step 4 — SNP distances
+
+How many differences between genomes? (N and gaps are ignored in each pair.)
 
 ```bash
 python3 scripts/15_snp_matrix.py results/phylo/aln.fasta --ids S01,OB10,OB15,OB22,OB25,OB01
 ```
+```bash
+column -t results/phylo/snp_matrix.tsv
+```
 
-N positions are ignored in each pair. Which genome is the closest to S01?
+**Question:** which genome(s) is the closest to S01?
+
+::: {.callout-tip collapse="true"}
+## Answer
+**OB10 and OB25** are closest to S01 (**2 SNPs**); OB15 and OB22 are at 3 SNPs; OB01 (lineage TV.2.1) is at 7 SNPs. All the
+closest ones are early TV.2 genomes from Region A. The distance is tiny (2 SNPs) but remember that two genomes at 2 SNPs are not
+necessarily direct contacts.
+:::
+
+**Next:** [Lineage assignment](02-lineage.qmd).

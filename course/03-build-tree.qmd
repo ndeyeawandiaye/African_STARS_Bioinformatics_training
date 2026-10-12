@@ -7,32 +7,103 @@ subtitle: "Module 3 — 60 min"
 
 | Method | Idea | Use |
 |---|---|---|
-| Distance (NJ) | tree from pairwise distances | very fast first look |
-| Maximum likelihood (IQ-TREE, RAxML) | tree that makes the alignment most probable under a substitution model | standard choice |
+| Distance (neighbour-joining) | tree built from pairwise distances | very fast first look |
+| Maximum likelihood (IQ-TREE, RAxML) | the tree that makes the alignment most probable under a substitution model | standard choice |
 | Bayesian / time-scaled (BEAST, TreeTime) | adds time and uncertainty | dating, advanced analyses |
 
-Key choices: **substitution model** (IQ-TREE tests them with `-m MFP`), **support** (ultrafast bootstrap `-B 1000`),
-and the **root** (an outgroup — here the reference `TOYV1_ref`).
+Three choices to make: the **substitution model** (IQ-TREE tests several with `-m MFP`), the **support** (ultrafast bootstrap,
+`-B 1000`) and the **root** (an outgroup: here the reference genome `TOYV1_ref`).
 
-## Exercise
+## Step 1 — Build the maximum-likelihood tree
 
-1. Build the maximum-likelihood tree:
-   ```bash
-   bash scripts/12_tree.sh            # results/phylo/tree.treefile
-   ```
-   Plan B (neighbour-joining, no IQ-TREE):
-   ```bash
-   python3 scripts/12b_tree_fallback.py     # results/phylo/tree.nwk
-   ```
-2. Draw it, coloured by region and by lineage:
-   ```bash
-   python3 scripts/13_lineage.py results/phylo/aln.fasta
-   python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color lineage --out results/phylo/tree_lineage.png
-   python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region  --out results/phylo/tree_region.png
-   ```
-   You can also open the Newick file in FigTree, iTOL or Microreact.
-3. Exclude the low-quality genome (more than 10 % N) and rebuild. Does the tree change?
+```bash
+iqtree2 -s results/phylo/aln.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree -redo
+```
+
+What the options mean: `-s` alignment, `-m MFP` choose the best model automatically, `-B 1000` 1,000 ultrafast bootstrap
+replicates, `-T 2` two threads, `--seed 1` reproducible result, `-o TOYV1_ref` root on the reference, `--prefix` name of the output files.
+
+IQ-TREE writes several files; the useful ones are:
+
+```bash
+ls results/phylo/tree.*
+```
+
+| File | Content |
+|---|---|
+| `tree.treefile` | **the tree** (Newick format, with bootstrap support) |
+| `tree.iqtree` | the full report (model chosen, log-likelihood, tree in text) |
+| `tree.log` | what happened during the run |
+
+Which model was chosen?
+
+```bash
+grep "Best-fit model" results/phylo/tree.iqtree
+```
+
+::: {.callout-tip collapse="true"}
+## About the model
+With so few variable sites a simple model (such as HKY or GTR variants) is chosen; the exact choice has almost no impact here.
+IQ-TREE may also warn that several sequences are **identical**: this is normal, they end up on the same branch tip.
+:::
+
+**Plan B (no IQ-TREE):** a neighbour-joining tree from SNP distances, good enough to read the course examples
+(but without bootstrap support):
+
+```bash
+python3 scripts/12b_tree_fallback.py
+```
+
+## Step 2 — Draw the tree
+
+Assign the lineages (needed for the colours), then draw the tree twice:
+
+```bash
+python3 scripts/13_lineage.py results/phylo/aln.fasta
+```
+```bash
+python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color lineage --out results/phylo/tree_lineage.png
+```
+```bash
+python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region --out results/phylo/tree_region.png
+```
+
+(Plan B: use `results/phylo/tree.nwk` instead of `tree.treefile`.) You can also open the Newick file in
+**FigTree**, **iTOL** (<https://itol.embl.de>) or **Microreact** (<https://microreact.org>).
+
+**Questions:** do the lineages form clean groups on the tree? Where is S01?
+
+::: {.callout-tip collapse="true"}
+## Answer
+Yes: each lineage forms its own group (clade). TV.3 and the TV.1 background genomes are close to the root; TV.2 and its two
+descendants TV.2.1 and TV.2.2 form one large clade. **S01 is inside the TV.2 group**, next to OB10, OB25, OB15 and OB22 (all early
+genomes of the outbreak).
+:::
+
+## Step 3 — Remove the low-quality genome and rebuild
+
+OB24 has 23 % N. Remove it from the alignment and rebuild the tree:
+
+```bash
+seqkit grep -v -p OB24 results/phylo/aln.fasta > results/phylo/aln_clean.fasta
+```
+```bash
+iqtree2 -s results/phylo/aln_clean.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree_clean -redo
+```
+
+**Question:** does the tree change?
+
+::: {.callout-tip collapse="true"}
+## Answer
+The main groups and their relationships **do not change**: OB24 was inside the TV.2.2 group, which stays the same without it.
+But its position had a **lower reliability** (a lot of missing data means that it can look closer to some genomes than it
+really is). Excluding it removes a source of doubt and shows that the conclusions do not depend on a poor genome.
+The excluded genome and the reason must be written in the report.
+:::
 
 ::: {.callout-warning}
-Few variable sites give little resolution and short branches. A tree is only as good as the alignment and the data behind it.
+With few variable sites there is little resolution: many branches are short and some are supported weakly. A tree is only as good as
+the alignment and the data behind it.
 :::
+
+**Next:** [Read a phylogenetic tree](03-read-tree.qmd).

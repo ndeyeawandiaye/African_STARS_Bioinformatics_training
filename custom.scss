@@ -1,20 +1,26 @@
 /*-- scss:defaults --*/
-$primary: #4a7c4e;
-$navbar-bg: #4a7c4e;
+$primary: #2b6cb0;
+$navbar-bg: #2b6cb0;
 $navbar-fg: #ffffff;
-$navbar-hover-color: #e4f1e6;
-$sidebar-bg: #e9f3ec;
-$sidebar-fg: #2f3b32;
-$link-color: #2f6a3a;
-$code-color: #a0522d;
-$body-color: #333a35;
+$navbar-hover-color: #dbeafe;
+$sidebar-bg: #eef5fc;
+$sidebar-fg: #27384d;
+$link-color: #1f5fa8;
+$code-color: #b4440e;
+$body-color: #2d3748;
 $font-family-sans-serif: "Lato", "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
 $headings-font-weight: 600;
+$border-radius: 0.6rem;
 
 /*-- scss:rules --*/
 .sidebar-navigation .sidebar-item-section > .sidebar-item-container > a.sidebar-item-text,
-.sidebar-navigation .sidebar-item-section > .sidebar-item-container > .sidebar-item-toggle { font-weight: 700; color: #123a1f; }
+.sidebar-navigation .sidebar-item-section > .sidebar-item-container > .sidebar-item-toggle { font-weight: 700; color: #16395f; }
 .sidebar-navigation .sidebar-item { font-size: 0.95rem; }
-.nav-footer { font-size: 0.85rem; }
+.nav-footer { font-size: 0.85rem; background: #eef5fc; }
+h1.title { color: #16395f; }
+h2 { border-bottom: 2px solid #cfe2f5; padding-bottom: .25rem; }
+table th { background: #dbeafe; color: #16395f; }
+.callout { border-radius: .6rem; }
 .callout-title-container { font-weight: 600; }
-table th { background: #e9f3ec; }
+pre { border-left: 4px solid #2b6cb0; background: #f6faff; }
+.step { background:#eef5fc; border-radius:.6rem; padding:.2rem .9rem; margin:.5rem 0; }

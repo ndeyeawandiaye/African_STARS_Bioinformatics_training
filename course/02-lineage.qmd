@@ -5,33 +5,72 @@ subtitle: "Module 2 — 30 min"
 
 ## What is a lineage?
 
-A lineage is a named group of genomes sharing a common ancestor, defined by **mutations specific to the group**
-(e.g. Pango lineages, Nextstrain clades). Names are hierarchical: `TV.2.1` is a descendant of `TV.2`.
+A lineage is a named group of genomes sharing a common ancestor, defined by **mutations specific to that group**
+(Pango lineages, Nextstrain clades…). Names are hierarchical: `TV.2.1` descends from `TV.2`. Lineages give a common language
+to talk about genomes without exchanging full sequences.
 
-The table `data/outbreak/lineage_definitions.tsv` is a miniature nomenclature:
+```bash
+column -t data/outbreak/lineage_definitions.tsv
+```
 
 | Lineage | Parent | Defining SNPs |
 |---|---|---|
-| TV.1 | root | – |
+| TV.1 | root | none (reference-like) |
 | TV.2 | TV.1 | 8 SNPs |
 | TV.2.1 | TV.2 | + 3 SNPs |
 | TV.2.2 | TV.2 | + 3 other SNPs |
 | TV.3 | TV.1 | 6 SNPs |
 
-## Exercise
+## Step 1 — Assign the lineages
 
-1. Assign lineages from the alignment:
-   ```bash
-   python3 scripts/13_lineage.py results/phylo/aln.fasta
-   ```
-2. What lineage is S01, and what evidence supports it?
-3. One genome has a masked defining SNP. What does the "evidence" column say? Is the call still reliable?
-4. Make a table: number of genomes per lineage and per region.
+We use a small program written for the course (a miniature Pangolin): for each genome it looks for the defining
+SNPs and picks the **most specific** lineage whose SNPs are **all** present.
+
+```bash
+python3 scripts/13_lineage.py results/phylo/aln.fasta
+```
+
+**Questions**
+
+1. What lineage is S01, and what is the evidence?
+2. One genome has a masked defining SNP. What does the "evidence" column say? Is the call still reliable?
+3. Make a table: number of genomes per lineage and per region.
+
+(For question 3, join the lineages with the metadata:
+`join -t $'\t' <(sort -k1,1 results/phylo/lineages.tsv) <(sort -k1,1 data/outbreak/metadata.tsv) | cut -f1,2,4,5 | sort -k2`.)
+
+::: {.callout-tip collapse="true"}
+## Answers
+1. **S01 = TV.2**, with evidence "8/8 defining SNPs". It does not carry the TV.2.1 or TV.2.2 SNPs, so it stays at the parent level.
+2. **OB24** says "TV.2.2 – 10/11 defining SNPs, 1 masked": the 11th SNP lies in the block of N. All the 10 observed SNPs
+   agree, so TV.2.2 is the best call, but it is **less certain** (missing data). Real tools such as Pangolin and Nextclade flag exactly this.
+3. Number of genomes per lineage and region:
+
+| Lineage | Region A | Region B | Region C | Region D |
+|---|---|---|---|---|
+| TV.1 | – | 2 | – | 1 |
+| TV.3 | – | 5 | – | – |
+| TV.2 | 3 (+ S01) | – | 1 | – |
+| TV.2.1 | 7 | – | 1 | – |
+| TV.2.2 | – | – | 7 | – |
+:::
 
 ::: {.callout-note}
 ## Real tools
-Pangolin and Nextclade do the same with far larger designations, and also report QC (missing data, private mutations,
-mixed sites). The principle — defining mutations and the most specific complete match — is identical.
+**Pangolin** and **Nextclade** do the same with much larger nomenclatures, and also give quality flags (missing data,
+unexpected mutations, mixed sites). The principle — defining mutations, most specific complete match — is identical.
 :::
 
-**Question:** can two genomes of the same lineage still be unrelated cases? Why?
+## Final question
+
+Can two genomes of the same lineage still be unrelated cases? Why?
+
+::: {.callout-tip collapse="true"}
+## Answer
+Yes. A lineage is defined by **a few mutations**, and many separate chains of transmission can carry the same lineage
+(for example if it was imported several times, or circulated widely before being sampled). A lineage says "belongs to this
+family"; to say "linked case" you need **finer resolution** (extra SNPs, as in the SNP matrix) **and** epidemiological information
+(dates, places, contacts).
+:::
+
+**Next:** [Build a phylogenetic tree](03-build-tree.qmd).

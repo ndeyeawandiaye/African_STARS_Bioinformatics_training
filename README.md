@@ -29,7 +29,7 @@ quarto render      # builds _site/
 ```
 
 Publishing: push to GitHub, then **Settings → Pages → Source: GitHub Actions** (`.github/workflows/publish.yml`).
-Replace `YOUR-ORG` in `_quarto.yml`, `index.qmd` and `course/git-github.qmd` by your GitHub organisation.
+Replace `YOUR-ORG` in `_quarto.yml`, `index.qmd` by your GitHub organisation.
 `solutions/` is never rendered into the site.
 
 ## Quick start
@@ -37,7 +37,7 @@ Replace `YOUR-ORG` in `_quarto.yml`, `index.qmd` and `course/git-github.qmd` by 
 ```bash
 git clone <URL-OF-THE-REPO> fastq-to-genome && cd fastq-to-genome
 mamba env create -f environment.yml      # or conda
-conda activate fastq2genome
+conda activate analyse
 bash scripts/00_check_setup.sh
 bash scripts/run_all.sh                  # whole pipeline, all samples
 ```
@@ -77,7 +77,7 @@ Each participant (or pair) returns `exercises/answer_sheet.tsv` filled in: one v
 
 ## Troubleshooting
 
-- `command not found`: the environment is not active → `conda activate fastq2genome`.
+- `command not found`: the environment is not active → `conda activate analyse`.
 - Slow solver: use `mamba` (or `conda config --set solver libmamba`).
 - Apple Silicon / Windows: use WSL2 on Windows; if a bioconda package is missing on ARM, use plan B.
 - Re-run a single step on one sample: `bash scripts/03_map.sh S02`.

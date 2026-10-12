@@ -6,36 +6,89 @@ subtitle: "Module 2 — 30 min"
 ## Why it matters
 
 Reads are mapped to **one** reference, and the consensus is built from that mapping. A reference that is too
-divergent causes reads to map badly (or not at all), hides real variants and biases the consensus towards the reference.
+divergent makes reads map badly (or not at all), hides real variants and **biases the consensus towards the reference**.
 
 | Criterion | Question |
 |---|---|
-| Same species/genotype | is it the right virus, and the right segment/genotype? |
-| Close to your samples | few differences = better mapping |
-| Complete and good quality | no gaps or ambiguous bases |
-| Well annotated, traceable | accession, source, date |
-| Consistent across the study | use **the same** reference for all samples being compared |
+| Same species / genotype | is it the right virus, the right genotype, the right segment? |
+| Close to your samples | fewer differences = better mapping |
+| Complete and good quality | no gaps, no ambiguous bases |
+| Well documented | accession number, source, date |
+| Consistent across the study | the **same** reference for all the samples you compare |
 
-## Exercise
+## Step 1 — Look at the three candidates
 
-Three candidate references are in `data/reference/candidates/`: `TOYV1_TV1` (root genotype), `TOYV1_TV2`
-(a genotype that appeared later) and `TOYV2_divergent` (another, more distant virus).
+Three candidate references are in `data/reference/candidates/`:
 
-1. Compare your S01 consensus with each candidate:
-   ```bash
-   python3 scripts/10_pick_reference.py results/consensus/S01.fa
-   ```
-   (plan B: `precomputed/consensus/S01.fa`)
-2. Which reference is the closest? How many mismatches? Does it match what you expect from the lineage story?
-3. Re-map S01 on a farther candidate and compare the % mapped and mean depth:
-   ```bash
-   REF=data/reference/candidates/TOYV2_divergent.fasta RESULTS=results_div bash scripts/run_all.sh S01
-   ```
+- `TOYV1_TV1`: the original (root) genotype;
+- `TOYV1_TV2`: a genotype that appeared later (8 mutations);
+- `TOYV2_divergent`: another, more distant virus (about 8 % different).
 
-::: {.callout-note}
-## In real life
-The choice is made with databases (e.g. NCBI Virus, GISAID-type resources, Nextclade datasets) and a quick
-identity search. Small differences between close references matter less than choosing the wrong genotype.
+```bash
+seqkit stats data/reference/candidates/*.fasta
+```
+
+## Step 2 — Which one is closest to S01?
+
+We count the differences between your S01 consensus and each candidate (positions with N are ignored):
+
+```bash
+python3 scripts/10_pick_reference.py results/consensus/S01.fa
+```
+
+(Plan B: `precomputed/consensus/S01.fa`. This small script is written for the course; in real life you would use
+a BLAST or Nextclade search against a database.)
+
+**Questions:** which reference is the closest? How many mismatches? Is it what you expected?
+
+::: {.callout-tip collapse="true"}
+## Answer
+| Candidate | Compared sites | Mismatches | Identity |
+|---|---|---|---|
+| **TOYV1_TV2** | 9,937 | **2** | 99.98 % |
+| TOYV1_TV1 | 9,937 | 10 | 99.90 % |
+| TOYV2_divergent | 9,937 | 807 | 91.88 % |
+
+**TOYV1_TV2** is the closest: S01 carries the 8 lineage mutations of TV.2 and only 2 private ones, so it differs by 2 positions
+from that reference and by 10 from the root. The divergent virus is ~8 % different: it is another virus and unusable here.
+(Choosing between TV.1 and TV.2 changes little, but choosing the wrong virus changes everything.)
 :::
 
-**Question:** why should all samples of an outbreak be mapped to the same reference?
+## Step 3 — See the effect of a bad reference
+
+Map S01 to the divergent reference and compare with the good mapping:
+
+```bash
+bwa index data/reference/candidates/TOYV2_divergent.fasta
+```
+```bash
+bwa mem -t 2 data/reference/candidates/TOYV2_divergent.fasta results/trimmed/S01_R1.fastq.gz results/trimmed/S01_R2.fastq.gz \
+  | samtools sort -o results/bam/S01_divergent.bam -
+```
+```bash
+samtools flagstat results/bam/S01_divergent.bam
+```
+
+**Question:** what changes compared with `results/bam/S01.flagstat.txt`?
+
+::: {.callout-tip collapse="true"}
+## Answer
+With about 8 % divergence, a 150-base read has around 12 mismatches: fewer reads align (the exact % depends on the aligner),
+many alignments are **soft-clipped** (only part of the read aligns) and the reads that do map carry dozens of false
+differences. In IGV you would see a mosaic of coloured mismatches, and the consensus would be unreliable. The lesson:
+**check that the reference is close to your virus before mapping**.
+:::
+
+## Final question
+
+Why should all the samples of an outbreak be mapped to the **same** reference?
+
+::: {.callout-tip collapse="true"}
+## Answer
+Because the differences are measured **against the reference**, with its coordinates. If each sample used another
+reference, positions would not correspond, mutations would not be comparable, and differences between references would be
+mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align
+and compare.
+:::
+
+**Next:** [Alignment](02-alignment.qmd).

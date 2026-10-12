@@ -1,18 +1,30 @@
-name: fastq2genome
+name: analyse
 channels:
   - conda-forge
   - bioconda
   - nodefaults
 dependencies:
   - python=3.11
+  # quality control and trimming
   - fastqc
   - multiqc
   - fastp
+  - seqkit
+  # contamination check and de novo assembly
+  - kraken2
+  - spades
+  - quast
+  # mapping, coverage, consensus, variants
+  - bwa
   - minimap2
   - samtools
   - bcftools
   - ivar
+  # alignment and phylogenetics
   - mafft
   - iqtree
   - biopython
   - matplotlib
+  # download public data from NCBI
+  - sra-tools
+  - entrez-direct

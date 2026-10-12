@@ -22,7 +22,7 @@ fastq_r2() { awk -F'\t' -v s="$1" 'NR>1 && $1==s {print $6}' "$SAMPLE_SHEET" | s
 # Stop with a clear message when a tool is missing.
 need() {
   command -v "$1" >/dev/null 2>&1 || {
-    echo "ERROR: '$1' not found. Did you activate the environment?  conda activate fastq2genome" >&2
+    echo "ERROR: '$1' not found. Did you activate the environment?  conda activate analyse" >&2
     exit 1
   }
 }

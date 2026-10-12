@@ -3,20 +3,80 @@ title: "Sequencing, file formats and assembly strategies"
 subtitle: "Bridge talk — module 1"
 ---
 
-## The big picture
+## Two ways to build a genome from Illumina reads
+
+Both start with the same raw material (FASTQ files) and the same first steps (quality control, trimming, contamination check).
+They differ in how the genome is rebuilt:
+
+- **De novo assembly**: reads are stitched together *without any reference* (new or very divergent virus, bacteria).
+- **Mapping (reference-based)**: reads are aligned to a *known* genome, then a consensus is called (known virus: SARS-CoV-2, Rift Valley fever, dengue…).
+
+### Pipeline 1 — de novo assembly (Illumina)
 
 ```{mermaid}
 flowchart TD
-  A[Sample] --> B[Library prep]
-  B --> C[Sequencer]
-  C --> D[FASTQ]
-  D --> E[QC + trimming]
-  E --> F[Mapping or de novo assembly]
-  F --> G[BAM / contigs]
-  G --> H[Consensus + variants]
-  H --> I[Genome QC]
-  I --> J[Alignment, lineage, tree]
+  A["FASTQ (R1 + R2)"] --> B["1. FastQC<br/>quality of the raw reads"]
+  B --> C["2. fastp<br/>remove adapters and low-quality bases"]
+  C --> D["3. FastQC + MultiQC<br/>check the trimmed reads, one report for all samples"]
+  D --> E["4. Kraken2<br/>which organisms are in the reads? contamination?"]
+  E --> F["5. SPAdes<br/>assemble the reads into contigs"]
+  F --> G["6. QUAST<br/>assembly quality: N50, length, genome fraction"]
+  G --> H["7. BLAST or minimap2 / RagTag<br/>identify, order and orient contigs on a reference"]
+  H --> I["8. Map the reads back (bwa + samtools)<br/>check coverage along the assembly"]
+  I --> J["Genome FASTA"]
+  classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;
+  class B,C,D,E qc;
 ```
+
+| Step | Tool | What it does | Main output |
+|---|---|---|---|
+| 1 | **FastQC** | per-base quality, adapters, GC content, duplication | `*_fastqc.html` |
+| 2 | **fastp** | trims adapters and low-quality ends, drops short reads | trimmed FASTQ, report |
+| 3 | **FastQC + MultiQC** | same check after trimming; MultiQC merges all samples in one page | `multiqc_report.html` |
+| 4 | **Kraken2** | assigns each read to a taxon (virus, human, bacteria…); needs a database | report per sample |
+| 5 | **SPAdes** | builds contigs (`--rnaviral` for RNA viruses, `--meta` for metagenomes) | `contigs.fasta` |
+| 6 | **QUAST** | assembly statistics, comparison to a reference if you give one | `report.html` |
+| 7 | **BLAST** (NCBI) or **minimap2 / RagTag** | which virus is it? order contigs on a reference | annotated / ordered contigs |
+| 8 | **bwa + samtools** | map reads back on the contigs; uneven coverage reveals misassemblies | BAM, depth |
+
+Optional additions: **seqkit stats** (quick read counts), **Bandage** (look at the assembly graph),
+**Prokka / Bakta** (gene annotation for bacteria), **KrakenTools** (keep only the reads of the target virus before assembling).
+
+### Pipeline 2 — mapping to a reference (Illumina)
+
+::: {.callout-important}
+## Steps you do NOT repeat
+If you already ran pipeline 1 on the same samples, **steps 1 to 4 are already done** (FastQC, fastp, MultiQC,
+Kraken2). Reuse the trimmed reads in `results/trimmed/`. Only the steps in white below are new.
+:::
+
+```{mermaid}
+flowchart TD
+  A["Trimmed reads (already done in pipeline 1:<br/>FastQC, fastp, MultiQC, Kraken2)"] --> B["5. bwa index + bwa mem<br/>align the reads to the reference"]
+  B --> C["6. samtools sort / index / flagstat<br/>sorted BAM and mapping statistics"]
+  C --> D["7. ivar trim (amplicon data only)<br/>remove the primer sequences"]
+  D --> E["8. samtools depth / coverage<br/>depth and breadth of coverage"]
+  E --> F["9. ivar consensus<br/>build the genome, mask low depth with N"]
+  F --> G["10. bcftools mpileup + call<br/>list the variants (VCF)"]
+  G --> H["11. Genome QC<br/>% N, mean depth, negative control"]
+  H --> I["12. Lineage (Pangolin, Nextclade),<br/>MAFFT alignment, IQ-TREE"]
+  classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;
+  class A done;
+```
+
+| Step | Tool | What it does | Main output |
+|---|---|---|---|
+| 1–4 | FastQC, fastp, MultiQC, Kraken2 | **already done** (see pipeline 1) | trimmed reads |
+| 5 | **bwa** (or minimap2) | aligns each read to the reference | SAM (stream) |
+| 6 | **samtools** | sorts, indexes and counts mapped reads | `S01.bam`, `.bai`, flagstat |
+| 7 | **ivar trim** | removes primers (amplicon protocols such as ARTIC) | trimmed BAM |
+| 8 | **samtools depth / coverage** | how many reads cover each position | depth table |
+| 9 | **ivar consensus** | majority base at each position; `N` where depth is too low | consensus FASTA |
+| 10 | **bcftools** | calls SNPs and small indels | VCF |
+| 11 | awk / seqkit / summary table | decide if the genome is good enough | verdict |
+| 12 | Pangolin or Nextclade, MAFFT, IQ-TREE | lineage and phylogeny (modules 2–3) | tree |
+
+In the dry lab we follow **pipeline 2**, because our toy virus has a reference genome.
 
 ## Sequencing technologies
 
@@ -30,11 +90,11 @@ flowchart TD
 
 ## Library preparation approaches (viruses)
 
-| | WGS / metagenomics | Amplicon (e.g. ARTIC) | Probe capture |
-|---|---|---|---|
-| Principle | sequence everything | amplify the virus in overlapping tiles | enrich with probes |
-| Best when | you do not know what you look for | routine viral surveillance | low viral load |
-| Watch out for | most reads are not from the virus | amplicon dropout when primer sites mutate | probes must match the virus |
+| | WGS / metagenomics | Amplicon (e.g. ARTIC) |
+|---|---|---|
+| Principle | sequence everything in the sample | amplify the virus in overlapping tiles (multiplex PCR) |
+| Best when | you do not know what you are looking for | routine viral surveillance (the most common approach) |
+| Watch out for | most reads may not come from the virus | amplicon dropout when primer sites mutate |
 
 ## File formats
 
@@ -63,11 +123,10 @@ Phred score **Q = −10·log10(P error)**: Q20 → 1 error in 100, Q30 → 1 in 
 | | Mapping to a reference | De novo assembly | Hybrid |
 |---|---|---|---|
 | Principle | align reads to a known genome | rebuild the genome without reference | combine short and long reads |
-| Tools | minimap2, BWA, iVar, bcftools | SPAdes, MEGAHIT; Flye, Canu | Unicycler |
+| Tools | bwa, minimap2, iVar, bcftools | SPAdes, MEGAHIT; Flye, Canu | Unicycler |
 | Choose when | known, little-divergent virus; amplicon data | new/divergent pathogen, bacteria, rearrangements | both read types available |
 
 Three questions to decide: *Do I have a good reference? Are my reads long? Is my coverage sufficient?*
-For amplicon viral data, **mapping is the default** — it is what we do in the dry lab.
 
 ## Pitfalls to remember
 
