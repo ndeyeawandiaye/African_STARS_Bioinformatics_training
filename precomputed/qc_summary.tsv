@@ -1,0 +1,6 @@
+sample	type	total_reads	mapped_reads	pct_mapped	mean_depth	pct_genome_ge10x	genome_length	n_bases	pct_N	longest_N_run	verdict	flags
+S01	sample	6666	6666	100.0	99.8	99.4	10000	63	0.6	33	PASS	
+S02	sample	6666	6666	100.0	99.7	84.3	10000	1566	15.7	1526	FAIL	only 84.3% of the genome at >=10x
+S03	sample	340	340	100.0	5.1	5.0	10000	9507	95.1	2248	FAIL	only 5.0% of the genome at >=10x
+S04	sample	6666	5000	75.0	74.7	99.4	10000	58	0.6	30	REVIEW	only 75.0% of reads map (off-target reads / contamination?)
+S05	NTC	450	50	11.1	0.8	0.0	10000	10000	100.0	10000	CONTROL-CHECK	negative control has 50 mapped reads (barcode bleed or contamination?)

@@ -1,0 +1,46 @@
+{
+  "seed": 20261012,
+  "ref_len": 10000,
+  "read_len": 150,
+  "s02_dropout_1based": [
+    3501,
+    5000
+  ],
+  "clade_positions_1based": [
+    553,
+    3299,
+    5753,
+    6605,
+    6663,
+    7748,
+    9419,
+    9784
+  ],
+  "samples": {
+    "S01": {
+      "viral_pairs": 3333,
+      "off_pairs": 0,
+      "bleed_pairs": 0
+    },
+    "S02": {
+      "viral_pairs": 3333,
+      "off_pairs": 0,
+      "bleed_pairs": 0
+    },
+    "S03": {
+      "viral_pairs": 170,
+      "off_pairs": 0,
+      "bleed_pairs": 0
+    },
+    "S04": {
+      "viral_pairs": 2500,
+      "off_pairs": 833,
+      "bleed_pairs": 0
+    },
+    "S05": {
+      "viral_pairs": 0,
+      "off_pairs": 200,
+      "bleed_pairs": 25
+    }
+  }
+}

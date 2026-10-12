@@ -1,0 +1,6 @@
+sample_id	sample_type	collection_date	region	R1	R2
+S01	sample	2026-03-02	Region A	data/fastq/S01_R1.fastq.gz	data/fastq/S01_R2.fastq.gz
+S02	sample	2026-03-05	Region A	data/fastq/S02_R1.fastq.gz	data/fastq/S02_R2.fastq.gz
+S03	sample	2026-03-09	Region B	data/fastq/S03_R1.fastq.gz	data/fastq/S03_R2.fastq.gz
+S04	sample	2026-03-11	Region C	data/fastq/S04_R1.fastq.gz	data/fastq/S04_R2.fastq.gz
+S05	NTC	2026-03-11		data/fastq/S05_R1.fastq.gz	data/fastq/S05_R2.fastq.gz
