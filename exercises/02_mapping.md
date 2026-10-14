@@ -18,11 +18,11 @@ In this exercise, we use the paired-end reads from NCBI run `SRR26396743`, clean
 BWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.
 
 ```bash
-bwa index data/ncbi/SARS-CoV-2_NC_045512.2.fasta
+bwa index data/SARS-CoV-2_NC_045512.2.fasta
 ```
 
 ```bash
-samtools faidx data/ncbi/SARS-CoV-2_NC_045512.2.fasta
+samtools faidx data/SARS-CoV-2_NC_045512.2.fasta
 ```
 
 **Questions**
@@ -31,11 +31,13 @@ samtools faidx data/ncbi/SARS-CoV-2_NC_045512.2.fasta
 2. What is the purpose of the `.fai` file?
 3. Why do we index the reference before mapping?
 
-**Answers**
+:::{.callout-tip collapse='true'}
+## Answers
 
 - `bwa index` creates auxiliary index files that allow BWA to search the reference efficiently.
 - `samtools faidx` creates a FASTA index (`.fai`) containing sequence names, lengths, and file offsets.
 - Indexing avoids rebuilding the reference search structures every time we map reads.
+:::
 
 ## Step 2 — Map the trimmed reads
 
@@ -50,7 +52,7 @@ Run BWA-MEM and sort the resulting alignments with Samtools:
 ```bash
 bwa mem -t 2 \
   -R '@RG\tID:SRR26396743\tSM:SARS-CoV-2' \
-  data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  data/NC_045512.2.fasta \
   results/trimmed/SRR26396743_1.fastq.gz \
   results/trimmed/SRR26396743_2.fastq.gz \
   | samtools sort -@ 2 \

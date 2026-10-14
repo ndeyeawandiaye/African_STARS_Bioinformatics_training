@@ -19,9 +19,9 @@ website:
       - icon: github
         menu:
           - text: Source code
-            href: https://github.com/YOUR-ORG/fastq-to-genome
+            href: https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/
           - text: Report an issue
-            href: https://github.com/YOUR-ORG/fastq-to-genome/issues
+            href: https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/issues
   sidebar:
     style: docked
     collapse-level: 1
@@ -47,16 +47,7 @@ website:
         contents:
           - course/03-build-tree.qmd
           - course/03-read-tree.qmd
-      - section: "Communicating genomic evidence"
-        contents:
-          - course/04-evidence.qmd
-          - course/04-brief-template.qmd
-      - section: "Mini outbreak investigation"
-        contents:
-          - course/05-scenario.qmd
-          - course/05-workflow.qmd
-          - course/05-deliverable.qmd
-          - course/05-model-answer.qmd
+
   page-footer:
     left: "African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only"
     right: "Built with [Quarto](https://quarto.org)"

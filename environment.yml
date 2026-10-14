@@ -8,7 +8,7 @@ dependencies:
   # quality control and trimming
   - fastqc
   - multiqc
-  - fastp
+  - trimmomatic
   - seqkit
   # contamination check and de novo assembly
   - kraken2

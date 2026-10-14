@@ -11,6 +11,67 @@ the course material on your computer, and a viewer (IGV) to look at alignments.
 Install **WSL2** (Ubuntu) first, then follow the *Linux* instructions inside the Ubuntu terminal.
 :::
 
+:::{.callout-tip collapse='true'}
+## Installing WSL2 with Ubuntu (Windows only)
+
+WSL2 (Windows Subsystem for Linux 2) allows you to run a Linux environment, such as Ubuntu, directly on Windows without installing a separate virtual machine.
+
+**Step 1: Open PowerShell as administrator**
+
+1. Open the Windows Start menu.
+2. Search for `PowerShell`.
+3. Right-click it and select **Run as administrator**.
+
+**Step 2: Install WSL2 and Ubuntu**
+
+Run the following command in PowerShell:
+
+```powershell
+wsl --install
+```
+
+Restart your computer if prompted.
+
+**Step 3: Set up Ubuntu**
+
+1. Open Ubuntu from the Windows Start menu.
+2. Create a Linux username and password when prompted.
+3. Wait for the initial setup to finish.
+
+*Note:* When entering your password, no characters will appear on the screen. This is normal.
+
+**Step 4: Update Ubuntu**
+
+In the Ubuntu terminal, run:
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
+
+**Step 5: Verify the installation**
+
+Open PowerShell and run:
+
+```powershell
+wsl --list --verbose
+```
+
+Check that Ubuntu uses WSL version `2`.
+
+If necessary, set Ubuntu to WSL2 with:
+
+```powershell
+wsl --set-version Ubuntu 2
+```
+
+You can now follow the Linux instructions in this course inside the Ubuntu terminal.
+
+**Official documentation:** [Install WSL — Microsoft Learn](https://learn.microsoft.com/en-us/windows/wsl/install)
+
+> **Important:** These instructions apply only to Windows. If you are using macOS, you do not need WSL2; use the macOS Terminal and follow compatible instructions instead.
+:::
+
 ## 1. Install Conda (Miniconda)
 
 Conda is a program that installs bioinformatics tools and keeps them in separate **environments**, so that one project does not break another. We use **Miniconda**, a lightweight, free Conda installer. We will add the `conda-forge` and `bioconda` channels to install the bioinformatics tools required for this course.
@@ -113,7 +174,7 @@ fastqc --version
 multiqc --version
 ```
 ```bash
-fastp --version
+trimmomatic -version
 ```
 ```bash
 seqkit version
@@ -184,40 +245,57 @@ cd data
 prefetch SRR26396743
 ```
 ```bash
-fasterq-dump --split-files --threads 2 -X 200000 SRR26396743
+fasterq-dump --split-3 --threads 2  SRR26396743
 ```
 ```bash
 gzip SRR26396743_1.fastq SRR26396743_2.fastq
-cd ../..
+cd ..
 ```
 
-`-X 200000` keeps only the first 200,000 read pairs, which is enough for practice (remove it to get everything).
-`--split-files` creates `_1` (= R1) and `_2` (= R2).
+`--split-3` separates paired-end reads into separate FASTQ files: two files for reads that form a pair (_1.fastq and _2.fastq) and a third file (.fastq) for reads that do not have a matching mate.
 
 Check that R1 and R2 have the same number of reads:
 
 ```bash
-seqkit stats data/ncbi/*.fastq.gz
+seqkit stats data/*.fastq.gz
 ```
+:::{.callout-tip collapse='true'}
+### Results
+| File | Format | Type | Number of reads | Total bases | Min. length | Average length | Max. length |
+|---|---|---|---:|---:|---:|---:|---:|
+| `SRR26396743_1.fastq.gz` | FASTQ | DNA | 330,144 | 48,517,409 | 51 | 147.0 | 151 |
+| `SRR26396743_2.fastq.gz` | FASTQ | DNA | 330,185 | 48,275,763 | 50 | 146.2 | 151 |
+:::
+
 
 ### c) Download the reference genome
 
 SARS-CoV-2 (one sequence, 29.9 kb):
 
-```bash
-efetch -db nuccore -id NC_045512.2 -format fasta > data/ncbi/SARS-CoV-2_NC_045512.2.fasta
-```
-
-Rift Valley fever virus has **three segments** (L, M, S), so the reference is a FASTA file with three sequences
-(RefSeq accessions NC_014397, NC_014396 and NC_014395 — check them on <https://www.ncbi.nlm.nih.gov/nuccore> before use):
 
 ```bash
-efetch -db nuccore -id NC_014397,NC_014396,NC_014395 -format fasta > data/ncbi/RVFV_L_M_S.fasta
+curl -fL --retry 5 --retry-delay 2 \
+  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NC_045512.2&rettype=fasta&retmode=text" \
+  -o data/SARS-CoV-2_NC_045512.2.fasta
 ```
+:::{.callout-tip }
+- `-f`: Fail if the server returns an HTTP error.
+- `-L`: Follow redirects automatically.
+- `--retry 5`: Retry failed requests up to five times.
+- `--retry-delay 2`: Wait two seconds between retries.
+- `-o`: Save the downloaded content to a specified file.
+:::
 
 ```bash
-seqkit stats data/ncbi/*.fasta
+seqkit stats data/*.fasta
 ```
+:::{.callout-tip collapse='true'}
+### Results
+| File | Format | Type | Number of reads | Total bases | Min. length | Average length | Max. length |
+|---|---|---|---:|---:|---:|---:|---:|
+data/NC_045512.2.fasta | FASTA | DNA | 1 | 29,903 | 29,903 | 29,903 | 29,903
+
+:::
 
 ## Troubleshooting
 

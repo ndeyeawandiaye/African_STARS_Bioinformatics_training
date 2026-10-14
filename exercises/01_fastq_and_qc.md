@@ -1,10 +1,20 @@
 ---
-title: "FASTQ and quality control"
-subtitle: "30 min"
+title: "From FASTQ to assembly: QC, trimming, assembly and identification"
+subtitle: "90 min"
 ---
 
 
-**Goal:** Understand the structure of FASTQ files, assess sequencing quality, and clean paired-end reads before mapping.
+**Goal:** Starting from paired-end FASTQ files (R1 + R2), assess sequencing quality, clean the reads, assemble them into contigs, identify which organisms are present (and detect contamination), and evaluate the quality of the assembly.
+
+## Workflow overview
+
+| Stage | Tool | Question answered |
+|---|---|---|
+| 1. Quality control | FastQC + MultiQC | What is the quality of the raw reads? |
+| 2. Trimming | trimmomatic | Can adapters and low-quality bases be removed? |
+| 3. Assembly | SPAdes | Can the reads be assembled into contigs or scaffolds? |
+| 4. Identification | Kraken2 and/or BLAST | Which organisms are in the reads? Is there contamination? |
+| 5. Assembly quality | QUAST | What are the N50, total length and genome fraction? |
 
 Open a terminal in the course folder and activate the environment:
 
@@ -12,73 +22,42 @@ Open a terminal in the course folder and activate the environment:
 conda activate analyse
 ```
 
+Check that all the tools are available:
+
+```bash
+fastqc --version && multiqc --version && trimmomatic --version && seqkit version
+spades.py --version && kraken2 --version && blastn -version && quast.py --version
+```
+
+If a tool is missing, ask your instructor or install it in the environment, for example `conda install -c bioconda quast`.
+
 Each grey box contains a command. Copy it, paste it into the terminal, press Enter, and examine the output before continuing.
+
+---
+
+# Part 1 — Quality control
 
 ## Step 1 — Look at a read
 
 A FASTQ file stores four lines per read: the read identifier, nucleotide sequence, a `+` separator, and a quality string. The files are compressed (`.gz`), so we use `zcat`.
 
 ```bash
-zcat data/ncbi/SRR26396743_1.fastq.gz | head -4
+zcat data/SRR26396743_1.fastq.gz | head -4
 ```
 
 **Questions**
 
 1. Which line contains the nucleotide sequence? Which contains the quality scores?
 2. What does each character in the quality string represent?
-3. Convert the first five quality characters to Phred scores using `ASCII code − 33`.
 
-**Answers**
+:::{.callout-tip collapse='true'}
+## Answers
 
 1. Line 1 is the read identifier, line 2 is the nucleotide sequence, line 3 is `+`, and line 4 contains the quality string.
 2. Each quality character encodes the estimated confidence in the corresponding base.
-3. Calculate the Phred scores from the five characters displayed in your own output. Do not assume that every FASTQ file starts with the same quality characters.
+:::
 
-The Phred quality score is calculated as:
-
-\[
-Q=-10\log_{10}(P_{\mathrm{error}})
-\]
-
-For example, Q30 corresponds to an estimated error probability of 0.1% per base.
-
-## Step 2 — Count the reads
-
-Each FASTQ read occupies four lines. Therefore, the number of reads equals the number of lines divided by four.
-
-Count the reads in R1:
-
-```bash
-echo $(( $(zcat data/ncbi/SRR26396743_1.fastq.gz | wc -l) / 4 ))
-```
-
-Count the reads in R2:
-
-```bash
-echo $(( $(zcat data/ncbi/SRR26396743_2.fastq.gz | wc -l) / 4 ))
-```
-
-Alternatively, use `seqkit` to summarize both files:
-
-```bash
-seqkit stats data/ncbi/SRR26396743_*.fastq.gz
-```
-
-**Questions**
-
-1. How many reads are present in R1 and R2?
-2. Do both files contain the same number of reads?
-3. What do the R1 and R2 labels mean?
-
-**Answers**
-
-1. Record the read counts reported by your commands.
-2. For paired-end data, R1 and R2 should contain the same number of read pairs before trimming. If the counts differ, investigate the files before proceeding.
-3. R1 contains the first read of each pair, while R2 contains the second read, generally sequenced from the opposite end of the same DNA fragment.
-
-**Important:** This practice dataset is limited to a subset of the sequencing run. Its read count may therefore be much lower than the full public dataset.
-
-## Step 3 — Quality control of the raw reads (FastQC + MultiQC)
+## Step 2 — Quality control of the raw reads (FastQC + MultiQC)
 
 **FastQC** analyzes individual FASTQ files and produces HTML reports. **MultiQC** combines the results into a single report.
 
@@ -91,7 +70,7 @@ mkdir -p results/qc_raw
 Run FastQC:
 
 ```bash
-fastqc -t 2 -o results/qc_raw data/ncbi/SRR26396743_*.fastq.gz
+fastqc -t 2 -o results/qc_raw data/SRR26396743_*.fastq.gz
 ```
 
 Combine the reports:
@@ -118,87 +97,50 @@ Examine three sections:
 - **Per base sequence quality:** quality distribution along the reads.
 - **Adapter Content:** evidence of adapter sequences remaining in the reads.
 
-**Questions**
 
-1. What are the minimum and maximum read lengths?
-2. Does the quality decrease towards the 3′ end?
-3. Is R1 better or worse than R2?
-4. Does FastQC detect adapter content?
-5. Which observations suggest that trimming might be useful?
 
-**Answers**
+# Part 2 — Trimming
 
-The answers must come from your FastQC/MultiQC report.
-
-- Quality may decrease towards the 3′ end, but the extent depends on the dataset.
-- R1 and R2 can have different quality profiles.
-- Adapter contamination may be present if sequencing extends beyond a short DNA fragment into adapter sequence.
-
-A warning in FastQC does not automatically mean that a dataset is unusable. Interpret the report in the context of the sequencing experiment.
-
-## Step 4 — Trim reads with fastp
+## Step 3 — Trim reads with fastp
 
 `fastp` can detect adapters in paired-end data, trim low-quality tails, filter short reads, and generate quality-control reports.
 
 Create the output directories:
 
 ```bash
-mkdir -p results/trimmed results/fastp
+mkdir -p results/trimmed results/trimmomatic
 ```
 
-Run `fastp`:
+Run `trimmomatic`:
 
 ```bash
-fastp \
-  -i data/ncbi/SRR26396743_1.fastq.gz \
-  -I data/ncbi/SRR26396743_2.fastq.gz \
-  -o results/trimmed/SRR26396743_1.fastq.gz \
-  -O results/trimmed/SRR26396743_2.fastq.gz \
-  --detect_adapter_for_pe \
-  --cut_tail \
-  --cut_tail_mean_quality 20 \
-  --qualified_quality_phred 20 \
-  --length_required 50 \
-  -j results/fastp/SRR26396743.json \
-  -h results/fastp/SRR26396743.html \
-  -w 2
+trimmomatic PE \
+  -threads 2 \
+  -phred33 \
+  data/SRR26396743_1.fastq \
+  data/SRR26396743_2.fastq \
+  results/trimmed/SRR26396743_1_paired.fastq.gz \
+  results/trimmed/SRR26396743_1_unpaired.fastq.gz \
+  results/trimmed/SRR26396743_2_paired.fastq.gz \
+  results/trimmed/SRR26396743_2_unpaired.fastq.gz \
+  TRAILING:20 \
+  SLIDINGWINDOW:4:20 \
+  MINLEN:50
 ```
 
 **What do the options mean?**
 
-| Option | Purpose |
-|---|---|
-| `-i`, `-I` | Input files R1 and R2 |
-| `-o`, `-O` | Output files R1 and R2 |
-| `--detect_adapter_for_pe` | Detect adapters in paired-end data |
-| `--cut_tail` | Trim low-quality sequence at the read ends |
-| `--cut_tail_mean_quality 20` | Use a mean-quality threshold of Q20 for tail trimming |
-| `--qualified_quality_phred 20` | Define a base with Q20 or higher as a qualified base for filtering statistics |
-| `--length_required 50` | Discard reads shorter than 50 bases after trimming |
-| `-j`, `-h` | Write JSON and HTML reports |
-| `-w 2` | Use two processing threads |
+- `PE`: Processes paired-end reads.
+- `-threads 2`: Uses two CPU threads.
+- `-phred33`: Specifies the Phred+33 quality score encoding.
+- `TRAILING:20`: Removes low-quality bases from the ends of reads when their quality score is below 20.
+- `SLIDINGWINDOW:4:20`: Trims a read when the average quality score in a four-base sliding window falls below 20.
+- `MINLEN:50`: Discards reads shorter than 50 bases after trimming.
+- `paired`: Output files containing reads whose mates both pass filtering.
+- `unpaired`: Output files containing reads whose mates do not both pass filtering.
 
-Read the summary printed by `fastp`. Then open:
 
-```bash
-open results/fastp/SRR26396743.html
-```
-
-**Questions**
-
-1. How many read pairs were processed?
-2. How many reads passed filtering?
-3. How many bases were removed or trimmed?
-4. What proportion of reads passed filtering?
-5. What is the Q30 rate before and after filtering?
-
-**Answers**
-
-Use the actual `fastp` summary and HTML report. The amount of trimming and filtering depends on the input reads, so there is no fixed expected number of reads or bases removed.
-
-Remember that Q30 rate and read retention are different metrics: a dataset can have a high retention rate while still containing some low-quality bases.
-
-## Step 5 — Check the trimmed reads
+## Step 4 — Check the trimmed reads
 
 Run FastQC on the cleaned files:
 
@@ -224,32 +166,216 @@ open results/qc_trimmed/multiqc_report.html
 
 Compare the raw and trimmed reports.
 
-**Questions**
 
-1. How did the read lengths change?
-2. Did the quality profile improve towards the 3′ end?
-3. Did adapter content decrease?
-4. How many reads were retained after filtering?
-5. Are the cleaned reads suitable for the next step: mapping against the SARS-CoV-2 reference genome?
+# Part 3 — Assembly
 
-**Answers**
+## Step 5 — Assemble the reads with SPAdes
 
-Look for improvements in the quality profiles and reductions in adapter content. Reads may be shorter after trimming, and some may have been discarded.
+An assembler joins overlapping reads into longer sequences called **contigs**. When paired-end information links contigs together, they can be ordered into **scaffolds**. **SPAdes** builds a de Bruijn graph from the reads and uses the R1/R2 pairing to resolve ambiguities.
 
-Trimming does not guarantee that every FastQC warning will disappear. Decide whether the reads are suitable for mapping based on the overall quality, read lengths, adapter content, and number of retained reads.
+Run SPAdes on the trimmed reads:
 
-## Final question
+```bash
+spades.py \
+  -1 results/trimmed/SRR26396743_1.fastq.gz \
+  -2 results/trimmed/SRR26396743_2.fastq.gz \
+  --meta \
+  -t 2 \
+  -o results/spades
+```
 
-A base has a Phred quality score of Q20. What is the estimated probability that the base is incorrect?
+| Option | Purpose |
+|---|---|
+| `-1`, `-2` | Trimmed R1 and R2 files (paired reads) |
+| `--meta` | metagenomic mode|
+| `-t 2` | Use two threads |
+| `-o` | Output directory |
 
-**Answer**
 
-\[
-P_{\mathrm{error}}=10^{-Q/10}=10^{-2}=0.01
-\]
+When SPAdes finishes, look at the output folder:
 
-Therefore, Q20 corresponds to an estimated error probability of **1%**, or approximately one incorrect base per 100 bases at that quality level.
+```bash
+ls results/spades
+```
 
-At Q30, the estimated error probability is 0.1%, or approximately one incorrect base per 1,000 bases.
+The main files are:
+
+- `contigs.fasta`: assembled contigs
+- `scaffolds.fasta`: contigs linked into scaffolds using paired-end information
+- `spades.log`: log of the run
+
+
+List the five longest contigs:
+
+```bash
+seqkit sort -l -r results/spades/contigs.fasta | seqkit fx2tab -n -l | head -5
+```
+:::{.callout-tip collapse='true'}
+## result
+
+| Metric | Contigs | Scaffolds |
+|:--|--:|--:|
+| Number of sequences | 14 | 12 |
+| Total length (bp) | 30,249 | 30,449 |
+| Longest sequence (bp) | 12,657 | 21,827 |
+| N50 (bp) | 9,070 | 21,827 |
+| N50_num | 2 | 1 |
+| Number of `N` bases | 0 | 200 |
+
+:::
+---
+
+# Part 4 — Identification
+
+## Step 6 — Which organisms are in the reads? (Kraken2 or BLAST)
+
+Assembling is not enough: we must verify that the sequences really come from the expected organism, and detect possible contamination (human DNA, bacteria, other viruses). Two complementary approaches are available.
+
+### Option A — Kraken2 on the reads
+
+**Kraken2** assigns a taxonomic label to each read by comparing its k-mers to a reference database. It is fast and gives an overview of **all** the organisms in the sample.
+
+Create the output directory:
+
+```bash
+mkdir -p results/kraken2
+```
+
+Run Kraken2 on the trimmed read pairs. Replace `db/kraken2` with the path of the Kraken2 database provided for the course:
+
+```bash
+kraken2 \
+  --db db/kraken2 \
+  --paired \
+  --gzip-compressed \
+  --threads 2 \
+  --report results/kraken2/SRR26396743.report \
+  --output results/kraken2/SRR26396743.kraken \
+  results/trimmed/SRR26396743_1.fastq.gz \
+  results/trimmed/SRR26396743_2.fastq.gz
+```
+
+Look at the taxonomic summary:
+
+```bash
+head -20 results/kraken2/SRR26396743.report
+```
+
+The report has six columns: percentage of reads in the clade, number of reads in the clade, number of reads assigned directly to the taxon, rank code (`U` unclassified, `D` domain, `G` genus, `S` species, …), NCBI taxonomy ID, and scientific name.
+
+Show only the species-level lines, sorted by percentage:
+
+```bash
+awk '$4=="S"' results/kraken2/SRR26396743.report | sort -k1,1nr | head -10
+```
+
+**Note:** a complete Kraken2 database (e.g. Standard) is very large. For this practical, a small database (such as a viral or MiniKraken index) is sufficient. Indexes are listed at <https://benlangmead.github.io/aws-indexes/k2>.
+
+### Option B — BLAST on the contigs
+
+**BLAST** aligns a sequence against a reference database and reports the best matches. It is slower but more precise, and works well on a few long contigs.
+
+Extract the longest contig:
+
+```bash
+seqkit sort -l -r results/spades/contigs.fasta | seqkit head -n 1 > results/spades/longest_contig.fasta
+```
+
+Run `blastn` against the NCBI nucleotide database (remote search, internet connection required):
+
+```bash
+blastn \
+  -query results/spades/longest_contig.fasta \
+  -db nt \
+  -remote \
+  -max_target_seqs 5 \
+  -outfmt "6 qseqid sseqid stitle pident length evalue bitscore" \
+  -out results/spades/longest_contig.blast.tsv
+```
+
+```bash
+cat results/spades/longest_contig.blast.tsv
+```
+
+The columns are: query ID, subject ID, subject title, percent identity, alignment length, E-value, and bit score.
+
+You can also paste the sequence into the web interface: <https://blast.ncbi.nlm.nih.gov/Blast.cgi> (choose *Nucleotide BLAST*).
+
+
+---
+
+# Part 5 — Assembly quality
+
+## Step 7 — Evaluate the assembly with QUAST
+
+**QUAST** computes statistics describing an assembly. When a reference genome is provided, it also measures how much of the reference is covered by the assembly.
+
+Create the output directory and run QUAST. Replace the reference path with the SARS-CoV-2 reference genome (NC_045512.2) provided in the course folder:
+
+```bash
+mkdir -p results/quast
+```
+
+```bash
+quast.py \
+  results/spades/contigs.fasta \
+  results/spades/scaffolds.fasta \
+  -r data/reference/NC_045512.2.fasta \
+  --min-contig 200 \
+  -t 2 \
+  -o results/quast
+```
+
+| Option | Purpose |
+|---|---|
+| `-r` | Reference genome (needed for genome fraction, misassemblies, NGA50) |
+| `--min-contig 200` | Ignore contigs shorter than 200 bp |
+| `-t 2` | Use two threads |
+| `-o` | Output directory |
+
+Display the text report and open the HTML report:
+
+```bash
+cat results/quast/report.txt
+```
+
+```bash
+open results/quast/report.html
+```
+
+Key metrics:
+
+| Metric | Meaning |
+|---|---|
+| `# contigs` | Number of contigs (fewer is generally better) |
+| `Largest contig` | Length of the longest contig |
+| `Total length` | Sum of all contig lengths |
+| `N50` | Length such that contigs of at least this size contain 50% of the assembly |
+| `L50` | Number of contigs needed to reach 50% of the assembly |
+| `Genome fraction (%)` | Percentage of the reference covered by the assembly |
+| `# misassemblies` | Contigs that do not align consistently to the reference |
+| `# N's per 100 kbp` | Amount of undefined bases (gaps) |
+
+
+---
+
+## Step 8 — Summarize your results
+
+Complete this table with your own values:
+
+| Stage | Metric | Value |
+|---|---|---|
+| Raw reads | Read pairs | |
+| Raw reads | Adapter content detected? | |
+| Trimming | Read pairs after fastp | |
+| Trimming | Q30 rate after filtering | |
+| Assembly | Number of contigs | |
+| Assembly | Longest contig (bp) | |
+| Identification | Dominant species (Kraken2 / BLAST) | |
+| Identification | Contamination detected? | |
+| Assembly quality | N50 | |
+| Assembly quality | Genome fraction (%) | |
+
+
 
 **Next:** [Mapping](02_mapping.md).
