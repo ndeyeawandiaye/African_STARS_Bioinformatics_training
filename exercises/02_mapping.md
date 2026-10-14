@@ -50,13 +50,8 @@ mkdir -p results/bam
 Run BWA-MEM and sort the resulting alignments with Samtools:
 
 ```bash
-bwa mem -t 2 \
-  -R '@RG\tID:SRR26396743\tSM:SARS-CoV-2' \
-  data/NC_045512.2.fasta \
-  results/trimmed/SRR26396743_1.fastq.gz \
-  results/trimmed/SRR26396743_2.fastq.gz \
-  | samtools sort -@ 2 \
-      -o results/bam/SRR26396743.bam -
+
+
 ```
 
 Index the sorted BAM file:

@@ -16,7 +16,7 @@ They differ in how the genome is rebuilt:
 ```{mermaid}
 flowchart TD
   A["FASTQ (R1 + R2)"] --> B["1. Quality Control <br/> FastQC <br/>quality of the raw reads"]
-  B --> C["2. Trimming<br/>fastp<br/>remove adapters and low-quality bases"]
+  B --> C["2. Trimming<br/>trimmomatic<br/>remove adapters and low-quality bases"]
   C --> D["3. Assmbly<br/>SPAdes<br/>assemble the reads into contigs or scaffolds"]
   D --> E["4. Identification<br/>Kraken2 or BLAST <br/>which organisms are in the reads? contamination?"]
   E --> F["5. Assembly quality<br/>QUAST<br/> N50, length, genome fraction"]
@@ -27,7 +27,7 @@ flowchart TD
 | Step | Tool | What it does | Main output |
 |---|---|---|---|
 | 1 | **FastQC** | per-base quality, adapters, GC content, duplication | `html` |
-| 2 | **fastp** | trims adapters and low-quality ends, drops short reads | `fastq.gz` |
+| 2 | **trimmomatic** | trims adapters and low-quality ends, drops short reads | `fastq.gz` |
 | 3 | **FastQC + MultiQC** | same check after trimming; MultiQC merges all samples in one page | `html` |
 | 4 | **Kraken2 +BLAST** | assigns each read to a taxon (virus, human, bacteria…); needs a database | `txt` |
 | 5 | **SPAdes** | builds contigs ( `--meta` for metagenomes) | `fasta` |
@@ -39,13 +39,13 @@ Optional additions: **seqkit stats** (quick read counts), **Prokka / Bakta** (ge
 
 ::: {.callout-important}
 ## Steps you do NOT repeat
-If you already ran pipeline 1 on the same samples, **steps 1 to 3 are already done** (FastQC, fastp, MultiQC,
+If you already ran pipeline 1 on the same samples, **steps 1 to 3 are already done** (FastQC, trimmomatic, MultiQC,
 Kraken2). Reuse the trimmed reads in `results/trimmed/`. Only the steps in white below are new.
 :::
 
 ```{mermaid}
 flowchart TD
-  A["Trimmed reads (already done in pipeline 1:<br/>FastQC, fastp, MultiQC)"] --> B["4. Mapping<br/>bwa<br/>align the reads to the reference"]
+  A["Trimmed reads (already done in pipeline 1:<br/>FastQC, trimmomatic, MultiQC)"] --> B["4. Mapping<br/>bwa<br/>align the reads to the reference"]
   B --> C["5. Sorting<br/>samtools<br/>sorted BAM and mapping statistics"]
   C --> D["6. Variant calling<br/>freebayes - bcftools <br/>list the variants (VCF)"]
   D --> E["7. Generate consensus<br/>samtools + ivar <br/>build the genome, mask low depth with N"]
@@ -57,7 +57,7 @@ flowchart TD
 
 | Step | Tool | What it does | Main output |
 |---|---|---|---|
-| 1–4 | **FastQC, fastp, MultiQC, Kraken2** | **already done** (see pipeline 1) | `fastq.gz` |
+| 1–4 | **FastQC, trimmomatic, MultiQC, Kraken2** | **already done** (see pipeline 1) | `fastq.gz` |
 | 5 | **bwa** (or minimap2) | aligns each read to the reference | `SAM`  |
 | 6 | **samtools** | sorts, indexes and counts mapped reads | `bam`, `.bai` |
 | 7 | **samtools flagstat / depth / coverage** | how many reads cover each position | `txt` |

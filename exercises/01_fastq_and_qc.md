@@ -101,9 +101,9 @@ Examine three sections:
 
 # Part 2 — Trimming
 
-## Step 3 — Trim reads with fastp
+## Step 3 — Trim reads with trimmomatic
 
-`fastp` can detect adapters in paired-end data, trim low-quality tails, filter short reads, and generate quality-control reports.
+`trimmomatic` can detect adapters in paired-end data, trim low-quality tails, filter short reads.
 
 Create the output directories:
 
@@ -367,7 +367,7 @@ Complete this table with your own values:
 |---|---|---|
 | Raw reads | Read pairs | |
 | Raw reads | Adapter content detected? | |
-| Trimming | Read pairs after fastp | |
+| Trimming | Read pairs after trimmomatic | |
 | Trimming | Q30 rate after filtering | |
 | Assembly | Number of contigs | |
 | Assembly | Longest contig (bp) | |
