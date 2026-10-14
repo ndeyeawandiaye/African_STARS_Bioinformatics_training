@@ -15,68 +15,57 @@ They differ in how the genome is rebuilt:
 
 ```{mermaid}
 flowchart TD
-  A["FASTQ (R1 + R2)"] --> B["1. FastQC<br/>quality of the raw reads"]
-  B --> C["2. fastp<br/>remove adapters and low-quality bases"]
-  C --> D["3. FastQC + MultiQC<br/>check the trimmed reads, one report for all samples"]
-  D --> E["4. Kraken2<br/>which organisms are in the reads? contamination?"]
-  E --> F["5. SPAdes<br/>assemble the reads into contigs"]
-  F --> G["6. QUAST<br/>assembly quality: N50, length, genome fraction"]
-  G --> H["7. BLAST or minimap2 / RagTag<br/>identify, order and orient contigs on a reference"]
-  H --> I["8. Map the reads back (bwa + samtools)<br/>check coverage along the assembly"]
-  I --> J["Genome FASTA"]
+  A["FASTQ (R1 + R2)"] --> B["1. Quality Control <br/> FastQC <br/>quality of the raw reads"]
+  B --> C["2. Trimming<br/>fastp<br/>remove adapters and low-quality bases"]
+  C --> D["3. Assmbly<br/>SPAdes<br/>assemble the reads into contigs or scaffolds"]
+  D --> E["4. Identification<br/>Kraken2 or BLAST <br/>which organisms are in the reads? contamination?"]
+  E --> F["5. Assembly quality<br/>QUAST<br/> N50, length, genome fraction"]
   classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;
   class B,C,D,E qc;
 ```
 
 | Step | Tool | What it does | Main output |
 |---|---|---|---|
-| 1 | **FastQC** | per-base quality, adapters, GC content, duplication | `*_fastqc.html` |
-| 2 | **fastp** | trims adapters and low-quality ends, drops short reads | trimmed FASTQ, report |
-| 3 | **FastQC + MultiQC** | same check after trimming; MultiQC merges all samples in one page | `multiqc_report.html` |
-| 4 | **Kraken2** | assigns each read to a taxon (virus, human, bacteria…); needs a database | report per sample |
-| 5 | **SPAdes** | builds contigs (`--rnaviral` for RNA viruses, `--meta` for metagenomes) | `contigs.fasta` |
-| 6 | **QUAST** | assembly statistics, comparison to a reference if you give one | `report.html` |
-| 7 | **BLAST** (NCBI) or **minimap2 / RagTag** | which virus is it? order contigs on a reference | annotated / ordered contigs |
-| 8 | **bwa + samtools** | map reads back on the contigs; uneven coverage reveals misassemblies | BAM, depth |
+| 1 | **FastQC** | per-base quality, adapters, GC content, duplication | `html` |
+| 2 | **fastp** | trims adapters and low-quality ends, drops short reads | `fastq.gz` |
+| 3 | **FastQC + MultiQC** | same check after trimming; MultiQC merges all samples in one page | `html` |
+| 4 | **Kraken2 +BLAST** | assigns each read to a taxon (virus, human, bacteria…); needs a database | `txt` |
+| 5 | **SPAdes** | builds contigs ( `--meta` for metagenomes) | `fasta` |
+| 6 | **QUAST** | assembly statistics, comparison to a reference if you give one | `html` |
 
-Optional additions: **seqkit stats** (quick read counts), **Bandage** (look at the assembly graph),
-**Prokka / Bakta** (gene annotation for bacteria), **KrakenTools** (keep only the reads of the target virus before assembling).
+Optional additions: **seqkit stats** (quick read counts), **Prokka / Bakta** (gene annotation for bacteria), **KrakenTools** (keep only the reads of the target virus before assembling).
 
 ### Pipeline 2 — mapping to a reference (Illumina)
 
 ::: {.callout-important}
 ## Steps you do NOT repeat
-If you already ran pipeline 1 on the same samples, **steps 1 to 4 are already done** (FastQC, fastp, MultiQC,
+If you already ran pipeline 1 on the same samples, **steps 1 to 3 are already done** (FastQC, fastp, MultiQC,
 Kraken2). Reuse the trimmed reads in `results/trimmed/`. Only the steps in white below are new.
 :::
 
 ```{mermaid}
 flowchart TD
-  A["Trimmed reads (already done in pipeline 1:<br/>FastQC, fastp, MultiQC, Kraken2)"] --> B["5. bwa index + bwa mem<br/>align the reads to the reference"]
-  B --> C["6. samtools sort / index / flagstat<br/>sorted BAM and mapping statistics"]
-  C --> D["7. ivar trim (amplicon data only)<br/>remove the primer sequences"]
-  D --> E["8. samtools depth / coverage<br/>depth and breadth of coverage"]
-  E --> F["9. ivar consensus<br/>build the genome, mask low depth with N"]
-  F --> G["10. bcftools mpileup + call<br/>list the variants (VCF)"]
-  G --> H["11. Genome QC<br/>% N, mean depth, negative control"]
-  H --> I["12. Lineage (Pangolin, Nextclade),<br/>MAFFT alignment, IQ-TREE"]
+  A["Trimmed reads (already done in pipeline 1:<br/>FastQC, fastp, MultiQC)"] --> B["4. Mapping<br/>bwa<br/>align the reads to the reference"]
+  B --> C["5. Sorting<br/>samtools<br/>sorted BAM and mapping statistics"]
+  C --> D["6. Variant calling<br/>freebayes - bcftools <br/>list the variants (VCF)"]
+  D --> E["7. Generate consensus<br/>samtools + ivar <br/>build the genome, mask low depth with N"]
+  E --> F["8. Genome QC<br/>% N, mean depth, negative control"]
+  F --> G["9. Lineage (Pangolin, Nextclade),<br/>MAFFT alignment, IQ-TREE"]
   classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;
   class A done;
 ```
 
 | Step | Tool | What it does | Main output |
 |---|---|---|---|
-| 1–4 | FastQC, fastp, MultiQC, Kraken2 | **already done** (see pipeline 1) | trimmed reads |
-| 5 | **bwa** (or minimap2) | aligns each read to the reference | SAM (stream) |
-| 6 | **samtools** | sorts, indexes and counts mapped reads | `S01.bam`, `.bai`, flagstat |
-| 7 | **ivar trim** | removes primers (amplicon protocols such as ARTIC) | trimmed BAM |
-| 8 | **samtools depth / coverage** | how many reads cover each position | depth table |
-| 9 | **ivar consensus** | majority base at each position; `N` where depth is too low | consensus FASTA |
-| 10 | **bcftools** | calls SNPs and small indels | VCF |
-| 11 | awk / seqkit / summary table | decide if the genome is good enough | verdict |
-| 12 | Pangolin or Nextclade, MAFFT, IQ-TREE | lineage and phylogeny (modules 2–3) | tree |
+| 1–4 | **FastQC, fastp, MultiQC, Kraken2** | **already done** (see pipeline 1) | `fastq.gz` |
+| 5 | **bwa** (or minimap2) | aligns each read to the reference | `SAM`  |
+| 6 | **samtools** | sorts, indexes and counts mapped reads | `bam`, `.bai` |
+| 7 | **samtools flagstat / depth / coverage** | how many reads cover each position | `txt` |
+| 8 | **ivar consensus** | majority base at each position; `N` where depth is too low | `FASTA` |
+| 9 | **freebayes / bcftools** | calls SNPs and small indels | `VCF` |
+| 10 | **awk / seqkit / summary table** | decide if the genome is good enough | `csv`|
+| 11 | **Pangolin or Nextclade, MAFFT, IQ-TREE** | lineage and phylogeny (modules 2–3) | tree |
 
-In the dry lab we follow **pipeline 2**, because our toy virus has a reference genome.
 
 ## Sequencing technologies
 
@@ -131,9 +120,7 @@ Three questions to decide: *Do I have a good reference? Are my reads long? Is my
 ## Pitfalls to remember
 
 - Cross-contamination and barcode bleed between samples (always read the negative control).
-- Amplicon dropout when a mutation falls in a primer site.
 - Wrong reference or unsuitable lineage.
-- Primers not trimmed → false mutations towards the reference.
-- Nanopore indels in homopolymers.
+
 
 **Next:** [FASTQ and quality control](../exercises/01_fastq_and_qc.md).

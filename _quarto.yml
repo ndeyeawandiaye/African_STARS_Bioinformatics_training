@@ -7,7 +7,7 @@ project:
     - exercises/*.md
 
 website:
-  title: "From FASTQ to Outbreak 2026"
+  title: "African STRAS Fellowship - Bioinformatics Training"
   page-navigation: true
   bread-crumbs: true
   search:

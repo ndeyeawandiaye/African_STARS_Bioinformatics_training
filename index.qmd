@@ -1,10 +1,9 @@
 ---
-title: "From FASTQ to Outbreak"
+title: "From FASTQ to Outbreak Insights"
 subtitle: "Genomic surveillance training — African STARS Fellowship · CARE · Institut Pasteur"
 ---
 
-This site gathers the whole hands-on course, from raw sequencing reads to an outbreak brief.
-Everything runs on a **synthetic** toy virus (`TOYV1`, 10 kb): no real patient data, nothing sensitive.
+
 
 ## The learning path
 
@@ -22,8 +21,7 @@ Module 1 is the 3-hour bridge session (talk + dry lab); modules 2–3 are Day 4 
 
 1. Do the [setup](exercises/00_setup.md) once.
 2. Follow the pages in the order of the left menu; each exercise ends with a question to discuss.
-3. If a tool will not install, use the **plan B** files in `precomputed/` (each page tells you when).
-4. Fill in your answer sheet and, on Day 5, your one-page brief.
+3. Fill in your answer sheet and, on Day 5, your one-page brief.
 
 ::: {.callout-tip}
 ## Data at a glance

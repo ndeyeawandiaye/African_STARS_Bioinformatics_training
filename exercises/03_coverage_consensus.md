@@ -3,195 +3,368 @@ title: "Coverage and consensus"
 subtitle: "45 min"
 ---
 
-**Goal:** measure how well the genome is covered, find the holes, build the consensus genome and list the variants.
-We start with **S01**, then repeat on the other samples.
+**Goal:** Measure genome coverage, identify low-depth regions, build a consensus genome, and identify candidate variants.
 
-::: {.callout-note}
-If a tool does not work for you, use the ready-made files: replace `results/bam/` by `precomputed/bam/`,
-`results/coverage/` by `precomputed/coverage/` (see *Plan B* in the Setup page).
-:::
+We will analyze the SARS-CoV-2 sequencing run `SRR26396743` from NCBI, using the trimmed reads and BAM file generated in the previous sessions.
 
-## Step 1 — Depth at every position
+**Input files**
 
-*Depth* = number of reads covering a position. `-a` asks for **all** positions, including the ones with zero reads.
+- Reference genome: `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`
+- Aligned reads: `results/bam/SRR26396743.bam`
+- BAM index: `results/bam/SRR26396743.bam.bai`
+
+If a previous step failed, use the corresponding precomputed files provided with the course, if available.
+
+## Step 1 — Calculate depth at every position
+
+**Depth** is the number of reads covering a reference position. We use `-a` to include positions with zero coverage.
+
+Create the output directories:
 
 ```bash
 mkdir -p results/coverage results/consensus results/variants
 ```
-```bash
-samtools depth -a results/bam/S01.bam > results/coverage/S01.depth.tsv
-```
-```bash
-head -3 results/coverage/S01.depth.tsv
-```
 
-The three columns are: reference name, position, depth. A quick summary per reference:
+Calculate the depth:
 
 ```bash
-samtools coverage results/bam/S01.bam
+samtools depth -aa \
+  results/bam/SRR26396743.bam \
+  > results/coverage/SRR26396743.depth.tsv
 ```
 
-(`meandepth` = mean depth, `coverage` = % of positions with at least 1 read.)
-
-## Step 2 — Mean depth and breadth at ≥ 10x
-
-*Breadth* = the part of the genome with enough depth to call a base (here ≥ 10x, the threshold of this course).
+Inspect the first three lines:
 
 ```bash
-awk '{t+=$3; if($3>=10) n++} END{printf "mean depth %.1f   genome at >=10x: %.1f%%\n", t/NR, 100*n/NR}' results/coverage/S01.depth.tsv
+head -3 results/coverage/SRR26396743.depth.tsv
 ```
 
-## Step 3 — Find the low-depth regions
+The output contains three columns:
 
-This command merges consecutive positions with depth < 10 into intervals (BED format: reference, start, end):
+1. Reference sequence name
+2. Position
+3. Read depth
 
-```bash
-awk 'BEGIN{OFS="\t"} $3<10{ if(!on){start=$2; on=1} end=$2; next } on{print $1,start-1,end; on=0} END{if(on) print $1,start-1,end}' results/coverage/S01.depth.tsv
-```
-
-## Step 4 — Repeat for the other samples
+Obtain a summary with Samtools:
 
 ```bash
-for s in S02 S03 S04 S05; do
-  samtools depth -a results/bam/$s.bam > results/coverage/$s.depth.tsv
-  echo -n "$s  "
-  awk '{t+=$3; if($3>=10) n++} END{printf "mean depth %.1f   >=10x: %.1f%%\n", t/NR, 100*n/NR}' results/coverage/$s.depth.tsv
-done
-```
-
-Then the low-depth regions of S02:
-
-```bash
-awk 'BEGIN{OFS="\t"} $3<10{ if(!on){start=$2; on=1} end=$2; next } on{print $1,start-1,end; on=0} END{if(on) print $1,start-1,end}' results/coverage/S02.depth.tsv
+samtools coverage results/bam/SRR26396743.bam
 ```
 
 **Questions**
 
-1. For each sample: mean depth, % of the genome at ≥ 10x, positions of the low-depth regions.
-2. In IGV, look at S02 (`TOYV1:3000-5500`). Where is the gap and how long is it? Which laboratory step could explain it?
+1. What is the depth at the first three reference positions?
+2. Are there positions with zero coverage?
+3. What are the mean depth and percentage of the reference covered by at least one read?
 
-::: {.callout-tip collapse="true"}
-## Answers
-| Sample | Mean depth | Genome ≥ 10x | Low-depth regions |
-|---|---|---|---|
-| S01 | 99.8 | 99.4 % | only the two ends (first ~30 and last ~30 bases) |
-| S02 | 99.7 | **84.3 %** | ends **and one large hole around 3,500–5,000** |
-| S03 | 5.1 | **5.0 %** | almost the whole genome |
-| S04 | 74.7 | 99.4 % | only the two ends |
-| S05 (NTC) | 0.8 | 0.0 % | the whole genome |
+**Answer**
 
-S02: the hole spans about **1,500 bases (positions ≈ 3,500 to 5,000)**, where the depth falls to nearly 0, while it is ~100x
-elsewhere. This is **amplicon dropout**: in an amplicon protocol the genome is amplified in overlapping pieces; if a
-mutation falls in a primer site, or if some amplicons fail (degraded RNA, low input, pool imbalance), the pieces are
-missing from the library and no reads come from that region. The ends of every genome are always poorly covered (reads
-start/stop there).
-:::
+The depth varies along the genome. A position with zero coverage has no aligned reads supporting a base call. The summary values must be obtained from your own output.
+
+## Step 2 — Calculate mean depth and genome breadth at ≥10× 
+
+For this exercise, we will use **10× depth** as a practical threshold for assessing genome completeness.
+
+- **Mean depth:** average number of reads covering each reference position.
+- **Breadth at ≥10×:** percentage of reference positions covered by at least 10 reads.
+
+Run:
+
+```bash
+awk '{
+  total += $3
+  if ($3 >= 10) covered++
+  positions++
+}
+END {
+  if (positions > 0) {
+    printf "Mean depth: %.1f\n", total/positions
+    printf "Genome at >=10x: %.1f%%\n", 100*covered/positions
+  }
+}' results/coverage/SRR26396743.depth.tsv
+```
+
+**Questions**
+
+1. What is the mean depth?
+2. What percentage of the genome has at least 10× coverage?
+3. Does the mean depth alone tell you whether the genome is complete?
+
+**Answer**
+
+No. A high mean depth can coexist with poorly covered regions. Always examine both mean depth and breadth of coverage.
+
+## Step 3 — Identify low-depth regions
+
+We will identify consecutive positions with depth below 10× and report them as intervals.
+
+```bash
+awk 'BEGIN {OFS="\t"}
+{
+  if ($3 < 10) {
+    if (!on) {
+      start = $2
+      on = 1
+    }
+    end = $2
+  } else if (on) {
+    print $1, start-1, end
+    on = 0
+  }
+}
+END {
+  if (on) print $1, start-1, end
+}' results/coverage/SRR26396743.depth.tsv \
+  > results/coverage/SRR26396743.low_depth.bed
+```
+
+Inspect the intervals:
+
+```bash
+cat results/coverage/SRR26396743.low_depth.bed
+```
+
+Each line contains the reference name, interval start, and interval end in BED format.
+
+**Questions**
+
+1. How many low-depth intervals were identified?
+2. What are their coordinates?
+3. Which interval is the longest?
+4. Are the low-depth regions located near the ends of the genome or in internal regions?
+
+**Answer**
+
+Use the generated BED file to identify the actual intervals. Low coverage near the genome ends can result from limitations in library preparation, read trimming, or the sequencing design. Internal gaps can have several causes, including uneven coverage, amplicon dropout, or local alignment issues. Coverage alone does not establish the cause.
+
+## Step 4 — Visualize coverage in IGV
+
+Open IGV and load:
+
+- Reference: `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`
+- Alignment: `results/bam/SRR26396743.bam`
+
+Inspect one of the low-depth intervals identified in Step 3.
+
+**Questions**
+
+1. Is coverage uniform across the region?
+2. Is the region completely uncovered or only poorly covered?
+3. Do reads stop abruptly at a particular coordinate?
+4. What additional information would help determine why the region has low coverage?
+
+**Answer**
+
+IGV helps distinguish a complete coverage gap from a region with reduced depth. The shape of the coverage profile may suggest a technical issue, but further information about the library preparation and sequencing protocol is needed to establish the cause.
 
 ## Step 5 — Build the consensus genome with iVar
 
-`samtools mpileup` lists the bases of all reads at each position; `ivar consensus` keeps the majority base and writes `N` when
-there is not enough information. The options: `-m 10` minimum depth, `-q 20` minimum base quality, `-t 0.5` a base must be seen in at least
-50 % of the reads, `-n N` write N for the missing positions.
+A **consensus genome** represents the most strongly supported nucleotide at each reference position, subject to the calling thresholds.
+
+Here, we will use:
+
+- Minimum base quality: Q20
+- Minimum depth: 10 reads
+- Minimum proportion of reads supporting a base: 50%
+- Missing or insufficiently supported positions: `N`
+
+Run `samtools mpileup` and pass its output to `ivar consensus`:
 
 ```bash
-samtools mpileup -aa -A -d 0 -Q 0 results/bam/S01.bam | ivar consensus -p results/consensus/S01.raw -q 20 -t 0.5 -m 10 -n N
-```
-```bash
-sed '1s/.*/>S01/' results/consensus/S01.raw.fa > results/consensus/S01.fa
-```
-```bash
-head -c 300 results/consensus/S01.fa
-```
-
-For the other samples:
-
-```bash
-for s in S02 S03 S04 S05; do
-  samtools mpileup -aa -A -d 0 -Q 0 results/bam/$s.bam | ivar consensus -p results/consensus/$s.raw -q 20 -t 0.5 -m 10 -n N
-  sed "1s/.*/>$s/" results/consensus/$s.raw.fa > results/consensus/$s.fa
-done
+samtools mpileup \
+  -aa -A -d 0 -Q 0 \
+  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  results/bam/SRR26396743.bam \
+  | ivar consensus \
+      -p results/consensus/SRR26396743 \
+      -q 20 \
+      -t 0.5 \
+      -m 10 \
+      -n N
 ```
 
-## Step 6 — Count the N
+This produces a consensus FASTA file, normally named:
 
-Number of `N` in a consensus, and the length of the longest run of N:
+`results/consensus/SRR26396743.fa`
+
+Inspect its header and sequence:
 
 ```bash
-grep -v '>' results/consensus/S01.fa | tr -cd 'N' | wc -c
-```
-```bash
-grep -v '>' results/consensus/S01.fa | tr -d '\n' | grep -o 'N\+' | awk '{print length}' | sort -n | tail -1
+head -c 300 results/consensus/SRR26396743.fa
 ```
 
-For all samples:
+**Questions**
 
-```bash
-for s in S01 S02 S03 S04 S05; do
-  n=$(grep -v '>' results/consensus/$s.fa | tr -cd 'N' | wc -c)
-  run=$(grep -v '>' results/consensus/$s.fa | tr -d '\n' | grep -o 'N\+' | awk '{print length}' | sort -n | tail -1)
-  echo "$s  N=$n  longest run=${run:-0}"
-done
-```
+1. What is the length of the consensus?
+2. Why are some positions represented by `N`?
+3. What happens when a position has fewer than 10 reads?
+4. Does a consensus sequence necessarily represent a perfect reconstruction of the original viral genome?
 
-::: {.callout-tip collapse="true"}
-## Expected values
-| Sample | N bases | % N | Longest N run |
-|---|---|---|---|
-| S01 | 63 | 0.6 % | 33 |
-| S02 | 1,566 | 15.7 % | **1,526** |
-| S03 | 9,507 | 95.1 % | 2,248 |
-| S04 | 58 | 0.6 % | 30 |
-| S05 | 10,000 | 100 % | 10,000 |
-:::
+**Answer**
 
-## Step 7 — List the variants (VCF)
+A consensus can contain `N` where the evidence is insufficient under the selected thresholds. It is an estimate derived from the available reads, not a guarantee of a perfectly reconstructed genome.
+
+The consensus quality depends on depth, base quality, mapping quality, the consensus thresholds, and the quality of the underlying sequencing data.
+
+## Step 6 — Measure the number of ambiguous bases
+
+Count the number of `N` bases:
 
 ```bash
-bcftools mpileup -f data/reference/TOYV1.fasta -Q 20 -d 1000000 -a AD results/bam/S01.bam \
-  | bcftools call -mv --ploidy 1 -Oz -o results/variants/S01.vcf.gz
-```
-```bash
-bcftools index results/variants/S01.vcf.gz
-```
-```bash
-bcftools view -H results/variants/S01.vcf.gz | cut -f1,2,4,5,6
+grep -v '^>' results/consensus/SRR26396743.fa \
+  | tr -cd 'N' \
+  | wc -c
 ```
 
-Each line is a variant: position, reference base, alternative base, quality. How many variants does S01 have, and do they
-match what you saw in IGV (position 553)?
-
-::: {.callout-tip collapse="true"}
-## Answer
-S01 carries **10 variants** relative to the reference (8 shared with the outbreak lineage, such as 553 T>G, 3299 C>A,
-5753 C>A, and 2 private ones, 269 A>C and 7782 G>C). Position 553 is in the list, as seen in IGV. Sequencing errors
-(like position 1372) do **not** appear: they are too rare and have low quality.
-:::
-
-## Step 8 — Change the depth threshold
-
-Rebuild the S01 consensus requiring 30 reads instead of 10, and compare the N:
+Calculate the percentage of the consensus represented by `N`:
 
 ```bash
-samtools mpileup -aa -A -d 0 -Q 0 results/bam/S01.bam | ivar consensus -p results/consensus/S01.m30 -q 20 -t 0.5 -m 30 -n N
-grep -v '>' results/consensus/S01.m30.fa | tr -cd 'N' | wc -c
+awk '
+  /^>/ {next}
+  {
+    n += gsub(/N/, "&")
+    length_total += length($0)
+  }
+  END {
+    if (length_total > 0)
+      printf "N bases: %d\nN percentage: %.2f%%\n",
+             n, 100*n/length_total
+  }
+' results/consensus/SRR26396743.fa
 ```
 
-::: {.callout-tip collapse="true"}
-## Answer
-There are **more N** (about 180 instead of 63: the genome ≥ 30x is 98.2 % instead of 99.4 %). A higher threshold
-makes each base call **more reliable** but the genome **less complete**. There is no universal value: it is a compromise that
-each laboratory chooses and documents (10x is common for surveillance; 20–30x for sensitive analyses).
-:::
+Find the longest consecutive run of `N` bases:
+
+```bash
+grep -v '^>' results/consensus/SRR26396743.fa \
+  | tr -d '\n' \
+  | grep -o 'N\+' \
+  | awk '{print length}' \
+  | sort -n \
+  | tail -1
+```
+
+If no `N` bases are present, the last command produces no output; interpret that as zero.
+
+**Questions**
+
+1. How many `N` bases are present?
+2. What percentage of the consensus is ambiguous?
+3. What is the longest consecutive run of `N`?
+4. Where are the longest ambiguous regions located?
+
+**Answer**
+
+All values should be measured from the generated consensus. A large number of `N` bases or a long consecutive run indicates regions that cannot be confidently resolved with the chosen thresholds.
+
+## Step 7 — Identify candidate variants with bcftools
+
+We will compare the aligned reads with the reference to identify candidate single-nucleotide variants and short insertions or deletions.
+
+Generate a VCF file:
+
+```bash
+bcftools mpileup \
+  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  -Q 20 \
+  -d 1000000 \
+  -a AD \
+  results/bam/SRR26396743.bam \
+  | bcftools call \
+      -mv \
+      --ploidy 1 \
+      -Oz \
+      -o results/variants/SRR26396743.vcf.gz
+```
+
+Index the VCF:
+
+```bash
+bcftools index results/variants/SRR26396743.vcf.gz
+```
+
+Display the variant records:
+
+```bash
+bcftools view -H results/variants/SRR26396743.vcf.gz \
+  | cut -f1,2,4,5,6
+```
+
+The columns displayed are:
+
+1. Reference sequence
+2. Position
+3. Reference allele
+4. Alternative allele
+5. Variant quality (QUAL)
+
+Count the reported variant records:
+
+```bash
+bcftools view -H results/variants/SRR26396743.vcf.gz \
+  | wc -l
+```
+
+**Questions**
+
+1. How many variant records were reported?
+2. Which reference positions contain candidate variants?
+3. Do the variants have good read support?
+4. Can you confirm that a variant is real based only on its presence in the VCF?
+
+**Answer**
+
+The VCF contains candidate variants identified by the caller. Each candidate must be interpreted using its read depth, allele support, base quality, mapping quality, and alignment context.
+
+A variant record is not automatically proof of a biological mutation. Examine suspicious calls in IGV and apply suitable quality filters before downstream analyses.
+
+## Step 8 — Change the consensus depth threshold
+
+A higher minimum depth can make the consensus more conservative, but it can also increase the number of ambiguous bases.
+
+Build a second consensus requiring at least 30 reads per position:
+
+```bash
+samtools mpileup \
+  -aa -A -d 0 -Q 0 \
+  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  results/bam/SRR26396743.bam \
+  | ivar consensus \
+      -p results/consensus/SRR26396743.m30 \
+      -q 20 \
+      -t 0.5 \
+      -m 30 \
+      -n N
+```
+
+Count the ambiguous bases in the second consensus:
+
+```bash
+grep -v '^>' results/consensus/SRR26396743.m30.fa \
+  | tr -cd 'N' \
+  | wc -c
+```
+
+Compare the results with the consensus generated at 10×.
+
+**Questions**
+
+1. Did the number of `N` bases change?
+2. Did the consensus become more or less complete?
+3. Why might a laboratory choose a higher depth threshold?
+
+**Answer**
+
+A higher threshold may increase the number of ambiguous bases because positions supported by 10–29 reads no longer meet the minimum-depth requirement. This illustrates the trade-off between the completeness of the consensus and the strictness of the calling criteria.
+
+A suitable threshold depends on the sequencing protocol, the intended use, and the laboratory's validated quality criteria.
 
 ## Final question
 
-S02 has a mean depth of about 100x. Why is its consensus still incomplete?
+The genome has a mean depth of 100×, but 15% of its positions have zero coverage. Can you consider the consensus complete?
 
-::: {.callout-tip collapse="true"}
-## Answer
-A **mean** hides the distribution: S02 has ~118x on 84 % of the genome and ~0x on the other 16 %, which gives a mean near 100x.
-Bases without reads cannot be called, so they become N. Mean depth is not enough: always look at the **breadth** (% ≥ 10x)
-and the **longest run of N**.
-:::
+**Answer**
+
+No. Mean depth is an average and can conceal large coverage gaps. Assess mean depth, breadth at relevant thresholds, low-depth intervals, and the number and distribution of `N` bases before deciding whether a consensus is suitable for its intended purpose.
 
 **Next:** [Is this genome good enough?](04_genome_qc_verdict.md)

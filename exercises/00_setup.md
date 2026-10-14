@@ -11,78 +11,96 @@ the course material on your computer, and a viewer (IGV) to look at alignments.
 Install **WSL2** (Ubuntu) first, then follow the *Linux* instructions inside the Ubuntu terminal.
 :::
 
-## 1. Install conda (Miniforge)
+## 1. Install Conda (Miniconda)
 
-Conda is a program that installs bioinformatics tools **and** keeps them in separate "environments", so that one
-project does not break another. We use **Miniforge**, a free conda installer that already points to the right
-software channels (conda-forge). It also includes `mamba`, a faster installer.
+Conda is a program that installs bioinformatics tools and keeps them in separate **environments**, so that one project does not break another. We use **Miniconda**, a lightweight, free Conda installer. We will add the `conda-forge` and `bioconda` channels to install the bioinformatics tools required for this course.
 
 ### Linux
 
+Download and install the latest Miniconda installer for your system:
+
 ```bash
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash Miniforge3-$(uname)-$(uname -m).sh
+mkdir -p ~/miniconda-installer
+cd ~/miniconda-installer
+
+curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh
+bash Miniconda3-latest-Linux-$(uname -m).sh
 ```
 
-Answer `yes` to the licence and to "initialize conda". Then **close and reopen the terminal**.
+Follow the instructions. Accept the licence and answer **yes** when asked whether to initialize Conda. Then close and reopen the terminal.
 
 ### Mac (Intel or Apple chip)
 
-Same command (it detects your processor automatically):
+Download and install Miniconda:
 
 ```bash
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash Miniforge3-$(uname)-$(uname -m).sh
+mkdir -p ~/miniconda-installer
+cd ~/miniconda-installer
+
+curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-$(uname -m).sh
+bash Miniconda3-latest-MacOSX-$(uname -m).sh
 ```
 
-If you use Homebrew you can instead run `brew install --cask miniforge` and then `conda init "$(basename "${SHELL}")"`.
-Close and reopen the terminal.
+Follow the instructions. Accept the licence and initialize Conda when prompted. Then close and reopen the terminal.
 
-### Check
+### Configure Conda channels
+
+Run these commands once:
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+```
+
+### Check the installation
 
 ```bash
 conda --version
-mamba --version
+conda info
 ```
 
-You should see a version number for both. The prompt now starts with `(base)`.
+You should see the Conda version and installation details. The terminal prompt may start with `(base)`.
 
-## 2. Get the course material
+**Note:** Miniconda does not include `mamba` by default. You can use `conda` instead, or install `mamba` in the base environment:
 
 ```bash
-git clone https://github.com/YOUR-ORG/fastq-to-genome.git
-cd fastq-to-genome
-ls
+conda install -n base -c conda-forge mamba
 ```
 
-(No `git`? On the GitHub page click **Code → Download ZIP**, unzip, and open a terminal in that folder.)
 
-## 3. Create the environment `analyse`
+## 2. Create the Conda environment `analyse`
+
+If you installed `mamba`, run:
 
 ```bash
 mamba env create -f environment.yml
 ```
 
-This downloads about 20 tools: it can take 10–20 minutes. Then activate it:
+Otherwise, use:
+
+```bash
+conda env create -f environment.yml
+```
+
+The installation may take 10–20 minutes or longer, depending on your internet connection and computer.
+
+Activate the environment:
 
 ```bash
 conda activate analyse
 ```
 
-The prompt now starts with `(analyse)`. **You must run this line in every new terminal.**
+The prompt should now start with `(analyse)`. **Run this activation command in every new terminal before using the course tools.**
 
-::: {.callout-warning}
-## Mac with an Apple chip (M1, M2, M3…)
-A few bioinformatics packages do not exist yet for Apple chips. If the installation stops with *"PackagesNotFoundError"*, use this instead:
+# Warning: Mac with an Apple chip (M1, M2, M3, M4…)
 
-```bash
-CONDA_SUBDIR=osx-64 mamba env create -f environment.yml
-conda activate analyse
-conda config --env --set subdir osx-64
-```
-:::
+Most common bioinformatics tools are available for Apple Silicon, but some packages may not be. If environment creation fails with `PackagesNotFoundError`, first check whether all required packages support your Mac's architecture.
 
-## 4. Check the tools, one by one
+As a fallback, you can try creating an Intel-compatible environment using Rosetta 2, provided it is installed and supported by your setup. Do not force `osx-64` for the entire environment unless necessary, because this can require additional compatibility configuration and may run more slowly.
+
+## 3. Check the tools, one by one
 
 Do **not** run a script. Type each command and look at the answer: a version number means the tool is installed.
 If you see `command not found`, the environment is not active (`conda activate analyse`) or the tool failed to install —
@@ -134,31 +152,22 @@ iqtree2 --version | head -1
 fasterq-dump --version
 ```
 
-## 5. Install IGV
+## 4. Install IGV
 
 **IGV** (Integrative Genomics Viewer) shows the reads stacked along the genome, like a zoomable photograph of an alignment.
 Download the desktop version from <https://igv.org/doc/desktop/> (choose Linux or Mac), or use the browser version at <https://igv.org/app>.
 
-## 6. Look at the samples
 
-```bash
-cat data/samples.tsv
-```
+## 5. Real data from NCBI (SARS-CoV-2, Rift Valley fever…)
 
-There are five samples, **S01 to S05**. Four are patient samples; **S05 is a negative control (NTC, "no template control")**:
-water taken through the whole protocol. A clean NTC contains (almost) no viral reads.
-
-## 7. Real data from NCBI (SARS-CoV-2, Rift Valley fever…)
-
-The practice data of this course are small and synthetic, so that every step runs in seconds. The commands you learn
+The practice data of this course are small, so that every step runs in seconds. The commands you learn
 work exactly the same on **real public data**. Here is how to get some from NCBI.
 
 ### a) Find a sequencing run
 
 1. Open the **SRA** database: <https://www.ncbi.nlm.nih.gov/sra>
-2. Search, for example:
+2. Search your pathogene, for example:
 
-   - SARS-CoV-2: `"Severe acute respiratory syndrome coronavirus 2"[Organism] AND "AMPLICON"[Strategy] AND "ILLUMINA"[Platform] AND "PAIRED"[Layout]`
    - Rift Valley fever: `"Rift Valley fever virus"[Organism] AND "ILLUMINA"[Platform] AND "PAIRED"[Layout]`
 
 3. Pick a result that is **Illumina, paired-end**, with a small size (a few hundred MB at most). Note its **Run accession**:
@@ -168,17 +177,17 @@ work exactly the same on **real public data**. Here is how to get some from NCBI
 ### b) Download the reads
 
 ```bash
-mkdir -p data/ncbi
-cd data/ncbi
+mkdir -p data
+cd data
 ```
 ```bash
-prefetch SRRXXXXXXX
+prefetch SRR26396743
 ```
 ```bash
-fasterq-dump --split-files --threads 2 -X 200000 SRRXXXXXXX
+fasterq-dump --split-files --threads 2 -X 200000 SRR26396743
 ```
 ```bash
-gzip SRRXXXXXXX_1.fastq SRRXXXXXXX_2.fastq
+gzip SRR26396743_1.fastq SRR26396743_2.fastq
 cd ../..
 ```
 
@@ -209,32 +218,6 @@ efetch -db nuccore -id NC_014397,NC_014396,NC_014395 -format fasta > data/ncbi/R
 ```bash
 seqkit stats data/ncbi/*.fasta
 ```
-
-::: {.callout-note}
-## What changes with real data
-- **Amplicon data (ARTIC):** primer sequences must be removed after mapping (`ivar trim` with the primer BED file).
-- **Segmented viruses:** each segment is a separate reference sequence; coverage and consensus are produced for each one.
-- **Bigger files:** the same commands just take longer.
-:::
-
-## Plan B: what if a tool will not install?
-
-It happens (old laptop, Apple chip, no internet at the venue). You will **not** lose the session. The folder
-`precomputed/` contains the **results already computed by the instructor** for the five practice samples:
-
-| In `precomputed/` | What it is | Replaces the step |
-|---|---|---|
-| `bam/S01.bam` + `.bai` | where every read aligns on the genome | mapping |
-| `coverage/S01.depth.tsv` | depth at each position | coverage |
-| `consensus/S01.fa` | the final genome | consensus |
-| `qc_summary.tsv` | one-line verdict per sample | summary |
-
-If, say, `bwa` does not work for you, skip the mapping command and **use `precomputed/bam/S01.bam` instead of
-`results/bam/S01.bam`** in the next commands. To *see* a BAM:
-
-1. Open IGV and choose the genome: *Genomes → Load Genome from File…* → `data/reference/TOYV1.fasta`.
-2. *File → Load from File…* → `precomputed/bam/S01.bam` (the `.bai` file must be in the same folder).
-3. Type `TOYV1:553` in the search box and press Enter: you see the reads stacked at position 553.
 
 ## Troubleshooting
 

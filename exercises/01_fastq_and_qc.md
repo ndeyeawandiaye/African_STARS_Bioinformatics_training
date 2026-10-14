@@ -3,152 +3,253 @@ title: "FASTQ and quality control"
 subtitle: "30 min"
 ---
 
-**Goal:** understand what is inside a FASTQ file, check the quality of the reads, and clean them.
-Open a terminal in the course folder and activate the environment (`conda activate analyse`).
-Each grey box is a command: copy it, paste it, press Enter, and read the answer **before** going on.
+
+**Goal:** Understand the structure of FASTQ files, assess sequencing quality, and clean paired-end reads before mapping.
+
+Open a terminal in the course folder and activate the environment:
+
+```bash
+conda activate analyse
+```
+
+Each grey box contains a command. Copy it, paste it into the terminal, press Enter, and examine the output before continuing.
 
 ## Step 1 — Look at a read
 
-A FASTQ file stores four lines per read: name, sequence, `+`, quality. The file is compressed (`.gz`), so we use `zcat`.
+A FASTQ file stores four lines per read: the read identifier, nucleotide sequence, a `+` separator, and a quality string. The files are compressed (`.gz`), so we use `zcat`.
 
 ```bash
-zcat data/fastq/S01_R1.fastq.gz | head -4
+zcat data/ncbi/SRR26396743_1.fastq.gz | head -4
 ```
 
 **Questions**
 
-1. Which line is the sequence? Which is the quality string?
-2. Convert the first 5 quality characters to Phred scores (ASCII code − 33).
+1. Which line contains the nucleotide sequence? Which contains the quality scores?
+2. What does each character in the quality string represent?
+3. Convert the first five quality characters to Phred scores using `ASCII code − 33`.
 
-::: {.callout-tip collapse="true"}
-## Answers
-1. Line 1 = read name (`@SIM01:7:...`, with the sample barcode at the end), line 2 = sequence (150 bases),
-   line 3 = `+`, line 4 = quality (150 characters: one per base).
-2. The first read of S01 starts with the quality characters `C G D E G`. Their ASCII codes are 67, 71, 68, 69, 71, so
-   the Phred scores are **34, 38, 35, 36, 38** (all above Q30 = at most 1 error in 1,000 bases).
-:::
+**Answers**
+
+1. Line 1 is the read identifier, line 2 is the nucleotide sequence, line 3 is `+`, and line 4 contains the quality string.
+2. Each quality character encodes the estimated confidence in the corresponding base.
+3. Calculate the Phred scores from the five characters displayed in your own output. Do not assume that every FASTQ file starts with the same quality characters.
+
+The Phred quality score is calculated as:
+
+\[
+Q=-10\log_{10}(P_{\mathrm{error}})
+\]
+
+For example, Q30 corresponds to an estimated error probability of 0.1% per base.
 
 ## Step 2 — Count the reads
 
-Four lines per read, so the number of reads is the number of lines divided by 4.
+Each FASTQ read occupies four lines. Therefore, the number of reads equals the number of lines divided by four.
+
+Count the reads in R1:
 
 ```bash
-echo $(( $(zcat data/fastq/S01_R1.fastq.gz | wc -l) / 4 ))
+echo $(( $(zcat data/ncbi/SRR26396743_1.fastq.gz | wc -l) / 4 ))
 ```
 
-Now all samples (R1 files):
+Count the reads in R2:
 
 ```bash
-for f in data/fastq/*_R1.fastq.gz; do echo -n "$f  "; echo $(( $(zcat $f | wc -l) / 4 )); done
+echo $(( $(zcat data/ncbi/SRR26396743_2.fastq.gz | wc -l) / 4 ))
 ```
 
-Or with `seqkit`, which also gives lengths and mean quality:
+Alternatively, use `seqkit` to summarize both files:
 
 ```bash
-seqkit stats data/fastq/*.fastq.gz
+seqkit stats data/ncbi/SRR26396743_*.fastq.gz
 ```
 
-::: {.callout-tip collapse="true"}
-## Answers
-S01: **3,333** read pairs (so 3,333 reads in R1 and 3,333 in R2). The same for S02 and S04. **S03 has only 170 pairs** and
-**S05 (negative control) 225 pairs**. Always check that R1 and R2 have the same number of reads.
-:::
+**Questions**
+
+1. How many reads are present in R1 and R2?
+2. Do both files contain the same number of reads?
+3. What do the R1 and R2 labels mean?
+
+**Answers**
+
+1. Record the read counts reported by your commands.
+2. For paired-end data, R1 and R2 should contain the same number of read pairs before trimming. If the counts differ, investigate the files before proceeding.
+3. R1 contains the first read of each pair, while R2 contains the second read, generally sequenced from the opposite end of the same DNA fragment.
+
+**Important:** This practice dataset is limited to a subset of the sequencing run. Its read count may therefore be much lower than the full public dataset.
 
 ## Step 3 — Quality control of the raw reads (FastQC + MultiQC)
 
-**FastQC** analyses one FASTQ file and produces an HTML report. **MultiQC** collects all the reports into a single page.
+**FastQC** analyzes individual FASTQ files and produces HTML reports. **MultiQC** combines the results into a single report.
+
+Create an output directory:
 
 ```bash
 mkdir -p results/qc_raw
 ```
+
+Run FastQC:
+
 ```bash
-fastqc -t 2 -o results/qc_raw data/fastq/*.fastq.gz
+fastqc -t 2 -o results/qc_raw data/ncbi/SRR26396743_*.fastq.gz
 ```
+
+Combine the reports:
+
 ```bash
 multiqc results/qc_raw -o results/qc_raw
 ```
 
-Open `results/qc_raw/multiqc_report.html` in your browser (double-click it, or `open results/qc_raw/multiqc_report.html` on a Mac,
-`xdg-open …` on Linux). Look at three sections: **General Statistics**, **Per base sequence quality**, **Adapter content**.
+Open the report in your browser:
+
+```bash
+open results/qc_raw/multiqc_report.html
+```
+
+On Linux, you can use:
+
+```bash
+xdg-open results/qc_raw/multiqc_report.html
+```
+
+Examine three sections:
+
+- **General Statistics:** number of reads, sequence length, and overall quality indicators.
+- **Per base sequence quality:** quality distribution along the reads.
+- **Adapter Content:** evidence of adapter sequences remaining in the reads.
 
 **Questions**
 
-1. Which samples have fewer reads than the others?
-2. Compare R1 and R2: where does the quality drop?
-3. Is there adapter content?
+1. What are the minimum and maximum read lengths?
+2. Does the quality decrease towards the 3′ end?
+3. Is R1 better or worse than R2?
+4. Does FastQC detect adapter content?
+5. Which observations suggest that trimming might be useful?
 
-::: {.callout-tip collapse="true"}
-## Answers
-1. **S03** (340 reads) and **S05** (450 reads) are far below the 6,666 reads of S01, S02 and S04.
-2. In every sample, quality is highest at the start of the read and decreases towards the **3′ end**. R2 drops faster than R1
-   (about 92 % of R1 bases are ≥ Q30, against about 73 % for R2). This is typical of Illumina paired-end data.
-3. Yes: the **Adapter content** plot shows adapter sequence at the 3′ end of the reads. It comes from short fragments:
-   when the DNA fragment is shorter than the read, the sequencer reads through into the adapter. It must be removed.
-:::
+**Answers**
 
-## Step 4 — Trim with fastp
+The answers must come from your FastQC/MultiQC report.
 
-fastp removes the adapters, cuts the low-quality tails and drops reads that become too short. First S01 alone:
+- Quality may decrease towards the 3′ end, but the extent depends on the dataset.
+- R1 and R2 can have different quality profiles.
+- Adapter contamination may be present if sequencing extends beyond a short DNA fragment into adapter sequence.
+
+A warning in FastQC does not automatically mean that a dataset is unusable. Interpret the report in the context of the sequencing experiment.
+
+## Step 4 — Trim reads with fastp
+
+`fastp` can detect adapters in paired-end data, trim low-quality tails, filter short reads, and generate quality-control reports.
+
+Create the output directories:
 
 ```bash
 mkdir -p results/trimmed results/fastp
 ```
+
+Run `fastp`:
+
 ```bash
-fastp -i data/fastq/S01_R1.fastq.gz -I data/fastq/S01_R2.fastq.gz \
-      -o results/trimmed/S01_R1.fastq.gz -O results/trimmed/S01_R2.fastq.gz \
-      --detect_adapter_for_pe --cut_tail --cut_tail_mean_quality 20 \
-      --qualified_quality_phred 20 --length_required 50 \
-      -j results/fastp/S01.json -h results/fastp/S01.html -w 2
+fastp \
+  -i data/ncbi/SRR26396743_1.fastq.gz \
+  -I data/ncbi/SRR26396743_2.fastq.gz \
+  -o results/trimmed/SRR26396743_1.fastq.gz \
+  -O results/trimmed/SRR26396743_2.fastq.gz \
+  --detect_adapter_for_pe \
+  --cut_tail \
+  --cut_tail_mean_quality 20 \
+  --qualified_quality_phred 20 \
+  --length_required 50 \
+  -j results/fastp/SRR26396743.json \
+  -h results/fastp/SRR26396743.html \
+  -w 2
 ```
 
-Read the summary printed by fastp (reads before / after filtering, adapter trimmed reads, Q30 rate). Then do the same
-for the four other samples (this loop repeats the same command):
+**What do the options mean?**
+
+| Option | Purpose |
+|---|---|
+| `-i`, `-I` | Input files R1 and R2 |
+| `-o`, `-O` | Output files R1 and R2 |
+| `--detect_adapter_for_pe` | Detect adapters in paired-end data |
+| `--cut_tail` | Trim low-quality sequence at the read ends |
+| `--cut_tail_mean_quality 20` | Use a mean-quality threshold of Q20 for tail trimming |
+| `--qualified_quality_phred 20` | Define a base with Q20 or higher as a qualified base for filtering statistics |
+| `--length_required 50` | Discard reads shorter than 50 bases after trimming |
+| `-j`, `-h` | Write JSON and HTML reports |
+| `-w 2` | Use two processing threads |
+
+Read the summary printed by `fastp`. Then open:
 
 ```bash
-for s in S02 S03 S04 S05; do
-  fastp -i data/fastq/${s}_R1.fastq.gz -I data/fastq/${s}_R2.fastq.gz \
-        -o results/trimmed/${s}_R1.fastq.gz -O results/trimmed/${s}_R2.fastq.gz \
-        --detect_adapter_for_pe --cut_tail --cut_tail_mean_quality 20 \
-        --qualified_quality_phred 20 --length_required 50 \
-        -j results/fastp/${s}.json -h results/fastp/${s}.html -w 2
-done
-```
-
-What the options mean: `--detect_adapter_for_pe` finds the adapters automatically; `--cut_tail` trims the 3′ end while the
-quality is low; `--length_required 50` drops reads shorter than 50 bases.
-
-## Step 5 — Check the trimmed reads
-
-```bash
-mkdir -p results/qc_trimmed
-```
-```bash
-fastqc -t 2 -o results/qc_trimmed results/trimmed/*.fastq.gz
-```
-```bash
-multiqc results/qc_trimmed -o results/qc_trimmed
+open results/fastp/SRR26396743.html
 ```
 
 **Questions**
 
-1. How many reads and bases were removed?
-2. Did the R2 tail improve? Is the adapter content gone?
+1. How many read pairs were processed?
+2. How many reads passed filtering?
+3. How many bases were removed or trimmed?
+4. What proportion of reads passed filtering?
+5. What is the Q30 rate before and after filtering?
 
-::: {.callout-tip collapse="true"}
-## Answers
-1. Only a small part of the data: usually **a few percent of the bases** and a small number of reads (the shortest fragments).
-   The exact figures are in the fastp output (*reads passed filter*) and in `results/fastp/S01.html`.
-2. Yes. The quality curve of R2 stays high for longer (the poor tail was cut) and the **adapter content curve is flat**.
-   Reads are now slightly shorter, on average, than 150 bases, which is normal.
-:::
+**Answers**
+
+Use the actual `fastp` summary and HTML report. The amount of trimming and filtering depends on the input reads, so there is no fixed expected number of reads or bases removed.
+
+Remember that Q30 rate and read retention are different metrics: a dataset can have a high retention rate while still containing some low-quality bases.
+
+## Step 5 — Check the trimmed reads
+
+Run FastQC on the cleaned files:
+
+```bash
+mkdir -p results/qc_trimmed
+```
+
+```bash
+fastqc -t 2 -o results/qc_trimmed results/trimmed/*.fastq.gz
+```
+
+Combine the reports:
+
+```bash
+multiqc results/qc_trimmed -o results/qc_trimmed
+```
+
+Open the report:
+
+```bash
+open results/qc_trimmed/multiqc_report.html
+```
+
+Compare the raw and trimmed reports.
+
+**Questions**
+
+1. How did the read lengths change?
+2. Did the quality profile improve towards the 3′ end?
+3. Did adapter content decrease?
+4. How many reads were retained after filtering?
+5. Are the cleaned reads suitable for the next step: mapping against the SARS-CoV-2 reference genome?
+
+**Answers**
+
+Look for improvements in the quality profiles and reductions in adapter content. Reads may be shorter after trimming, and some may have been discarded.
+
+Trimming does not guarantee that every FastQC warning will disappear. Decide whether the reads are suitable for mapping based on the overall quality, read lengths, adapter content, and number of retained reads.
 
 ## Final question
 
-A base has quality **Q20**. What is the probability that it is wrong?
+A base has a Phred quality score of Q20. What is the estimated probability that the base is incorrect?
 
-::: {.callout-tip collapse="true"}
-## Answer
-P = 10^(−Q/10) = 10^(−2) = **1 %**: one base in 100 is expected to be wrong. At Q30 it is 1 in 1,000.
-:::
+**Answer**
+
+\[
+P_{\mathrm{error}}=10^{-Q/10}=10^{-2}=0.01
+\]
+
+Therefore, Q20 corresponds to an estimated error probability of **1%**, or approximately one incorrect base per 100 bases at that quality level.
+
+At Q30, the estimated error probability is 0.1%, or approximately one incorrect base per 1,000 bases.
 
 **Next:** [Mapping](02_mapping.md).

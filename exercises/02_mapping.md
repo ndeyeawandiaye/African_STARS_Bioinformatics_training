@@ -3,148 +3,225 @@ title: "Mapping"
 subtitle: "30 min"
 ---
 
-**Goal:** align the trimmed reads to the reference genome, and read the mapping statistics.
+**Goal:** Align trimmed SARS-CoV-2 reads to the reference genome, evaluate mapping statistics, and inspect aligned reads in a genome browser.
 
-## Step 1 — Index the reference
-
-The aligner and samtools need an index of the reference. You do it once.
+Activate the course environment:
 
 ```bash
-bwa index data/reference/TOYV1.fasta
+conda activate analyse
 ```
+
+In this exercise, we use the paired-end reads from NCBI run `SRR26396743`, cleaned in the previous session, and the SARS-CoV-2 reference genome NC_045512.2.
+
+## Step 1 — Index the reference genome
+
+BWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.
+
 ```bash
-samtools faidx data/reference/TOYV1.fasta
+bwa index data/ncbi/SARS-CoV-2_NC_045512.2.fasta
 ```
 
-## Step 2 — Map the reads of S01
+```bash
+samtools faidx data/ncbi/SARS-CoV-2_NC_045512.2.fasta
+```
 
-`bwa mem` aligns the read pairs and writes SAM text to the screen; the pipe `|` sends it to `samtools sort`, which
-orders the reads by position and saves a compact BAM file.
+**Questions**
+
+1. What files are created by `bwa index`?
+2. What is the purpose of the `.fai` file?
+3. Why do we index the reference before mapping?
+
+**Answers**
+
+- `bwa index` creates auxiliary index files that allow BWA to search the reference efficiently.
+- `samtools faidx` creates a FASTA index (`.fai`) containing sequence names, lengths, and file offsets.
+- Indexing avoids rebuilding the reference search structures every time we map reads.
+
+## Step 2 — Map the trimmed reads
+
+Create an output directory:
 
 ```bash
 mkdir -p results/bam
 ```
-```bash
-bwa mem -t 2 -R "@RG\tID:S01\tSM:S01" data/reference/TOYV1.fasta \
-    results/trimmed/S01_R1.fastq.gz results/trimmed/S01_R2.fastq.gz \
-  | samtools sort -@ 2 -o results/bam/S01.bam -
-```
-```bash
-samtools index results/bam/S01.bam
-```
-```bash
-samtools flagstat results/bam/S01.bam | tee results/bam/S01.flagstat.txt
-```
 
-(`-R` adds a read-group label with the sample name; `tee` prints the result and also saves it.)
-
-## Step 3 — Map the other four samples
-
-Same commands, repeated by a loop:
+Run BWA-MEM and sort the resulting alignments with Samtools:
 
 ```bash
-for s in S02 S03 S04 S05; do
-  bwa mem -t 2 -R "@RG\tID:${s}\tSM:${s}" data/reference/TOYV1.fasta \
-      results/trimmed/${s}_R1.fastq.gz results/trimmed/${s}_R2.fastq.gz \
-    | samtools sort -@ 2 -o results/bam/${s}.bam -
-  samtools index results/bam/${s}.bam
-  samtools flagstat results/bam/${s}.bam > results/bam/${s}.flagstat.txt
-done
+bwa mem -t 2 \
+  -R '@RG\tID:SRR26396743\tSM:SARS-CoV-2' \
+  data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  results/trimmed/SRR26396743_1.fastq.gz \
+  results/trimmed/SRR26396743_2.fastq.gz \
+  | samtools sort -@ 2 \
+      -o results/bam/SRR26396743.bam -
 ```
 
-::: {.callout-note}
-**Prefer minimap2?** It is faster and also works for long reads. For paired Illumina reads:
-`minimap2 -ax sr -t 2 data/reference/TOYV1.fasta R1.fastq.gz R2.fastq.gz | samtools sort -o out.bam -`.
-:::
-
-## Step 4 — Read the flagstat files
+Index the sorted BAM file:
 
 ```bash
-cat results/bam/S01.flagstat.txt
+samtools index results/bam/SRR26396743.bam
 ```
 
-The lines to read: **in total** (all reads), **mapped** (reads aligned to the reference, with %), **properly paired**
-(both mates aligned in the expected orientation and distance). Fill in your
-[answer sheet](https://github.com/YOUR-ORG/fastq-to-genome/blob/main/exercises/answer_sheet.tsv) (columns total reads, % mapped).
-
-To see all samples at once:
+Calculate the mapping statistics and save them:
 
 ```bash
-for s in S01 S02 S03 S04 S05; do echo "== $s"; grep -E "in total|mapped \(|properly paired" results/bam/$s.flagstat.txt; done
+samtools flagstat results/bam/SRR26396743.bam \
+  | tee results/bam/SRR26396743.flagstat.txt
 ```
 
-::: {.callout-tip collapse="true"}
-## Expected values
-The numbers below are for the raw reads; after trimming you get very slightly fewer reads, but the **percentages are the same**.
+**What do these commands do?**
 
-| Sample | Total reads | % mapped | % properly paired |
-|---|---|---|---|
-| S01 | 6,666 | 100 % | 100 % |
-| S02 | 6,666 | 100 % | 100 % |
-| S03 | 340 | 100 % | 100 % |
-| S04 | 6,666 | **75 %** | 75 % |
-| S05 (NTC) | 450 | **11 %** | 11 % |
-:::
+- `bwa mem` aligns the paired-end reads to the reference genome.
+- `-t 2` uses two threads for BWA.
+- `-R` adds read-group information, including the run and sample identifiers.
+- `samtools sort` sorts alignments by genomic coordinate and writes a BAM file.
+- `samtools index` creates an index for the BAM file.
+- `samtools flagstat` summarizes alignment and pairing statistics.
+- `tee` displays the results and saves them to a text file.
 
-## Questions
+**Questions**
 
-**1. Which sample has a low % mapped? What could the unmapped reads be?**
+1. What is the difference between a FASTQ file and a BAM file?
+2. Why do we use a reference genome?
+3. Why are the reads sorted after alignment?
 
-::: {.callout-tip collapse="true"}
-## Answer
-**S04**: only 75 % of its reads map (and S05, the negative control, 11 %). The 25 % of unmapped reads in S04 do not come
-from the virus: they are **contamination or off-target material** (host DNA, bacteria, reagent contaminants, another sample).
-To find out what they are, extract them and classify them:
+**Answers**
+
+FASTQ files contain read sequences and their base-quality scores. BAM files contain alignment records, including read positions, mapping information, and flags.
+
+The reference genome provides the coordinate system used to locate reads along the viral genome.
+
+Sorting arranges the alignments by genomic position, making downstream analysis and regional access more efficient.
+
+## Step 3 — Read the mapping statistics
+
+Display the report:
 
 ```bash
-samtools fastq -f 12 -n -1 results/S04_unmapped_R1.fq -2 results/S04_unmapped_R2.fq -0 /dev/null -s /dev/null results/bam/S04.bam
-kraken2 --db <PATH_TO_DB> --paired results/S04_unmapped_R1.fq results/S04_unmapped_R2.fq --report results/S04.kraken.txt --output -
+cat results/bam/SRR26396743.flagstat.txt
 ```
 
-(`-f 12` = both mates unmapped. You can also paste a few reads in NCBI BLAST.) In this simulated dataset they come from a
-non-viral genome. A low % mapped is a **laboratory clue** (poor enrichment, contamination), not necessarily a bad genome:
-S04 still has about 75 reads per position (see next exercise).
-:::
+Pay particular attention to these lines:
 
-**2. Which samples have almost no reads? What does the NTC (S05) contain, and is that acceptable?**
+- **in total:** total number of alignment records examined.
+- **mapped:** number and percentage of mapped alignment records.
+- **properly paired:** number and percentage of records belonging to pairs aligned in the expected orientation and distance.
+- **primary:** primary alignment records, excluding secondary and supplementary alignments.
 
-::: {.callout-tip collapse="true"}
-## Answer
-**S03** has only 340 reads (about 5x depth on a 10 kb genome): too little material (low viral load, failed library or
-under-represented in the pool). **S05** is the negative control and should contain no viral reads. It has 450 reads, of which
-**50 (25 pairs) map to the virus**: that is **not acceptable without a comment**. The most likely cause is **barcode bleed**
-(index hopping) from a very abundant sample on the same run, here S01. You can check it: the reads in the NTC carry S01's variants
-(e.g. an A instead of the reference C at position 5753, in 4 of the NTC reads: open `results/bam/S05.bam` in IGV and go to `TOYV1:5753`). The other reads are background contamination.
+Remember that `samtools flagstat` reports alignment records, not necessarily read pairs. For paired-end data, one read pair normally produces two alignment records.
 
-Consequence: S03 has 340 reads, the same order of magnitude as the 50 reads in the NTC, so **S03 cannot be trusted**:
-a good part of its signal could be contamination. Always report the NTC and interpret low-depth samples with it in mind.
-:::
+You can also obtain a compact summary of the BAM file:
 
-**3. Open `results/bam/S01.bam` in IGV (reference: `data/reference/TOYV1.fasta`). Zoom on a position where reads differ from the reference. Is it a sequencing error or a real variant? How can you tell?**
+```bash
+samtools idxstats results/bam/SRR26396743.bam
+```
 
-How to open it: *Genomes → Load Genome from File…* → `data/reference/TOYV1.fasta`; *File → Load from File…* → `results/bam/S01.bam`
-(or `precomputed/bam/S01.bam`). Type `TOYV1:553` in the box and press Enter, then do the same for `TOYV1:1372`.
-Coloured letters on the reads are bases that differ from the reference.
+The output lists reference sequences, their lengths, the number of mapped records, and the number of unmapped records associated with each reference.
 
-::: {.callout-tip collapse="true"}
-## Answer
-- At **position 553**, the reference has a T, but **all ~100 reads** show a **G** (the column is entirely one colour). Present in
-  every read, on both strands, with good quality: it is a **real variant** (a SNP of the sample).
-- At **position 1372**, only **2 reads out of ~115** show an A; the other reads match the reference. Few reads, scattered,
-  with a low base quality (the two reads have Q4 and Q24: paler colour in IGV), in the second half of the reads: a **sequencing error**.
+**Questions**
 
-Rule of thumb: a real variant is seen in (almost) **all the reads** that cover the position; an error in **a few**.
-:::
+1. What percentage of alignment records are mapped?
+2. What percentage are properly paired?
+3. How many alignment records are unmapped?
+4. Does the mapping result suggest that the reads are compatible with the SARS-CoV-2 reference?
+5. What other factors could explain a low mapping percentage?
+
+**Answers**
+
+Use the values obtained from your own run. Do not assume a particular mapping percentage before analyzing the data.
+
+A high mapping percentage indicates that many reads align to the reference, but it does not by itself prove that the sample is free of contamination or that the resulting genome is accurate.
+
+A low mapping percentage may reflect low-quality reads, residual adapters, a reference mismatch, contamination, or a dataset that does not contain the expected organism.
+
+## Step 4 — Visualize the alignments in IGV
+
+IGV (Integrative Genomics Viewer) allows you to inspect aligned reads and compare their bases with the reference genome.
+
+First, confirm that both the BAM file and its index exist:
+
+```bash
+ls -lh results/bam/SRR26396743.bam*
+```
+
+Open IGV and load the reference genome:
+
+1. Select **Genomes → Load Genome from File…**
+2. Choose `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`.
+3. Select **File → Load from File…**
+4. Load `results/bam/SRR26396743.bam`.
+5. Navigate to a genomic region by entering a coordinate, for example `NC_045512.2:1000-2000`, if that is the chromosome label displayed by IGV.
+
+Zoom in to examine individual reads and their mismatches relative to the reference.
+
+**Questions**
+
+1. Do the reads cover the whole reference genome or only some regions?
+2. Can you see bases that differ from the reference?
+3. Are the differences supported by multiple reads?
+4. Do the supporting reads have good base quality?
+5. Can you conclude that a mismatch is a true variant simply because it appears in one read?
+
+**Answers**
+
+A mismatch may represent a genuine variant, a sequencing error, an alignment artifact, or another technical issue.
+
+Before interpreting a mismatch, examine its supporting read depth, base quality, mapping quality, strand distribution, and position within the reads. A single observation is not sufficient to establish a true variant.
+
+No specific variant positions or allele frequencies are assumed in this exercise; these must be determined from the actual data.
+
+## Step 5 — Explore read coverage
+
+Use Samtools to calculate the number of reads covering each reference position:
+
+```bash
+samtools depth -aa results/bam/SRR26396743.bam \
+  > results/bam/SRR26396743.depth.tsv
+```
+
+Calculate the mean depth across the reference, including positions with zero coverage:
+
+```bash
+awk '{sum += $3; n++} END {
+  if (n > 0) printf "Mean depth: %.2f\n", sum/n;
+  else print "No positions found"
+}' results/bam/SRR26396743.depth.tsv
+```
+
+Calculate the proportion of reference positions covered by at least one read:
+
+```bash
+awk '{total++; if ($3 > 0) covered++}
+END {
+  if (total > 0)
+    printf "Reference covered: %.2f%%\n", 100*covered/total;
+  else
+    print "No positions found"
+}' results/bam/SRR26396743.depth.tsv
+```
+
+**Questions**
+
+1. What is the mean read depth?
+2. What percentage of the reference is covered by at least one read?
+3. Are there regions with zero coverage?
+4. Why can a high mapping percentage coexist with low coverage in some regions?
+
+**Answers**
+
+Mapping percentage measures how many alignment records map to the reference. Coverage describes how many reads support each reference position.
+
+A dataset may have a high mapping percentage while still containing poorly covered regions. Those regions may be unreliable for consensus generation or variant analysis.
 
 ## Final question
 
-Why do we **sort** and **index** a BAM file?
+Why do we **sort and index** a BAM file?
 
-::: {.callout-tip collapse="true"}
-## Answer
-Sorting puts the reads in order of position along the genome. The index (`.bai`) is a table of contents that tells a program
-where a given region is in the file. Together they let IGV, `samtools depth` or a variant caller **jump directly to a region**
-instead of reading the whole file, and many tools refuse a BAM that is not sorted and indexed.
-:::
+**Answer**
+
+Sorting arranges the alignments by genomic coordinate. Indexing creates a lookup structure that allows programs such as IGV and Samtools to access a specific genomic region without scanning the entire file.
+
+Many downstream tools require a coordinate-sorted BAM file and its index.
 
 **Next:** [Coverage and consensus](03_coverage_consensus.md).
