@@ -304,7 +304,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#part-2-trimming" id="toc-part-2-trimming" class="nav-link" data-scroll-target="#part-2-trimming">Part 2 — Trimming</a>
   <ul class="collapse">
-  <li><a href="#step-3-trim-reads-with-fastp" id="toc-step-3-trim-reads-with-fastp" class="nav-link" data-scroll-target="#step-3-trim-reads-with-fastp">Step 3 — Trim reads with fastp</a></li>
+  <li><a href="#step-3-trim-reads-with-trimmomatic" id="toc-step-3-trim-reads-with-trimmomatic" class="nav-link" data-scroll-target="#step-3-trim-reads-with-trimmomatic">Step 3 — Trim reads with trimmomatic</a></li>
   <li><a href="#step-4-check-the-trimmed-reads" id="toc-step-4-check-the-trimmed-reads" class="nav-link" data-scroll-target="#step-4-check-the-trimmed-reads">Step 4 — Check the trimmed reads</a></li>
   </ul></li>
   <li><a href="#part-3-assembly" id="toc-part-3-assembly" class="nav-link" data-scroll-target="#part-3-assembly">Part 3 — Assembly</a>
@@ -457,9 +457,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="part-2-trimming" class="level1">
 <h1>Part 2 — Trimming</h1>
-<section id="step-3-trim-reads-with-fastp" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-trim-reads-with-fastp">Step 3 — Trim reads with fastp</h2>
-<p><code>fastp</code> can detect adapters in paired-end data, trim low-quality tails, filter short reads, and generate quality-control reports.</p>
+<section id="step-3-trim-reads-with-trimmomatic" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-trim-reads-with-trimmomatic">Step 3 — Trim reads with trimmomatic</h2>
+<p><code>trimmomatic</code> can detect adapters in paired-end data, trim low-quality tails, filter short reads.</p>
 <p>Create the output directories:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/trimmed results/trimmomatic</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run <code>trimmomatic</code>:</p>
@@ -773,7 +773,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>Trimming</td>
-<td>Read pairs after fastp</td>
+<td>Read pairs after trimmomatic</td>
 <td></td>
 </tr>
 <tr class="even">

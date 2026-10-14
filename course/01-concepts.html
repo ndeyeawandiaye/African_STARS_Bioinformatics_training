@@ -319,7 +319,7 @@ ul.task-list li input[type="checkbox"] {
 <div>
 <pre class="mermaid mermaid-js">flowchart TD
   A["FASTQ (R1 + R2)"] --&gt; B["1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads"]
-  B --&gt; C["2. Trimming&lt;br/&gt;fastp&lt;br/&gt;remove adapters and low-quality bases"]
+  B --&gt; C["2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases"]
   C --&gt; D["3. Assmbly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds"]
   D --&gt; E["4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?"]
   E --&gt; F["5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction"]
@@ -355,7 +355,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td>2</td>
-<td><strong>fastp</strong></td>
+<td><strong>trimmomatic</strong></td>
 <td>trims adapters and low-quality ends, drops short reads</td>
 <td><code>fastq.gz</code></td>
 </tr>
@@ -399,7 +399,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>If you already ran pipeline 1 on the same samples, <strong>steps 1 to 3 are already done</strong> (FastQC, fastp, MultiQC, Kraken2). Reuse the trimmed reads in <code>results/trimmed/</code>. Only the steps in white below are new.</p>
+<p>If you already ran pipeline 1 on the same samples, <strong>steps 1 to 3 are already done</strong> (FastQC, trimmomatic, MultiQC, Kraken2). Reuse the trimmed reads in <code>results/trimmed/</code>. Only the steps in white below are new.</p>
 </div>
 </div>
 <div class="cell" data-layout-align="default">
@@ -408,7 +408,7 @@ ul.task-list li input[type="checkbox"] {
 <p></p><figure class="figure"><p></p>
 <div>
 <pre class="mermaid mermaid-js">flowchart TD
-  A["Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, fastp, MultiQC)"] --&gt; B["4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference"]
+  A["Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, trimmomatic, MultiQC)"] --&gt; B["4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference"]
   B --&gt; C["5. Sorting&lt;br/&gt;samtools&lt;br/&gt;sorted BAM and mapping statistics"]
   C --&gt; D["6. Variant calling&lt;br/&gt;freebayes - bcftools &lt;br/&gt;list the variants (VCF)"]
   D --&gt; E["7. Generate consensus&lt;br/&gt;samtools + ivar &lt;br/&gt;build the genome, mask low depth with N"]
@@ -440,7 +440,7 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td>1–4</td>
-<td><strong>FastQC, fastp, MultiQC, Kraken2</strong></td>
+<td><strong>FastQC, trimmomatic, MultiQC, Kraken2</strong></td>
 <td><strong>already done</strong> (see pipeline 1)</td>
 <td><code>fastq.gz</code></td>
 </tr>
