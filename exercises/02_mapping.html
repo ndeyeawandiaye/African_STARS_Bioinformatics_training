@@ -130,12 +130,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label=""><i class="bi bi-github"></i></a>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="quarto-navigation-tool-dropdown-0">
           <li>
-            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/YOUR-ORG/fastq-to-genome">
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/">
             Source code
             </a>
           </li>
           <li>
-            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/YOUR-ORG/fastq-to-genome/issues">
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/issues">
             Report an issue
             </a>
           </li>
@@ -211,7 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../exercises/01_fastq_and_qc.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">FASTQ and quality control</span></a>
+ <span class="menu-text">From FASTQ to assembly: QC, trimming, assembly and identification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,64 +286,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
       </ul>
   </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
- <span class="menu-text">Communicating genomic evidence</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/04-evidence.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Communicating genomic evidence</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/04-brief-template.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">One-page brief template</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
- <span class="menu-text">Mini outbreak investigation</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/05-scenario.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Scenario and data</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/05-workflow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Suggested workflow</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/05-deliverable.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deliverable and assessment</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../course/05-model-answer.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Model answer</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
     </ul>
     </div>
 </nav>
@@ -393,20 +335,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="step-1-index-the-reference-genome" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-index-the-reference-genome">Step 1 — Index the reference genome</h2>
 <p>BWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> index data/ncbi/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> faidx data/ncbi/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> index data/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> faidx data/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Questions</strong></p>
 <ol type="1">
 <li>What files are created by <code>bwa index</code>?</li>
 <li>What is the purpose of the <code>.fai</code> file?</li>
 <li>Why do we index the reference before mapping?</li>
 </ol>
-<p><strong>Answers</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <ul>
 <li><code>bwa index</code> creates auxiliary index files that allow BWA to search the reference efficiently.</li>
 <li><code>samtools faidx</code> creates a FASTA index (<code>.fai</code>) containing sequence names, lengths, and file offsets.</li>
 <li>Indexing avoids rebuilding the reference search structures every time we map reads.</li>
 </ul>
+</div>
+</div>
+</div>
 </section>
 <section id="step-2-map-the-trimmed-reads" class="level2">
 <h2 class="anchored" data-anchor-id="step-2-map-the-trimmed-reads">Step 2 — Map the trimmed reads</h2>
@@ -415,7 +371,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Run BWA-MEM and sort the resulting alignments with Samtools:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="at">-t</span> 2 <span class="dt">\</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-R</span> <span class="st">'@RG\tID:SRR26396743\tSM:SARS-CoV-2'</span> <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  data/ncbi/SARS-CoV-2_NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  data/NC_045512.2.fasta <span class="dt">\</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_1.fastq.gz <span class="dt">\</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_2.fastq.gz <span class="dt">\</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">samtools</span> sort <span class="at">-@</span> 2 <span class="dt">\</span></span>
@@ -615,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/ndeyeawandiaye\.github\.io\/African_STARS_Bioinformatics_training\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -949,8 +905,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../exercises/01_fastq_and_qc.html" class="pagination-link" aria-label="FASTQ and quality control">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">FASTQ and quality control</span>
+      <a href="../exercises/01_fastq_and_qc.html" class="pagination-link" aria-label="From FASTQ to assembly: QC, trimming, assembly and identification">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">From FASTQ to assembly: QC, trimming, assembly and identification</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
