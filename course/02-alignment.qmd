@@ -5,107 +5,98 @@ subtitle: "Module 2 — 45 min"
 
 ## Idea
 
-A **multiple sequence alignment** puts homologous positions in the same column, so that each column can be compared
-between genomes. Phylogenetics and SNP counting both start from it.
+A **multiple sequence alignment** puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.
 
-- Consensus genomes obtained by mapping are already on the reference coordinates, but real data also contain indels and different lengths.
+- Consensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.
 - **MAFFT** is a fast, standard aligner for viral genomes.
 - Always look at the alignment (AliView, Jalview): never trust it blindly.
 - Columns full of N or gaps carry no information.
 
 ## Step 1 — Put all the genomes in one file
 
-The dataset has the reference, the 27 outbreak genomes (OB01–OB27) and your S01. The `sed` command renames the reference header.
+We combine the lineage references downloaded from NCBI Virus and your consensus from the previous exercises. `seqkit seq` rewrites the file cleanly, and `sed` renames the header of the consensus.
 
-```bash
+``` bash
 mkdir -p results/phylo
+seqkit seq data/ncbi/lineage_refs.clean.fasta > results/phylo/all.fasta
+sed 's/^>.*/>SRR26396743/' results/consensus/SRR26396743.fa | seqkit seq >> results/phylo/all.fasta
 ```
-```bash
-sed 's/^>.*/>TOYV1_ref/' data/reference/TOYV1.fasta > results/phylo/all.fasta
-```
-```bash
-cat data/outbreak/sequences.fasta >> results/phylo/all.fasta
-```
-```bash
-cat results/consensus/S01.fa >> results/phylo/all.fasta
-```
-```bash
+
+``` bash
 grep -c '>' results/phylo/all.fasta
+grep '>' results/phylo/all.fasta
 ```
 
-**Question:** how many sequences are there?
+**Question:** how many sequences are there, and which one is your sample?
 
-::: {.callout-tip collapse="true"}
-## Answer
-**29** sequences: 1 reference + 27 outbreak genomes + S01.
+::: {.callout-tip title="Answer" collapse="true"}
+The number of references you downloaded **plus one** (your consensus, named `SRR26396743`).
 :::
 
-## Step 2 — Align with MAFFT
+## Step 2 — Check the quality of each genome before aligning
 
-```bash
-mafft --auto --preservecase --thread 2 results/phylo/all.fasta > results/phylo/aln.fasta
-```
+Count the `N` in each sequence:
 
-(`--preservecase` keeps our upper-case letters. Plan B without MAFFT: the toy genomes have no insertion or deletion, so
-`python3 scripts/11b_align_fallback.py` just checks that all lengths are equal and writes the same file.)
-
-Check the number of sequences and columns:
-
-```bash
-seqkit stats results/phylo/aln.fasta
-```
-
-**Question:** how many sequences and how many alignment columns?
-
-::: {.callout-tip collapse="true"}
-## Answer
-**29 sequences × 10,000 columns** (no insertion/deletion, so the length of the reference).
-:::
-
-## Step 3 — Inspect the alignment
-
-Open `results/phylo/aln.fasta` in AliView or Jalview (<https://www.jalview.org>), or print the content of one column with:
-
-```bash
-seqkit subseq -r 553:553 results/phylo/aln.fasta | seqkit fx2tab | cut -f1,2 | head -10
+``` bash
+seqkit fx2tab -n -l -B N results/phylo/all.fasta | awk '{printf "%s\t%d bp\t%d N\t%.2f%%\n", $1, $2, $3, 100*$3/$2}'
 ```
 
 **Questions**
 
-1. S01 differs from the reference at which positions?
-2. Which outbreak genome has a long block of N? Would you keep it?
+1.  Which genome has the most `N`?
+2.  Is your sample good enough to be placed on a tree? (remember the exercise *Is this genome good enough?*)
 
-To answer the second question, compute the percentage of N in each genome:
-
-```bash
-awk '/^>/{if(name) printf "%s\t%.1f%%\n", name, 100*n/len; name=substr($0,2); n=0; len=0; next} {n+=gsub(/N/,"N"); len+=length($0)} END{printf "%s\t%.1f%%\n", name, 100*n/len}' results/phylo/aln.fasta | sort -k2 -n -r | head -5
-```
-
-::: {.callout-tip collapse="true"}
-## Answers
-1. **10 positions**: the 8 lineage-defining SNPs (553, 3299, 5753, 6605, 6663, 7748, 9419, 9784) plus 2 private SNPs (269 and 7782).
-2. **OB24**: about 23 % N (a block of ~2,300 N around positions 4,100–6,400, plus scattered N). Its tree position is unreliable.
-   It should be **excluded** (the course threshold is 10 % N) — and the reason written in the report.
+::: {.callout-tip title="Answer" collapse="true"}
+Use your own values. A genome with a large percentage of `N` (the course threshold is 10 %) has a position in the tree that is less reliable, because missing data can make it look closer to some genomes than it really is. If a reference has many `N`, replace it in NCBI Virus with a better one.
 :::
 
-## Step 4 — SNP distances
+## Step 3 — Align with MAFFT
 
-How many differences between genomes? (N and gaps are ignored in each pair.)
-
-```bash
-python3 scripts/15_snp_matrix.py results/phylo/aln.fasta --ids S01,OB10,OB15,OB22,OB25,OB01
-```
-```bash
-column -t results/phylo/snp_matrix.tsv
+``` bash
+mafft --auto --preservecase --thread 2 results/phylo/all.fasta > results/phylo/aln.fasta
 ```
 
-**Question:** which genome(s) is the closest to S01?
+(`--preservecase` keeps our upper-case letters. For a few dozen genomes of 30 kb this takes seconds to minutes.)
 
-::: {.callout-tip collapse="true"}
-## Answer
-**OB10 and OB25** are closest to S01 (**2 SNPs**); OB15 and OB22 are at 3 SNPs; OB01 (lineage TV.2.1) is at 7 SNPs. All the
-closest ones are early TV.2 genomes from Region A. The distance is tiny (2 SNPs) but remember that two genomes at 2 SNPs are not
-necessarily direct contacts.
+``` bash
+seqkit stats results/phylo/aln.fasta
+```
+
+**Question:** how many sequences and how many alignment columns? Why is the number of columns slightly larger than the genome length?
+
+::: {.callout-tip title="Answer" collapse="true"}
+The number of sequences is the same as in `all.fasta`. The number of columns is at least the length of the longest genome: when one genome has an insertion or a different start or end, MAFFT adds gaps (`-`) in the others so that homologous positions stay in the same column.
+:::
+
+## Step 4 — Inspect the alignment
+
+Open `results/phylo/aln.fasta` in **AliView** or **Jalview** (<https://www.jalview.org>).
+
+**Questions**
+
+1.  Are the ends of the genomes aligned in the same way for all the sequences?
+2.  Do you see blocks of `-` or `N`? In which genomes?
+3.  Are the differences between genomes spread over the genome or concentrated in some regions?
+
+::: {.callout-tip title="Answer" collapse="true"}
+Look at your own alignment. The ends of public genomes are often ragged (different start and stop, or poly-A tails), blocks of `N` come from regions that were not covered, and differences between lineages are concentrated in some genes (the spike gene carries many lineage-defining changes). Real surveillance pipelines trim the ragged ends and mask known problematic sites before building trees.
+:::
+
+## Step 5 — SNP distances
+
+How many differences between your sample and each genome? `snp-dists` ignores `N` and gaps in each pair:
+
+``` bash
+snp-dists -m results/phylo/aln.fasta | awk '$1=="SRR26396743" && $2!="SRR26396743"' | sort -k3,3n | column -t
+```
+
+**Questions**
+
+1.  Which genomes are the closest to your sample, and how many SNPs apart?
+2.  How many SNPs separate your sample from Wuhan-Hu-1 (`NC_045512.2`)?
+
+::: {.callout-tip title="Answer" collapse="true"}
+Read the values in your own table. The closest genomes have the smallest numbers; the distance to Wuhan-Hu-1 gives the amount of evolution since the beginning of the pandemic. Keep this table, we use it for the lineage assignment.
 :::
 
 **Next:** [Lineage assignment](02-lineage.qmd).

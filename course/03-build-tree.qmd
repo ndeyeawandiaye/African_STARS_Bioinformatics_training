@@ -5,105 +5,62 @@ subtitle: "Module 3 — 60 min"
 
 ## Choosing a method
 
-| Method | Idea | Use |
-|---|---|---|
-| Distance (neighbour-joining) | tree built from pairwise distances | very fast first look |
-| Maximum likelihood (IQ-TREE, RAxML) | the tree that makes the alignment most probable under a substitution model | standard choice |
-| Bayesian / time-scaled (BEAST, TreeTime) | adds time and uncertainty | dating, advanced analyses |
+| Method                                   | Idea                                                                       | Use                       |
+| ---------------------------------------- | -------------------------------------------------------------------------- | ------------------------- |
+| Distance (neighbour-joining)             | tree built from pairwise distances                                         | very fast first look      |
+| Maximum likelihood (IQ-TREE, RAxML)      | the tree that makes the alignment most probable under a substitution model | standard choice           |
+| Bayesian / time-scaled (BEAST, TreeTime) | adds time and uncertainty                                                  | dating, advanced analyses |
 
-Three choices to make: the **substitution model** (IQ-TREE tests several with `-m MFP`), the **support** (ultrafast bootstrap,
-`-B 1000`) and the **root** (an outgroup: here the reference genome `TOYV1_ref`).
+Three choices to make: the **substitution model** (IQ-TREE tests several with `-m MFP`), the **support** (ultrafast bootstrap, `-B 1000`) and the **root** (an **outgroup**: a genome that branches off before all the others).
+
+The outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use **Wuhan-Hu-1 (`NC_045512.2`)**, the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.
 
 ## Step 1 — Build the maximum-likelihood tree
 
-```bash
-iqtree2 -s results/phylo/aln.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree -redo
-```
-
-What the options mean: `-s` alignment, `-m MFP` choose the best model automatically, `-B 1000` 1,000 ultrafast bootstrap
-replicates, `-T 2` two threads, `--seed 1` reproducible result, `-o TOYV1_ref` root on the reference, `--prefix` name of the output files.
-
-IQ-TREE writes several files; the useful ones are:
+Find the exact name of the root genome in the alignment, then run IQ-TREE:
 
 ```bash
-ls results/phylo/tree.*
+OUT=$(grep '>' results/phylo/aln.fasta | grep 'NC_045512.2' | tr -d '>')
+echo $OUT
 ```
 
-| File | Content |
-|---|---|
-| `tree.treefile` | **the tree** (Newick format, with bootstrap support) |
-| `tree.iqtree` | the full report (model chosen, log-likelihood, tree in text) |
-| `tree.log` | what happened during the run |
+```bash
+iqtree -s results/phylo/aln.fasta -m MFP -B 1000 -T 2  --prefix results/phylo/tree
+```
 
-Which model was chosen?
+What the options mean: `-s` alignment, `-m MFP` choose the best model automatically, `-B 1000` 1,000 ultrafast bootstrap replicates, `-T 2` two threads, `--seed 1` reproducible result, `-o` root on the outgroup, `--prefix` name of the output files.
+
+(If the model test is too slow on your laptop, use `-m GTR+G` for a first look.)
+
+| File            | Content                                                      |
+| --------------- | ------------------------------------------------------------ |
+| `tree.treefile` | **the tree** (Newick format, with bootstrap support)         |
+| `tree.iqtree`   | the full report (model chosen, log-likelihood, tree in text) |
+| `tree.log`      | what happened during the run                                 |
 
 ```bash
 grep "Best-fit model" results/phylo/tree.iqtree
 ```
 
-::: {.callout-tip collapse="true"}
-## About the model
-With so few variable sites a simple model (such as HKY or GTR variants) is chosen; the exact choice has almost no impact here.
-IQ-TREE may also warn that several sequences are **identical**: this is normal, they end up on the same branch tip.
+**Questions:** which model was chosen? Did IQ-TREE warn about identical sequences?
+
+::: {.callout-tip title="Answer" collapse="true"}
+Use your own report. IQ-TREE may warn that some sequences are **identical** (or nearly so): this is normal, they end up at the same position in the tree. The exact model matters little here; what matters more is the quality of the alignment.
 :::
 
-**Plan B (no IQ-TREE):** a neighbour-joining tree from SNP distances, good enough to read the course examples
-(but without bootstrap support):
+## Step 2 — Draw and annotate the tree in iTOL
 
-```bash
-python3 scripts/12b_tree_fallback.py
-```
+1. Open <https://itol.embl.de> and click **Upload**; upload `results/phylo/tree.treefile`. (Create an account if you want to keep the tree.)
+2. In the control panel, choose the **Rectangular** display.
+3. **Root:** click on the branch of `NC_045512.2` and choose **Tree structure → Re-root the tree here**.
+4. **Support:** display the bootstrap values (Basic tab, or Advanced tab depending on the version).
+5. **Colors:** click on an internal node and choose **Colors/Styles** to colour a clade; colour each lineage (the lineage is in the leaf name) and give your sample, `SRR26396743`, a different colour.
+6. **Export** the picture (PNG, SVG or PDF) from the **Export** tab.
 
-## Step 2 — Draw the tree
+**Questions:** do the lineages form clean groups on the tree? Where is your sample?
 
-Assign the lineages (needed for the colours), then draw the tree twice:
-
-```bash
-python3 scripts/13_lineage.py results/phylo/aln.fasta
-```
-```bash
-python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color lineage --out results/phylo/tree_lineage.png
-```
-```bash
-python3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region --out results/phylo/tree_region.png
-```
-
-(Plan B: use `results/phylo/tree.nwk` instead of `tree.treefile`.) You can also open the Newick file in
-**FigTree**, **iTOL** (<https://itol.embl.de>) or **Microreact** (<https://microreact.org>).
-
-**Questions:** do the lineages form clean groups on the tree? Where is S01?
-
-::: {.callout-tip collapse="true"}
-## Answer
-Yes: each lineage forms its own group (clade). TV.3 and the TV.1 background genomes are close to the root; TV.2 and its two
-descendants TV.2.1 and TV.2.2 form one large clade. **S01 is inside the TV.2 group**, next to OB10, OB25, OB15 and OB22 (all early
-genomes of the outbreak).
-:::
-
-## Step 3 — Remove the low-quality genome and rebuild
-
-OB24 has 23 % N. Remove it from the alignment and rebuild the tree:
-
-```bash
-seqkit grep -v -p OB24 results/phylo/aln.fasta > results/phylo/aln_clean.fasta
-```
-```bash
-iqtree2 -s results/phylo/aln_clean.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree_clean -redo
-```
-
-**Question:** does the tree change?
-
-::: {.callout-tip collapse="true"}
-## Answer
-The main groups and their relationships **do not change**: OB24 was inside the TV.2.2 group, which stays the same without it.
-But its position had a **lower reliability** (a lot of missing data means that it can look closer to some genomes than it
-really is). Excluding it removes a source of doubt and shows that the conclusions do not depend on a poor genome.
-The excluded genome and the reason must be written in the report.
-:::
-
-::: {.callout-warning}
-With few variable sites there is little resolution: many branches are short and some are supported weakly. A tree is only as good as
-the alignment and the data behind it.
+::: {.callout-tip title="Answer" collapse="true"}
+Use your own tree. References of the same lineage should form a group (a clade); sister lineages sit next to each other. Your sample should fall next to the lineage found in the *Lineage assignment* page. If it sits alone on a long branch, check its percentage of `N` and its reference set.
 :::
 
 **Next:** [Read a phylogenetic tree](03-read-tree.qmd).
