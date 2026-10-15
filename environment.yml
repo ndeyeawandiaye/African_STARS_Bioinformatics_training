@@ -25,6 +25,7 @@ dependencies:
   - iqtree
   - biopython
   - matplotlib
+  - snp-dists
   # download public data from NCBI
   - sra-tools
   - entrez-direct
