@@ -17,7 +17,7 @@ They differ in how the genome is rebuilt:
 flowchart TD
   A["FASTQ (R1 + R2)"] --> B["1. Quality Control <br/> FastQC <br/>quality of the raw reads"]
   B --> C["2. Trimming<br/>trimmomatic<br/>remove adapters and low-quality bases"]
-  C --> D["3. Assmbly<br/>SPAdes<br/>assemble the reads into contigs or scaffolds"]
+  C --> D["3. Assembly<br/>SPAdes<br/>assemble the reads into contigs or scaffolds"]
   D --> E["4. Identification<br/>Kraken2 or BLAST <br/>which organisms are in the reads? contamination?"]
   E --> F["5. Assembly quality<br/>QUAST<br/> N50, length, genome fraction"]
   classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;

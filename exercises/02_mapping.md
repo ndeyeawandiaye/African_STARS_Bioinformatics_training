@@ -18,11 +18,11 @@ In this exercise, we use the paired-end reads from NCBI run `SRR26396743`, clean
 BWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.
 
 ```bash
-bwa index data/SARS-CoV-2_NC_045512.2.fasta
+bwa index data/NC_045512.2.fasta
 ```
 
 ```bash
-samtools faidx data/SARS-CoV-2_NC_045512.2.fasta
+samtools faidx data/NC_045512.2.fasta
 ```
 
 **Questions**
@@ -47,24 +47,38 @@ Create an output directory:
 mkdir -p results/bam
 ```
 
-Run BWA-MEM and sort the resulting alignments with Samtools:
+Align the paired-end reads :
+
+```bash
+bwa mem \
+  data/NC_045512.2.fasta \
+  results/trimmed/SRR26396743_1_paired.fastq.gz \
+  results/trimmed/SRR26396743_2_paired.fastq.gz \
+  > results/bam/SRR26396743.sam
+
+```
+
+Convert to BAM and sort the alignments
 
 ```bash
 
+samtools sort \
+  -@ 2 \
+  -o results/bam/SRR26396743.sorted.bam \
+  results/bam/SRR26396743.sam
 
 ```
 
 Index the sorted BAM file:
 
 ```bash
-samtools index results/bam/SRR26396743.bam
+samtools index results/bam/SRR26396743.sorted.bam
 ```
 
 Calculate the mapping statistics and save them:
 
 ```bash
-samtools flagstat results/bam/SRR26396743.bam \
-  | tee results/bam/SRR26396743.flagstat.txt
+samtools flagstat results/bam/SRR26396743.sorted.bam  > results/bam/SRR26396743.flagstat.txt
 ```
 
 **What do these commands do?**
@@ -75,7 +89,6 @@ samtools flagstat results/bam/SRR26396743.bam \
 - `samtools sort` sorts alignments by genomic coordinate and writes a BAM file.
 - `samtools index` creates an index for the BAM file.
 - `samtools flagstat` summarizes alignment and pairing statistics.
-- `tee` displays the results and saves them to a text file.
 
 **Questions**
 
@@ -83,13 +96,16 @@ samtools flagstat results/bam/SRR26396743.bam \
 2. Why do we use a reference genome?
 3. Why are the reads sorted after alignment?
 
-**Answers**
+:::{.callout-tip collapse='true'}
+
+## Answers
 
 FASTQ files contain read sequences and their base-quality scores. BAM files contain alignment records, including read positions, mapping information, and flags.
 
 The reference genome provides the coordinate system used to locate reads along the viral genome.
 
 Sorting arranges the alignments by genomic position, making downstream analysis and regional access more efficient.
+:::
 
 ## Step 3 — Read the mapping statistics
 
@@ -98,39 +114,62 @@ Display the report:
 ```bash
 cat results/bam/SRR26396743.flagstat.txt
 ```
-
-Pay particular attention to these lines:
+:::{.callout-tip}
+## Pay particular attention to these lines:
 
 - **in total:** total number of alignment records examined.
 - **mapped:** number and percentage of mapped alignment records.
 - **properly paired:** number and percentage of records belonging to pairs aligned in the expected orientation and distance.
 - **primary:** primary alignment records, excluding secondary and supplementary alignments.
+:::
+
+
+:::{.callout-tip collapse='true'}
+
+### Alignment Quality Assessment
+
+After mapping the paired-end reads to the SARS-CoV-2 reference genome using BWA-MEM, `samtools flagstat` was used to summarize the alignment results.
+
+| Metric | Result | Meaning |
+|---|---:|---|
+| Total reads | 662,332 | Total number of alignment records, including primary, secondary, and supplementary records. |
+| Primary alignments | 659,100 | Number of primary alignment records, representing the main alignment for each read. |
+| Secondary alignments | 0 | No secondary alignment records were reported. |
+| Supplementary alignments | 3,232 | Additional alignment records for reads whose alignments are split across multiple genomic regions. |
+| Duplicates | 0 | No reads were marked as duplicates in this BAM file. This does not prove that PCR or optical duplicates are absent. |
+| Mapped reads | 662,193 (99.98%) | Percentage of alignment records classified as mapped. |
+| Primary mapped reads | 658,961 (99.98%) | Percentage of primary alignment records classified as mapped. |
+| Paired reads | 659,100 | Number of primary records identified as belonging to paired-end sequencing data. |
+| Read 1 | 329,550 | Number of primary records identified as the first mate. |
+| Read 2 | 329,550 | Number of primary records identified as the second mate. |
+| Properly paired | 640,776 (97.22%) | Number of reads whose pairs satisfy BWA-MEM's expected pairing criteria. |
+| Both mates mapped | 658,958 | Number of primary reads for which both the read and its mate are mapped. |
+| Singletons | 3 (0.00%) | Number of primary reads mapped while their mate is unmapped. |
+
+### Interpretation
+
+**Mapping rate:** Approximately 99.98% of primary reads mapped to the reference genome. This high mapping rate indicates that the reads are highly compatible with the SARS-CoV-2 reference sequence.
+
+**Properly paired reads:** Approximately 97.22% of primary reads were classified as properly paired. This suggests that most read pairs have an expected orientation and insert size.
+
+**Supplementary alignments:** The 3,232 supplementary records represent additional alignments, often produced when a read aligns in multiple segments. These are alignment records, not necessarily additional sequencing reads.
+
+**Singletons:** Only three primary reads were mapped while their mates were unmapped, representing a very small fraction of the data.
+
+**Important limitation:** A high mapping rate does not, by itself, confirm that the genome assembly is complete or that all mapped bases are accurate. Coverage depth, coverage uniformity, mapping quality, and variant-level evidence should also be examined.
+
+:::
 
 Remember that `samtools flagstat` reports alignment records, not necessarily read pairs. For paired-end data, one read pair normally produces two alignment records.
 
 You can also obtain a compact summary of the BAM file:
 
 ```bash
-samtools idxstats results/bam/SRR26396743.bam
+samtools idxstats results/bam/SRR26396743.sorted.bam
 ```
 
 The output lists reference sequences, their lengths, the number of mapped records, and the number of unmapped records associated with each reference.
 
-**Questions**
-
-1. What percentage of alignment records are mapped?
-2. What percentage are properly paired?
-3. How many alignment records are unmapped?
-4. Does the mapping result suggest that the reads are compatible with the SARS-CoV-2 reference?
-5. What other factors could explain a low mapping percentage?
-
-**Answers**
-
-Use the values obtained from your own run. Do not assume a particular mapping percentage before analyzing the data.
-
-A high mapping percentage indicates that many reads align to the reference, but it does not by itself prove that the sample is free of contamination or that the resulting genome is accurate.
-
-A low mapping percentage may reflect low-quality reads, residual adapters, a reference mismatch, contamination, or a dataset that does not contain the expected organism.
 
 ## Step 4 — Visualize the alignments in IGV
 
@@ -139,15 +178,15 @@ IGV (Integrative Genomics Viewer) allows you to inspect aligned reads and compar
 First, confirm that both the BAM file and its index exist:
 
 ```bash
-ls -lh results/bam/SRR26396743.bam*
+ls -lh results/bam/SRR26396743.sorted.bam*
 ```
 
 Open IGV and load the reference genome:
 
 1. Select **Genomes → Load Genome from File…**
-2. Choose `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`.
+2. Choose `data/NC_045512.2.fasta`.
 3. Select **File → Load from File…**
-4. Load `results/bam/SRR26396743.bam`.
+4. Load `results/bam/SRR26396743.sorted.bam`.
 5. Navigate to a genomic region by entering a coordinate, for example `NC_045512.2:1000-2000`, if that is the chromosome label displayed by IGV.
 
 Zoom in to examine individual reads and their mismatches relative to the reference.
@@ -160,22 +199,42 @@ Zoom in to examine individual reads and their mismatches relative to the referen
 4. Do the supporting reads have good base quality?
 5. Can you conclude that a mismatch is a true variant simply because it appears in one read?
 
-**Answers**
-
-A mismatch may represent a genuine variant, a sequencing error, an alignment artifact, or another technical issue.
-
-Before interpreting a mismatch, examine its supporting read depth, base quality, mapping quality, strand distribution, and position within the reads. A single observation is not sufficient to establish a true variant.
-
-No specific variant positions or allele frequencies are assumed in this exercise; these must be determined from the actual data.
 
 ## Step 5 — Explore read coverage
+
+```bash
+mkdir -p results/coverage
+```
 
 Use Samtools to calculate the number of reads covering each reference position:
 
 ```bash
-samtools depth -aa results/bam/SRR26396743.bam \
-  > results/bam/SRR26396743.depth.tsv
+samtools depth -aa results/bam/SRR26396743.sorted.bam \
+  > results/coverage/SRR26396743.depth.tsv
 ```
+
+Obtain a summary with Samtools:
+
+```bash
+samtools coverage results/bam/SRR26396743.sorted.bam
+```
+
+:::{.callout-tip collapse='true'}
+## Coverage statistics
+
+| Metric | Result | Meaning |
+|---|---:|---|
+| `rname` | `NC_045512.2` | Name of the reference sequence. |
+| `startpos` | 1 | First reference position included in the analysis. |
+| `endpos` | 29,903 | Last reference position included in the analysis. |
+| `numreads` | 662,193 | Number of alignment records overlapping the reference region. |
+| `covbases` | 29,785 | Number of reference bases covered by at least one aligned read. |
+| `coverage (%)` | 99.605% | Percentage of reference bases covered by at least one aligned read. |
+| `meandepth` | 99.61× | Average sequencing depth across the reference region. |
+| `meanbaseq` | 38 | Mean base quality score, indicating high confidence in the sequenced nucleotides. |
+| `meanmapq` | 60 | Mean mapping quality score, indicating high confidence in read placement. |
+
+:::
 
 Calculate the mean depth across the reference, including positions with zero coverage:
 
@@ -198,27 +257,6 @@ END {
 }' results/bam/SRR26396743.depth.tsv
 ```
 
-**Questions**
 
-1. What is the mean read depth?
-2. What percentage of the reference is covered by at least one read?
-3. Are there regions with zero coverage?
-4. Why can a high mapping percentage coexist with low coverage in some regions?
-
-**Answers**
-
-Mapping percentage measures how many alignment records map to the reference. Coverage describes how many reads support each reference position.
-
-A dataset may have a high mapping percentage while still containing poorly covered regions. Those regions may be unreliable for consensus generation or variant analysis.
-
-## Final question
-
-Why do we **sort and index** a BAM file?
-
-**Answer**
-
-Sorting arranges the alignments by genomic coordinate. Indexing creates a lookup structure that allows programs such as IGV and Samtools to access a specific genomic region without scanning the entire file.
-
-Many downstream tools require a coordinate-sorted BAM file and its index.
 
 **Next:** [Coverage and consensus](03_coverage_consensus.md).

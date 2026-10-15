@@ -37,7 +37,6 @@ website:
           - exercises/01_fastq_and_qc.md
           - exercises/02_mapping.md
           - exercises/03_coverage_consensus.md
-          - exercises/04_genome_qc_verdict.md
       - section: "Alignment, lineage & reference selection"
         contents:
           - course/02-reference-selection.qmd

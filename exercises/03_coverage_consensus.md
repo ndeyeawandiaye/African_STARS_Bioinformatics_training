@@ -9,59 +9,14 @@ We will analyze the SARS-CoV-2 sequencing run `SRR26396743` from NCBI, using the
 
 **Input files**
 
-- Reference genome: `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`
-- Aligned reads: `results/bam/SRR26396743.bam`
-- BAM index: `results/bam/SRR26396743.bam.bai`
+- Reference genome: `data/NC_045512.2.fasta`
+- Aligned reads: `results/bam/SRR26396743.sorted.bam`
+- BAM index: `results/bam/SRR26396743.sorted.bam.bai`
 
 If a previous step failed, use the corresponding precomputed files provided with the course, if available.
 
-## Step 1 — Calculate depth at every position
 
-**Depth** is the number of reads covering a reference position. We use `-a` to include positions with zero coverage.
-
-Create the output directories:
-
-```bash
-mkdir -p results/coverage results/consensus results/variants
-```
-
-Calculate the depth:
-
-```bash
-samtools depth -aa \
-  results/bam/SRR26396743.bam \
-  > results/coverage/SRR26396743.depth.tsv
-```
-
-Inspect the first three lines:
-
-```bash
-head -3 results/coverage/SRR26396743.depth.tsv
-```
-
-The output contains three columns:
-
-1. Reference sequence name
-2. Position
-3. Read depth
-
-Obtain a summary with Samtools:
-
-```bash
-samtools coverage results/bam/SRR26396743.bam
-```
-
-**Questions**
-
-1. What is the depth at the first three reference positions?
-2. Are there positions with zero coverage?
-3. What are the mean depth and percentage of the reference covered by at least one read?
-
-**Answer**
-
-The depth varies along the genome. A position with zero coverage has no aligned reads supporting a base call. The summary values must be obtained from your own output.
-
-## Step 2 — Calculate mean depth and genome breadth at ≥10× 
+## Step 1 — Calculate mean depth and genome breadth at ≥10× 
 
 For this exercise, we will use **10× depth** as a practical threshold for assessing genome completeness.
 
@@ -84,80 +39,8 @@ END {
 }' results/coverage/SRR26396743.depth.tsv
 ```
 
-**Questions**
 
-1. What is the mean depth?
-2. What percentage of the genome has at least 10× coverage?
-3. Does the mean depth alone tell you whether the genome is complete?
-
-**Answer**
-
-No. A high mean depth can coexist with poorly covered regions. Always examine both mean depth and breadth of coverage.
-
-## Step 3 — Identify low-depth regions
-
-We will identify consecutive positions with depth below 10× and report them as intervals.
-
-```bash
-awk 'BEGIN {OFS="\t"}
-{
-  if ($3 < 10) {
-    if (!on) {
-      start = $2
-      on = 1
-    }
-    end = $2
-  } else if (on) {
-    print $1, start-1, end
-    on = 0
-  }
-}
-END {
-  if (on) print $1, start-1, end
-}' results/coverage/SRR26396743.depth.tsv \
-  > results/coverage/SRR26396743.low_depth.bed
-```
-
-Inspect the intervals:
-
-```bash
-cat results/coverage/SRR26396743.low_depth.bed
-```
-
-Each line contains the reference name, interval start, and interval end in BED format.
-
-**Questions**
-
-1. How many low-depth intervals were identified?
-2. What are their coordinates?
-3. Which interval is the longest?
-4. Are the low-depth regions located near the ends of the genome or in internal regions?
-
-**Answer**
-
-Use the generated BED file to identify the actual intervals. Low coverage near the genome ends can result from limitations in library preparation, read trimming, or the sequencing design. Internal gaps can have several causes, including uneven coverage, amplicon dropout, or local alignment issues. Coverage alone does not establish the cause.
-
-## Step 4 — Visualize coverage in IGV
-
-Open IGV and load:
-
-- Reference: `data/ncbi/SARS-CoV-2_NC_045512.2.fasta`
-- Alignment: `results/bam/SRR26396743.bam`
-
-Inspect one of the low-depth intervals identified in Step 3.
-
-**Questions**
-
-1. Is coverage uniform across the region?
-2. Is the region completely uncovered or only poorly covered?
-3. Do reads stop abruptly at a particular coordinate?
-4. What additional information would help determine why the region has low coverage?
-
-**Answer**
-
-IGV helps distinguish a complete coverage gap from a region with reduced depth. The shape of the coverage profile may suggest a technical issue, but further information about the library preparation and sequencing protocol is needed to establish the cause.
-
-## Step 5 — Build the consensus genome with iVar
+## Step 2 — Build the consensus genome with iVar
 
 A **consensus genome** represents the most strongly supported nucleotide at each reference position, subject to the calling thresholds.
 
@@ -168,13 +51,19 @@ Here, we will use:
 - Minimum proportion of reads supporting a base: 50%
 - Missing or insufficiently supported positions: `N`
 
+Create the output directories:
+
+```bash
+mkdir -p results/coverage results/consensus results/variants
+```
+
 Run `samtools mpileup` and pass its output to `ivar consensus`:
 
 ```bash
 samtools mpileup \
   -aa -A -d 0 -Q 0 \
-  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
-  results/bam/SRR26396743.bam \
+  -f data/NC_045512.2.fasta \
+  results/bam/SRR26396743.sorted.bam \
   | ivar consensus \
       -p results/consensus/SRR26396743 \
       -q 20 \
@@ -182,7 +71,27 @@ samtools mpileup \
       -m 10 \
       -n N
 ```
+:::{.callout-tip collapse='true'}
 
+## Options
+
+| Command / Option | Explanation |
+|---|---|
+| `samtools mpileup` | Generates per-position alignment information from the BAM file. |
+| `-aa` | Includes all reference positions, including positions with zero coverage. |
+| `-A` | Includes anomalous read pairs/orphan reads that would otherwise be skipped. |
+| `-d 0` | Removes the maximum depth limit. |
+| `-Q 0` | Sets the minimum base quality threshold in mpileup to Q0. |
+| `-f data/NC_045512.2.fasta` | Specifies the reference genome in FASTA format. |
+| `results/bam/SRR26396743.sorted.bam` | Input BAM file containing coordinate-sorted alignments. |
+| `ivar consensus` | Generates a consensus sequence from the pileup data. |
+| `-p results/consensus/SRR26396743` | Sets the output file prefix. |
+| `-q 20` | Uses a minimum base quality of Q20 for consensus calling. |
+| `-t 0.5` | Requires a minimum base frequency of 50% to call a consensus base. |
+| `-m 10` | Requires at least 10 reads covering a position. |
+| `-n N` | Uses `N` for positions where a consensus base cannot be called. |
+
+:::
 This produces a consensus FASTA file, normally named:
 
 `results/consensus/SRR26396743.fa`
@@ -193,20 +102,8 @@ Inspect its header and sequence:
 head -c 300 results/consensus/SRR26396743.fa
 ```
 
-**Questions**
 
-1. What is the length of the consensus?
-2. Why are some positions represented by `N`?
-3. What happens when a position has fewer than 10 reads?
-4. Does a consensus sequence necessarily represent a perfect reconstruction of the original viral genome?
-
-**Answer**
-
-A consensus can contain `N` where the evidence is insufficient under the selected thresholds. It is an estimate derived from the available reads, not a guarantee of a perfectly reconstructed genome.
-
-The consensus quality depends on depth, base quality, mapping quality, the consensus thresholds, and the quality of the underlying sequencing data.
-
-## Step 6 — Measure the number of ambiguous bases
+## Step 3 — Measure the number of ambiguous bases
 
 Count the number of `N` bases:
 
@@ -233,31 +130,8 @@ awk '
 ' results/consensus/SRR26396743.fa
 ```
 
-Find the longest consecutive run of `N` bases:
 
-```bash
-grep -v '^>' results/consensus/SRR26396743.fa \
-  | tr -d '\n' \
-  | grep -o 'N\+' \
-  | awk '{print length}' \
-  | sort -n \
-  | tail -1
-```
-
-If no `N` bases are present, the last command produces no output; interpret that as zero.
-
-**Questions**
-
-1. How many `N` bases are present?
-2. What percentage of the consensus is ambiguous?
-3. What is the longest consecutive run of `N`?
-4. Where are the longest ambiguous regions located?
-
-**Answer**
-
-All values should be measured from the generated consensus. A large number of `N` bases or a long consecutive run indicates regions that cannot be confidently resolved with the chosen thresholds.
-
-## Step 7 — Identify candidate variants with bcftools
+## Step 4 — Identify candidate variants with bcftools
 
 We will compare the aligned reads with the reference to identify candidate single-nucleotide variants and short insertions or deletions.
 
@@ -265,17 +139,38 @@ Generate a VCF file:
 
 ```bash
 bcftools mpileup \
-  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
+  -f data/NC_045512.2.fasta \
   -Q 20 \
   -d 1000000 \
   -a AD \
-  results/bam/SRR26396743.bam \
+  results/bam/SRR26396743.sorted.bam \
   | bcftools call \
       -mv \
       --ploidy 1 \
       -Oz \
       -o results/variants/SRR26396743.vcf.gz
 ```
+:::{.callout-tip collapse='true'}
+### Options
+
+| Command / Option | Explanation |
+|---|---|
+| `bcftools mpileup` | Generates per-position read data for variant detection. |
+| `-f data/NC_045512.2.fasta` | Specifies the reference genome in FASTA format. |
+| `-Q 20` | Excludes bases with a base quality below Q20. |
+| `-d 1000000` | Sets the maximum read depth per position to 1,000,000. |
+| `-a AD` | Adds allele-depth (`AD`) information. |
+| `results/bam/SRR26396743.sorted.bam` | Input BAM file containing aligned reads. |
+| `bcftools call` | Identifies candidate variants from the read data. |
+| `-m` | Uses the multiallelic variant-calling model. |
+| `-v` | Outputs variant sites only. |
+| `--ploidy 1` | Assumes a haploid genome. |
+| `-Oz` | Writes the VCF output in compressed BGZF format. |
+| `-o results/variants/SRR26396743.vcf.gz` | Specifies the output VCF file. |
+
+**Output:** A compressed VCF file containing candidate variants identified by comparing the sequencing reads with the SARS-CoV-2 reference genome.
+:::
+
 
 Index the VCF:
 
@@ -289,7 +184,7 @@ Display the variant records:
 bcftools view -H results/variants/SRR26396743.vcf.gz \
   | cut -f1,2,4,5,6
 ```
-
+:::{.callout-tip}
 The columns displayed are:
 
 1. Reference sequence
@@ -297,6 +192,7 @@ The columns displayed are:
 3. Reference allele
 4. Alternative allele
 5. Variant quality (QUAL)
+:::
 
 Count the reported variant records:
 
@@ -305,20 +201,8 @@ bcftools view -H results/variants/SRR26396743.vcf.gz \
   | wc -l
 ```
 
-**Questions**
 
-1. How many variant records were reported?
-2. Which reference positions contain candidate variants?
-3. Do the variants have good read support?
-4. Can you confirm that a variant is real based only on its presence in the VCF?
-
-**Answer**
-
-The VCF contains candidate variants identified by the caller. Each candidate must be interpreted using its read depth, allele support, base quality, mapping quality, and alignment context.
-
-A variant record is not automatically proof of a biological mutation. Examine suspicious calls in IGV and apply suitable quality filters before downstream analyses.
-
-## Step 8 — Change the consensus depth threshold
+## Step 5 — Change the consensus depth threshold
 
 A higher minimum depth can make the consensus more conservative, but it can also increase the number of ambiguous bases.
 
@@ -327,8 +211,8 @@ Build a second consensus requiring at least 30 reads per position:
 ```bash
 samtools mpileup \
   -aa -A -d 0 -Q 0 \
-  -f data/ncbi/SARS-CoV-2_NC_045512.2.fasta \
-  results/bam/SRR26396743.bam \
+  -f data/NC_045512.2.fasta \
+  results/bam/SRR26396743.sorted.bam \
   | ivar consensus \
       -p results/consensus/SRR26396743.m30 \
       -q 20 \
@@ -347,24 +231,30 @@ grep -v '^>' results/consensus/SRR26396743.m30.fa \
 
 Compare the results with the consensus generated at 10×.
 
-**Questions**
+## Step 6 — Is this genome good enough?
 
-1. Did the number of `N` bases change?
-2. Did the consensus become more or less complete?
-3. Why might a laboratory choose a higher depth threshold?
+A genome is not simply "good" or "bad": it is **good enough for a specific purpose**, based on several quality metrics.
 
-**Answer**
+## The numbers that matter
 
-A higher threshold may increase the number of ambiguous bases because positions supported by 10–29 reads no longer meet the minimum-depth requirement. This illustrates the trade-off between the completeness of the consensus and the strictness of the calling criteria.
+| Metric | Why it matters |
+|---|---|
+| **Total reads / % mapped** | Indicates the amount of sequencing data and the proportion mapping to the virus. A low mapping rate may indicate contamination or poor enrichment. |
+| **Mean depth** | Indicates the average sequencing coverage at each reference position. |
+| **% of genome at ≥ 10× depth** | Measures how much of the genome has sufficient coverage for reliable consensus calling. |
+| **% N / longest run of Ns** | Indicates missing sequence information. Long runs of Ns may correspond to missing genomic regions. |
+| **Negative control (NTC)** | Checks whether viral reads are detected in a sample that should contain no viral material. |
 
-A suitable threshold depends on the sequencing protocol, the intended use, and the laboratory's validated quality criteria.
 
-## Final question
+## illustrative thresholds
+These are **illustrative thresholds**, not universal standards. Adapt them to the sequencing protocol and intended analysis.
 
-The genome has a mean depth of 100×, but 15% of its positions have zero coverage. Can you consider the consensus complete?
 
-**Answer**
-
-No. Mean depth is an average and can conceal large coverage gaps. Assess mean depth, breadth at relevant thresholds, low-depth intervals, and the number and distribution of `N` bases before deciding whether a consensus is suitable for its intended purpose.
+| Criterion | Good | To review | Poor |
+|---|---|---|---|
+| **% mapped** | ≥ 90% | 70–89.9% | < 70% |
+| **Genome at ≥ 10×** | ≥ 90% | 70–89.9% | < 70% |
+| **% N** | ≤ 10% | > 10–20% | > 20% |
+| **Negative control** | No concerning viral signal | Investigate low-level signal | Clear evidence of contamination |
 
 **Next:** [Is this genome good enough?](04_genome_qc_verdict.md)

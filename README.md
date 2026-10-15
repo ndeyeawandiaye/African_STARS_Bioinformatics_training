@@ -1,94 +1,58 @@
 # From FASTQ to genome — hands-on dry lab
 
-Practical session (≈ 3 h) of the NGS training (African STARS Fellowship / CARE / Institut Pasteur):
-go from raw paired-end Illumina reads to a **consensus genome** and decide whether it is good enough
-for phylogenetics (Day 4).
+Practical session of the NGS training (African STARS Fellowship / CARE / Institut Pasteur): go from raw paired-end Illumina reads (R1 + R2) to a checked genome.
 
-> **All data are synthetic.** A 10 kb toy virus (`TOYV1`) and five simulated samples. No real patient data.
+> **Real public data.** The reads are downloaded from NCBI SRA (run `SRR26396743`, SARS-CoV-2) and the reference is `NC_045512.2`. No synthetic data, no patient information.
 
-## Repository map
+## Pipeline
 
-| Path | Content |
-|---|---|
-| `data/` | reference (`reference/TOYV1.fasta`), FASTQ files, sample sheet (`samples.tsv`) |
-| `scripts/` | pipeline steps `00`–`07` and `run_all.sh`; settings in `config.sh` |
-| `exercises/` | step-by-step instructions and `answer_sheet.tsv` |
-| `precomputed/` | plan B: BAM, coverage, consensus and QC summary |
-| `solutions/` | instructor material (answers, truth) — **remove or publish only after the session** |
-| `course/`, `index.qmd`, `_quarto.yml` | the **Quarto website** with all the lessons (modules 1–5) |
-| `tools/` | data simulators (`simulate_data.py`, `simulate_outbreak.py`) and tools to regenerate `precomputed/` |
+| Step | Tool | Purpose |
+|---|---|---|
+| 1. Quality control | FastQC + MultiQC | Quality of the raw reads |
+| 2. Trimming | trimmomatic | Remove adapters and low-quality bases |
+| 3. Assembly | SPAdes | Assemble reads into contigs / scaffolds |
+| 4. Identification | Kraken2 or BLAST | Which organisms? Contamination? |
+| 5. Assembly quality | QUAST | N50, length, genome fraction |
+| 6. Mapping and consensus | BWA / minimap2, samtools, bcftools, iVar | Next lessons |
 
-## Course website
-
-All lessons (FASTQ → consensus genome; alignment, lineage & reference selection; build and read a tree;
-communicating genomic evidence; mini outbreak investigation) are in a Quarto site.
-
-```bash
-quarto preview     # local preview
-quarto render      # builds _site/
-```
-
-Publishing: push to GitHub, then **Settings → Pages → Source: GitHub Actions** (`.github/workflows/publish.yml`).
-Replace `YOUR-ORG` in `_quarto.yml`, `index.qmd` by your GitHub organisation.
-`solutions/` is never rendered into the site.
 
 ## Quick start
 
 ```bash
-git clone <URL-OF-THE-REPO> fastq-to-genome && cd fastq-to-genome
+https://github.com/ndeyeawandiaye/African_STARS_Bioinformatics_training.git && cd African_STARS_Bioinformatics_training
 mamba env create -f environment.yml      # or conda
 conda activate analyse
-bash scripts/00_check_setup.sh
-bash scripts/run_all.sh                  # whole pipeline, all samples
 ```
 
-Visualisation: [IGV desktop](https://igv.org/doc/desktop/) or the [igv.org web app](https://igv.org/app)
-(not in the conda environment).
+Download the data (details in the Setup lesson):
 
-## Session flow (3 h)
+```bash
+mkdir -p data && cd data
+prefetch SRR26396743
+fasterq-dump --split-3 --threads 2 SRR26396743
+gzip SRR26396743_1.fastq SRR26396743_2.fastq
+cd ..
+curl -fL --retry 5 --retry-delay 2 \
+  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NC_045512.2&rettype=fasta&retmode=text" \
+  -o data/SARS-CoV-2_NC_045512.2.fasta
+seqkit stats data/*.fastq.gz       # R1 and R2 must have the same number of reads
+```
 
-| Time | Part | File |
-|---|---|---|
-| 0:00–0:45 | Bridge talk: formats, sequencers, assembly strategies | slides |
-| 0:45–1:00 | Setup | `exercises/00_setup.md` |
-| 1:00–1:30 | FASTQ and QC | `exercises/01_fastq_and_qc.md` |
-| 1:30–2:00 | Mapping | `exercises/02_mapping.md` |
-| 2:00–2:45 | Coverage and consensus | `exercises/03_coverage_consensus.md` |
-| 2:45–3:15 | Genome QC and verdict | `exercises/04_genome_qc_verdict.md` |
+## Course website
 
-## The five samples
+https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/
 
-| Sample | What the participants should discover |
-|---|---|
-| S01 | a good genome (reference case) |
-| S02 | good mean depth, but a large uncovered region |
-| S03 | far too little data |
-| S04 | many reads are not from the virus |
-| S05 | negative control with reads in it |
-
-## Plan B (no install possible)
-
-Use `precomputed/`: open the BAMs in IGV, read `qc_summary.tsv`, and do exercises 03–04 from those files.
-Regenerate the summary with `python3 scripts/07_summary.py --results precomputed`.
-
-## Deliverables
-
-Each participant (or pair) returns `exercises/answer_sheet.tsv` filled in: one verdict and a justification per sample.
 
 ## Troubleshooting
 
-- `command not found`: the environment is not active → `conda activate analyse`.
-- Slow solver: use `mamba` (or `conda config --set solver libmamba`).
-- Apple Silicon / Windows: use WSL2 on Windows; if a bioconda package is missing on ARM, use plan B.
-- Re-run a single step on one sample: `bash scripts/03_map.sh S02`.
+- `command not found`: activate the environment with `conda activate analyse`.
+- Slow solver: use `mamba`.
+- macOS: use `gzcat` or `gzip -dc` instead of `zcat`.
+- Apple Silicon / Windows: use WSL2 on Windows; if a package is missing on ARM, see the Setup lesson.
+- NCBI download fails (`curl: (56)`): retry, or download the files from the NCBI website.
 
 ## Instructor notes
 
-- Test the whole pipeline once on your own machine before the session. The shell scripts were written to be
-  standard, but **they were not run end-to-end with the real tools during preparation**; `precomputed/` comes from a
-  Python stand-in. Then run `tools/refresh_precomputed.sh` so plan B matches plan A.
-- Regenerate the data (deterministic): `python3 tools/simulate_data.py`, `python3 tools/simulate_outbreak.py`, then
-  `pip install -r tools/requirements.txt && python3 tools/make_precomputed.py`.
-- Keep `solutions/` out of the participants' copy (private branch, or delete before sharing), and publish it afterwards.
-- Choose a licence (e.g. MIT for code, CC BY 4.0 for the material) and add a `LICENSE` file.
-- Modules 2–5 (scripts `10`–`15`) were tested only with their Python plan-B versions here (MAFFT and IQ-TREE were not available); run `scripts/11_align.sh` and `12_tree.sh` once before teaching.
+- Run the whole pipeline once before the session.
+- Keep `solutions/` out of the participants' copy.
+- Add a `LICENSE` file (e.g. MIT for code, CC BY 4.0 for the material).

@@ -117,8 +117,8 @@ Run `trimmomatic`:
 trimmomatic PE \
   -threads 2 \
   -phred33 \
-  data/SRR26396743_1.fastq \
-  data/SRR26396743_2.fastq \
+  data/SRR26396743_1.fastq.gz \
+  data/SRR26396743_2.fastq.gz \
   results/trimmed/SRR26396743_1_paired.fastq.gz \
   results/trimmed/SRR26396743_1_unpaired.fastq.gz \
   results/trimmed/SRR26396743_2_paired.fastq.gz \
@@ -320,7 +320,7 @@ mkdir -p results/quast
 quast.py \
   results/spades/contigs.fasta \
   results/spades/scaffolds.fasta \
-  -r data/reference/NC_045512.2.fasta \
+  -r data/NC_045512.2.fasta \
   --min-contig 200 \
   -t 2 \
   -o results/quast
@@ -342,21 +342,56 @@ cat results/quast/report.txt
 ```bash
 open results/quast/report.html
 ```
+:::{.callout-tip collapse='true'}
+## Interpretation
 
-Key metrics:
+### Key Assembly Quality Metrics
+
+#### 1. Assembly statistics (reference-independent)
+
+These metrics describe the assembled sequences without requiring a reference genome.
 
 | Metric | Meaning |
 |---|---|
-| `# contigs` | Number of contigs (fewer is generally better) |
-| `Largest contig` | Length of the longest contig |
-| `Total length` | Sum of all contig lengths |
-| `N50` | Length such that contigs of at least this size contain 50% of the assembly |
-| `L50` | Number of contigs needed to reach 50% of the assembly |
-| `Genome fraction (%)` | Percentage of the reference covered by the assembly |
-| `# misassemblies` | Contigs that do not align consistently to the reference |
-| `# N's per 100 kbp` | Amount of undefined bases (gaps) |
+| `# contigs` | Number of assembled contigs meeting the specified minimum length. Fewer contigs can indicate a more continuous assembly. |
+| `Largest contig` | Length of the longest assembled contig, in base pairs (bp). |
+| `Total length` | Sum of the lengths of all assembled contigs or scaffolds. |
+| `Total length (>= 1,000 bp)` | Combined length of sequences that are at least 1,000 bp long. |
+| `Total length (>= 10,000 bp)` | Combined length of sequences that are at least 10,000 bp long. |
+| `Total length (>= 50,000 bp)` | Combined length of sequences that are at least 50,000 bp long. |
+| `N50` | Length of the contig or scaffold at which sequences of that length or longer account for at least 50% of the total assembly length. |
+| `L50` | Minimum number of the longest contigs or scaffolds needed to account for at least 50% of the total assembly length. |
+| `# N's` | Total number of ambiguous nucleotide positions (`N`) in the assembly, usually representing unresolved sequence gaps. |
 
+#### 2. Alignment-based statistics (reference-dependent)
 
+These metrics evaluate the assembly by comparing it with a reference genome.
+
+| Metric | Meaning |
+|---|---|
+| `Genome fraction (%)` | Percentage of the reference genome covered by the assembled sequences. |
+| `Duplication ratio` | Ratio of the total aligned length, including overlapping or duplicated alignments, to the reference genome length. A value near 1 generally indicates limited excess aligned sequence. |
+| `Largest alignment` | Length of the longest alignment between an assembled sequence and the reference genome. |
+| `Total aligned length` | Sum of the lengths of assembly regions aligned to the reference, according to the tool's alignment rules. |
+| `NGA50` | Reference-based continuity metric calculated from aligned assembly blocks using the reference genome length as the benchmark. |
+| `LGA50` | Minimum number of the longest aligned blocks needed to cover at least 50% of the reference genome. |
+| `# misassemblies` | Number of structural inconsistencies detected when aligning the assembly to the reference genome. |
+| `Misassembled contigs length` | Total length of contigs classified as misassembled by the evaluation tool. |
+| `# mismatches per 100 kbp` | Number of aligned nucleotide positions that differ from the reference, normalized to 100,000 aligned bases. |
+| `# indels per 100 kbp` | Number of insertion and deletion events detected in the alignments, normalized to 100,000 aligned bases. |
+| `# N's per 100 kbp` | Number of ambiguous bases (`N`) per 100,000 bases of assembly sequence. |
+
+#### 3. Interpretation guidelines
+
+- **Continuity:** Fewer contigs, a larger longest contig, and higher N50/NGA50 values generally indicate a more continuous assembly.
+- **Completeness:** A higher genome fraction indicates that more of the reference genome is represented in the assembly.
+- **Structural consistency:** Fewer detected misassemblies indicate better agreement with the reference structure.
+- **Sequence accuracy:** Lower mismatch and indel rates indicate fewer differences from the reference, although genuine biological variation can also contribute to these differences.
+- **Ambiguous bases:** A high number of `N` bases indicates unresolved sequence positions, often associated with gaps in scaffolds.
+- **Total length:** An assembly length close to the expected genome length can be reassuring, but does not by itself demonstrate completeness or accuracy.
+
+**Important:** No single metric is sufficient to assess assembly quality. Interpret continuity, completeness, structural consistency, and sequence accuracy together. Metrics such as N50 and NGA50 are not directly interchangeable because they use different reference-length benchmarks.
+:::
 ---
 
 ## Step 8 — Summarize your results
