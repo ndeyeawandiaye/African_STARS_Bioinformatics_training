@@ -26,41 +26,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -291,7 +256,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#anatomy-of-a-tree" id="toc-anatomy-of-a-tree" class="nav-link active" data-scroll-target="#anatomy-of-a-tree">Anatomy of a tree</a></li>
   <li><a href="#what-a-tree-can-and-cannot-tell" id="toc-what-a-tree-can-and-cannot-tell" class="nav-link" data-scroll-target="#what-a-tree-can-and-cannot-tell">What a tree can and cannot tell</a></li>
-  <li><a href="#exercise-read-the-tree" id="toc-exercise-read-the-tree" class="nav-link" data-scroll-target="#exercise-read-the-tree">Exercise — read the tree</a></li>
+  <li><a href="#exercise-read-your-tree" id="toc-exercise-read-your-tree" class="nav-link" data-scroll-target="#exercise-read-your-tree">Exercise — read your tree</a></li>
   <li><a href="#final-question" id="toc-final-question" class="nav-link" data-scroll-target="#final-question">Final question</a></li>
   </ul>
 </nav>
@@ -322,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="anatomy-of-a-tree" class="level2">
 <h2 class="anchored" data-anchor-id="anatomy-of-a-tree">Anatomy of a tree</h2>
 <ul>
-<li><strong>Tips</strong> = the genomes you sequenced. <strong>Internal nodes</strong> = inferred common ancestors.</li>
+<li><strong>Tips</strong> = the genomes you sequenced or downloaded. <strong>Internal nodes</strong> = inferred common ancestors.</li>
 <li><strong>Branch length</strong> = amount of change (substitutions per site), <em>not</em> time (unless the tree is time-scaled).</li>
 <li><strong>Clade</strong> = an ancestor and <em>all</em> its descendants. Rotating the branches around a node does not change the tree.</li>
 <li><strong>Root</strong> = where the tree starts. Without a root you cannot say who is ancestral.</li>
@@ -334,7 +299,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 49%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -358,47 +323,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="exercise-read-the-tree" class="level2">
-<h2 class="anchored" data-anchor-id="exercise-read-the-tree">Exercise — read the tree</h2>
-<p>The figure below was made from the course data with the plan-B method (neighbour-joining). Open yours too: it should look similar.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../precomputed/phylo/tree_region.png" class="img-fluid figure-img" style="width:85.0%"></p>
-<figcaption>Tree coloured by region</figcaption>
-</figure>
-</div>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../precomputed/phylo/tree_lineage.png" class="img-fluid figure-img" style="width:85.0%"></p>
-<figcaption>Same tree coloured by lineage</figcaption>
-</figure>
-</div>
-<p>Dates and regions are in <code>data/outbreak/metadata.tsv</code>. To sort the genomes by date:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span> <span class="at">-t</span><span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> <span class="at">-k2,2</span> data/outbreak/metadata.tsv <span class="kw">|</span> <span class="ex">column</span> <span class="at">-t</span> <span class="at">-s</span> <span class="st">$'</span><span class="dt">\t</span><span class="st">'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="exercise-read-your-tree" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-read-your-tree">Exercise — read your tree</h2>
+<p>Open your tree in iTOL (<code>results/phylo/tree.treefile</code>), rooted on <code>NC_045512.2</code> and coloured by lineage as in the previous page. The collection dates and countries of the references are in the table of NCBI Virus (you can add these columns with <em>Customize columns</em>).</p>
 <p><strong>Questions</strong></p>
 <ol type="1">
-<li>Where is S01? Who are its closest relatives?</li>
-<li>How many clusters do you see, and in which regions?</li>
-<li>Which part of the tree is the oldest? (use the dates)</li>
-<li>Do the Region C cases form one cluster or several? What does it suggest?</li>
+<li>Where is your sample, <code>SRR26396743</code>? Who are its closest relatives?</li>
+<li>Do the references of each lineage form a clade? Is there a lineage that does not?</li>
+<li>Which part of the tree is the oldest? Check it against the collection dates.</li>
+<li>Which are the longest branches? What do they mean?</li>
+<li>Are the bootstrap values high around your sample? What does it tell you?</li>
 </ol>
-<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Answers
+<span class="screen-reader-only">Tip</span>Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
+<p>Use your own tree.</p>
 <ol type="1">
-<li>S01 is in the <strong>TV.2</strong> group, next to <strong>OB10, OB25, OB15 and OB22</strong> (2–3 SNPs away). OB10, OB25 and OB15 are Region A genomes from 2–4 March: S01 (2 March, Region A) fits perfectly with the start of the Region A outbreak. OB22 is a Region C genome (12 March).</li>
-<li><strong>Four groups</strong> hang from the root: (i) background <strong>TV.1</strong> genomes (Regions B and D, January–February), (ii) <strong>TV.3</strong> (Region B, February–March), (iii) the <strong>TV.2</strong> early group (Region A, with one Region C genome), and, derived from it, (iv) two sub-clades: <strong>TV.2.1</strong> (almost all Region A) and <strong>TV.2.2</strong> (Region C).</li>
-<li>The <strong>oldest</strong> genomes are the TV.1 ones (January–February) and the TV.3 ones (February–March), close to the root. The TV.2 group starts in early March; TV.2.1 and TV.2.2 appear from late March: the tree order matches the dates.</li>
-<li><strong>One main cluster</strong> (TV.2.2: 7 genomes, from 25 March) plus <strong>two other Region C genomes</strong> that belong to other groups (OB22, an early TV.2, and OB14, a TV.2.1). This suggests several links between regions A and C: an introduction of the early TV.2 virus followed by <strong>local transmission</strong> (the TV.2.2 cluster), and a later exchange (OB14). Direction cannot be proved by the tree alone.</li>
+<li>Your sample sits in the clade of the closest reference found in <em>Lineage assignment</em>. If it is next to a reference of a given lineage, that lineage is a good candidate.</li>
+<li>References of the same lineage normally group together. A lineage that is split suggests a labelling issue, or too few genomes to resolve it.</li>
+<li>The oldest genomes (early 2020) are close to the root; the tree order should match the collection dates.</li>
+<li>Long branches mean many substitutions between a genome and its relatives: either a lineage that evolved fast (for example the first Omicron lineages) or a sequence with errors or missing data.</li>
+<li>A bootstrap of 95 or more means that the grouping is well supported. Low values around the sample mean that its position is uncertain: the genome may be incomplete, or the closest references are too similar to be separated.</li>
 </ol>
 </div>
 </div>
@@ -407,7 +361,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="final-question" class="level2">
 <h2 class="anchored" data-anchor-id="final-question">Final question</h2>
 <p>Two genomes are identical. List three explanations other than “A infected B”.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -421,10 +375,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="callout-body-container callout-body">
 <ul>
 <li><strong>Too few mutations</strong> to tell them apart: viruses change slowly, so unrelated cases can have the same sequence over a short period.</li>
-<li>A <strong>common source</strong> (same event, same contaminated food/animal) that infected both without contact between them.</li>
+<li>A <strong>common source</strong> that infected both without contact between them.</li>
 <li>A <strong>common ancestor several steps earlier</strong>, with unsampled intermediate cases (you only see part of the chain).</li>
 <li><strong>Laboratory contamination</strong> or barcode bleed between the two samples.</li>
-<li>Missing data: identical <em>on the positions that could be compared</em> (N regions hide differences).</li>
+<li>Missing data: identical <em>on the positions that could be compared</em> (<code>N</code> regions hide differences).</li>
 </ul>
 </div>
 </div>

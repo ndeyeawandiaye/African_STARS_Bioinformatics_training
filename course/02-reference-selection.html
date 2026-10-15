@@ -291,9 +291,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#why-it-matters" id="toc-why-it-matters" class="nav-link active" data-scroll-target="#why-it-matters">Why it matters</a></li>
-  <li><a href="#step-1-look-at-the-three-candidates" id="toc-step-1-look-at-the-three-candidates" class="nav-link" data-scroll-target="#step-1-look-at-the-three-candidates">Step 1 — Look at the three candidates</a></li>
-  <li><a href="#step-2-which-one-is-closest-to-s01" id="toc-step-2-which-one-is-closest-to-s01" class="nav-link" data-scroll-target="#step-2-which-one-is-closest-to-s01">Step 2 — Which one is closest to S01?</a></li>
-  <li><a href="#step-3-see-the-effect-of-a-bad-reference" id="toc-step-3-see-the-effect-of-a-bad-reference" class="nav-link" data-scroll-target="#step-3-see-the-effect-of-a-bad-reference">Step 3 — See the effect of a bad reference</a></li>
+  <li><a href="#our-sample" id="toc-our-sample" class="nav-link" data-scroll-target="#our-sample">Our sample</a></li>
+  <li><a href="#step-1-download-references-of-several-lineages-from-ncbi-virus" id="toc-step-1-download-references-of-several-lineages-from-ncbi-virus" class="nav-link" data-scroll-target="#step-1-download-references-of-several-lineages-from-ncbi-virus">Step 1 — Download references of several lineages from NCBI Virus</a></li>
   <li><a href="#final-question" id="toc-final-question" class="nav-link" data-scroll-target="#final-question">Final question</a></li>
   </ul>
 </nav>
@@ -323,11 +322,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="why-it-matters" class="level2">
 <h2 class="anchored" data-anchor-id="why-it-matters">Why it matters</h2>
-<p>Reads are mapped to <strong>one</strong> reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and <strong>biases the consensus towards the reference</strong>.</p>
+<p>Reads are mapped to <strong>one</strong> reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and <strong>biases the consensus towards the reference</strong>. For a tree, we also need <strong>reference genomes of several lineages</strong> to place our own genome in context.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 30%">
+<col style="width: 69%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -337,8 +336,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>Same species / genotype</td>
-<td>is it the right virus, the right genotype, the right segment?</td>
+<td>Same species / lineage</td>
+<td>is it the right virus, the right lineage?</td>
 </tr>
 <tr class="even">
 <td>Close to your samples</td>
@@ -346,11 +345,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>Complete and good quality</td>
-<td>no gaps, no ambiguous bases</td>
+<td>complete genome, few ambiguous bases (N)</td>
 </tr>
 <tr class="even">
 <td>Well documented</td>
-<td>accession number, source, date</td>
+<td>accession number, host, country, collection date</td>
 </tr>
 <tr class="odd">
 <td>Consistent across the study</td>
@@ -359,23 +358,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="step-1-look-at-the-three-candidates" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-look-at-the-three-candidates">Step 1 — Look at the three candidates</h2>
-<p>Three candidate references are in <code>data/reference/candidates/</code>:</p>
-<ul>
-<li><code>TOYV1_TV1</code>: the original (root) genotype;</li>
-<li><code>TOYV1_TV2</code>: a genotype that appeared later (8 mutations);</li>
-<li><code>TOYV2_divergent</code>: another, more distant virus (about 8 % different).</li>
-</ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats data/reference/candidates/<span class="pp">*</span>.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="step-2-which-one-is-closest-to-s01" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-which-one-is-closest-to-s01">Step 2 — Which one is closest to S01?</h2>
-<p>We count the differences between your S01 consensus and each candidate (positions with N are ignored):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/10_pick_reference.py results/consensus/S01.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>(Plan B: <code>precomputed/consensus/S01.fa</code>. This small script is written for the course; in real life you would use a BLAST or Nextclade search against a database.)</p>
-<p><strong>Questions:</strong> which reference is the closest? How many mismatches? Is it what you expected?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="our-sample" class="level2">
+<h2 class="anchored" data-anchor-id="our-sample">Our sample</h2>
+<p>Our sample is the consensus genome built in the previous exercises from the run <code>SRR26396743</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> results/consensus/</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats results/consensus/SRR26396743.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Since the mapping exercise we have used <strong>NC_045512.2</strong> (Wuhan-Hu-1), the RefSeq reference of SARS-CoV-2, as the coordinate system for this sample.</p>
+<p><strong>Questions:</strong> what is the length of the consensus? Why was Wuhan-Hu-1 a good reference to map these reads?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -387,50 +377,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Candidate</th>
-<th>Compared sites</th>
-<th>Mismatches</th>
-<th>Identity</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>TOYV1_TV2</strong></td>
-<td>9,937</td>
-<td><strong>2</strong></td>
-<td>99.98 %</td>
-</tr>
-<tr class="even">
-<td>TOYV1_TV1</td>
-<td>9,937</td>
-<td>10</td>
-<td>99.90 %</td>
-</tr>
-<tr class="odd">
-<td>TOYV2_divergent</td>
-<td>9,937</td>
-<td>807</td>
-<td>91.88 %</td>
-</tr>
-</tbody>
-</table>
-<p><strong>TOYV1_TV2</strong> is the closest: S01 carries the 8 lineage mutations of TV.2 and only 2 private ones, so it differs by 2 positions from that reference and by 10 from the root. The divergent virus is ~8 % different: it is another virus and unusable here. (Choosing between TV.1 and TV.2 changes little, but choosing the wrong virus changes everything.)</p>
+<p>The length should be close to 29.9 kb, that of the SARS-CoV-2 genome. Wuhan-Hu-1 is the RefSeq reference of the right virus, a complete and well-documented genome, and the coordinate system used by the whole community (variant calling, lineage tools, primer schemes).</p>
 </div>
 </div>
 </div>
 </section>
-<section id="step-3-see-the-effect-of-a-bad-reference" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-see-the-effect-of-a-bad-reference">Step 3 — See the effect of a bad reference</h2>
-<p>Map S01 to the divergent reference and compare with the good mapping:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> index data/reference/candidates/TOYV2_divergent.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="at">-t</span> 2 data/reference/candidates/TOYV2_divergent.fasta results/trimmed/S01_R1.fastq.gz results/trimmed/S01_R2.fastq.gz <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">samtools</span> sort <span class="at">-o</span> results/bam/S01_divergent.bam <span class="at">-</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> flagstat results/bam/S01_divergent.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Question:</strong> what changes compared with <code>results/bam/S01.flagstat.txt</code>?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="step-1-download-references-of-several-lineages-from-ncbi-virus" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-download-references-of-several-lineages-from-ncbi-virus">Step 1 — Download references of several lineages from NCBI Virus</h2>
+<p>To place our genome in a tree (next sessions), we need <strong>reference genomes of several lineages</strong> from the same database. Open NCBI Virus: <a href="https://www.ncbi.nlm.nih.gov/labs/virus" class="uri">https://www.ncbi.nlm.nih.gov/labs/virus</a> and choose <strong>SARS-CoV-2</strong> (taxid 2697049).</p>
+<ol type="1">
+<li>In the filters on the left, keep <strong>Nucleotide completeness: complete</strong> and <strong>Host: <em>Homo sapiens</em></strong>.</li>
+<li>Filter by <strong>Pango lineage</strong> (or add the lineage column to the table with <em>Customize columns</em>) and choose <strong>one or two genomes per lineage</strong>.</li>
+<li>Choose lineages that span the pandemic: the ancestral lineage <strong>B</strong> (Wuhan-Hu-1, accession NC_045512.2), Alpha (B.1.1.7), Delta (B.1.617.2), Omicron (BA.1, BA.2, BA.5, XBB.1.5) <strong>and the lineages circulating when your sample was collected</strong> (look at the <code>collection_date</code> of the run <code>SRR26396743</code> on its NCBI BioSample page).</li>
+<li>Prefer genomes with a full date and country, and with few ambiguous bases.</li>
+<li>Select about 10–15 genomes, then <strong>Download → Nucleotide → FASTA → Build custom</strong>, and put <strong>Accession</strong> and <strong>Pango lineage</strong> in the definition line. Save the file as <code>data/ncbi/lineage_refs.fasta</code>.</li>
+</ol>
+<p>Clean the names (no spaces, no <code>|</code>: the tree software does not like them):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^&gt;/ { s/[ |][ |]*/_/g; s/_$// }'</span> data/ncbi/lineage_refs.fasta <span class="op">&gt;</span> data/ncbi/lineage_refs.clean.fasta</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'&gt;'</span> data/ncbi/lineage_refs.clean.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each name should now look like <code>ACCESSION_LINEAGE</code>. Check that <code>NC_045512.2</code> is in the list: it will be our root.</p>
+<p><strong>Questions:</strong> how many genomes did you keep? Which criteria did you use to choose them?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -442,15 +409,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>With about 8 % divergence, a 150-base read has around 12 mismatches: fewer reads align (the exact % depends on the aligner), many alignments are <strong>soft-clipped</strong> (only part of the read aligns) and the reads that do map carry dozens of false differences. In IGV you would see a mosaic of coloured mismatches, and the consensus would be unreliable. The lesson: <strong>check that the reference is close to your virus before mapping</strong>.</p>
+<p>The criteria are the table at the top of the page: same species, complete genome, few <code>N</code>, documented (accession, lineage, date, country), and a good spread of lineages and dates so that the tree has meaningful comparisons. One genome per lineage is enough for this exercise; real studies use many more.</p>
 </div>
 </div>
 </div>
 </section>
 <section id="final-question" class="level2">
 <h2 class="anchored" data-anchor-id="final-question">Final question</h2>
-<p>Why should all the samples of an outbreak be mapped to the <strong>same</strong> reference?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<p>Why should all the samples of a study be mapped to the <strong>same</strong> reference?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -462,7 +429,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Because the differences are measured <strong>against the reference</strong>, with its coordinates. If each sample used another reference, positions would not correspond, mutations would not be comparable, and differences between references would be mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align and compare.</p>
+<p>Because differences are measured <strong>against the reference</strong>, with its coordinates. If each sample used another reference, positions would not correspond, mutations would not be comparable, and differences between references would be mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align and compare.</p>
 </div>
 </div>
 </div>

@@ -292,8 +292,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#choosing-a-method" id="toc-choosing-a-method" class="nav-link active" data-scroll-target="#choosing-a-method">Choosing a method</a></li>
   <li><a href="#step-1-build-the-maximum-likelihood-tree" id="toc-step-1-build-the-maximum-likelihood-tree" class="nav-link" data-scroll-target="#step-1-build-the-maximum-likelihood-tree">Step 1 — Build the maximum-likelihood tree</a></li>
-  <li><a href="#step-2-draw-the-tree" id="toc-step-2-draw-the-tree" class="nav-link" data-scroll-target="#step-2-draw-the-tree">Step 2 — Draw the tree</a></li>
-  <li><a href="#step-3-remove-the-low-quality-genome-and-rebuild" id="toc-step-3-remove-the-low-quality-genome-and-rebuild" class="nav-link" data-scroll-target="#step-3-remove-the-low-quality-genome-and-rebuild">Step 3 — Remove the low-quality genome and rebuild</a></li>
+  <li><a href="#step-2-draw-and-annotate-the-tree-in-itol" id="toc-step-2-draw-and-annotate-the-tree-in-itol" class="nav-link" data-scroll-target="#step-2-draw-and-annotate-the-tree-in-itol">Step 2 — Draw and annotate the tree in iTOL</a></li>
   </ul>
 </nav>
     </div>
@@ -324,9 +323,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="choosing-a-method">Choosing a method</h2>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 28%">
+<col style="width: 53%">
+<col style="width: 17%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -353,18 +352,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Three choices to make: the <strong>substitution model</strong> (IQ-TREE tests several with <code>-m MFP</code>), the <strong>support</strong> (ultrafast bootstrap, <code>-B 1000</code>) and the <strong>root</strong> (an outgroup: here the reference genome <code>TOYV1_ref</code>).</p>
+<p>Three choices to make: the <strong>substitution model</strong> (IQ-TREE tests several with <code>-m MFP</code>), the <strong>support</strong> (ultrafast bootstrap, <code>-B 1000</code>) and the <strong>root</strong> (an <strong>outgroup</strong>: a genome that branches off before all the others).</p>
+<p>The outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use <strong>Wuhan-Hu-1 (<code>NC_045512.2</code>)</strong>, the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.</p>
 </section>
 <section id="step-1-build-the-maximum-likelihood-tree" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-build-the-maximum-likelihood-tree">Step 1 — Build the maximum-likelihood tree</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> results/phylo/aln.fasta <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 2 <span class="at">--seed</span> 1 <span class="at">-o</span> TOYV1_ref <span class="at">--prefix</span> results/phylo/tree <span class="at">-redo</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>What the options mean: <code>-s</code> alignment, <code>-m MFP</code> choose the best model automatically, <code>-B 1000</code> 1,000 ultrafast bootstrap replicates, <code>-T 2</code> two threads, <code>--seed 1</code> reproducible result, <code>-o TOYV1_ref</code> root on the reference, <code>--prefix</code> name of the output files.</p>
-<p>IQ-TREE writes several files; the useful ones are:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> results/phylo/tree.<span class="pp">*</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Find the exact name of the root genome in the alignment, then run IQ-TREE:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">OUT</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">'&gt;'</span> results/phylo/aln.fasta <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'NC_045512.2'</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'&gt;'</span><span class="va">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$OUT</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree</span> <span class="at">-s</span> results/phylo/aln.fasta <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 2  <span class="at">--prefix</span> results/phylo/tree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>What the options mean: <code>-s</code> alignment, <code>-m MFP</code> choose the best model automatically, <code>-B 1000</code> 1,000 ultrafast bootstrap replicates, <code>-T 2</code> two threads, <code>--seed 1</code> reproducible result, <code>-o</code> root on the outgroup, <code>--prefix</code> name of the output files.</p>
+<p>(If the model test is too slow on your laptop, use <code>-m GTR+G</code> for a first look.)</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 20%">
+<col style="width: 80%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -387,36 +389,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Which model was chosen?</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"Best-fit model"</span> results/phylo/tree.iqtree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-tip callout-titled">
+<p><strong>Questions:</strong> which model was chosen? Did IQ-TREE warn about identical sequences?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>About the model
+<span class="screen-reader-only">Tip</span>Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>With so few variable sites a simple model (such as HKY or GTR variants) is chosen; the exact choice has almost no impact here. IQ-TREE may also warn that several sequences are <strong>identical</strong>: this is normal, they end up on the same branch tip.</p>
+<p>Use your own report. IQ-TREE may warn that some sequences are <strong>identical</strong> (or nearly so): this is normal, they end up at the same position in the tree. The exact model matters little here; what matters more is the quality of the alignment.</p>
 </div>
 </div>
 </div>
-<p><strong>Plan B (no IQ-TREE):</strong> a neighbour-joining tree from SNP distances, good enough to read the course examples (but without bootstrap support):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/12b_tree_fallback.py</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-2-draw-the-tree" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-draw-the-tree">Step 2 — Draw the tree</h2>
-<p>Assign the lineages (needed for the colours), then draw the tree twice:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/13_lineage.py results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/14_plot_tree.py results/phylo/tree.treefile <span class="at">--color</span> lineage <span class="at">--out</span> results/phylo/tree_lineage.png</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/14_plot_tree.py results/phylo/tree.treefile <span class="at">--color</span> region <span class="at">--out</span> results/phylo/tree_region.png</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>(Plan B: use <code>results/phylo/tree.nwk</code> instead of <code>tree.treefile</code>.) You can also open the Newick file in <strong>FigTree</strong>, <strong>iTOL</strong> (<a href="https://itol.embl.de" class="uri">https://itol.embl.de</a>) or <strong>Microreact</strong> (<a href="https://microreact.org" class="uri">https://microreact.org</a>).</p>
-<p><strong>Questions:</strong> do the lineages form clean groups on the tree? Where is S01?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="step-2-draw-and-annotate-the-tree-in-itol" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-draw-and-annotate-the-tree-in-itol">Step 2 — Draw and annotate the tree in iTOL</h2>
+<ol type="1">
+<li>Open <a href="https://itol.embl.de" class="uri">https://itol.embl.de</a> and click <strong>Upload</strong>; upload <code>results/phylo/tree.treefile</code>. (Create an account if you want to keep the tree.)</li>
+<li>In the control panel, choose the <strong>Rectangular</strong> display.</li>
+<li><strong>Root:</strong> click on the branch of <code>NC_045512.2</code> and choose <strong>Tree structure → Re-root the tree here</strong>.</li>
+<li><strong>Support:</strong> display the bootstrap values (Basic tab, or Advanced tab depending on the version).</li>
+<li><strong>Colors:</strong> click on an internal node and choose <strong>Colors/Styles</strong> to colour a clade; colour each lineage (the lineage is in the leaf name) and give your sample, <code>SRR26396743</code>, a different colour.</li>
+<li><strong>Export</strong> the picture (PNG, SVG or PDF) from the <strong>Export</strong> tab.</li>
+</ol>
+<p><strong>Questions:</strong> do the lineages form clean groups on the tree? Where is your sample?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -428,44 +431,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Yes: each lineage forms its own group (clade). TV.3 and the TV.1 background genomes are close to the root; TV.2 and its two descendants TV.2.1 and TV.2.2 form one large clade. <strong>S01 is inside the TV.2 group</strong>, next to OB10, OB25, OB15 and OB22 (all early genomes of the outbreak).</p>
+<p>Use your own tree. References of the same lineage should form a group (a clade); sister lineages sit next to each other. Your sample should fall next to the lineage found in the <em>Lineage assignment</em> page. If it sits alone on a long branch, check its percentage of <code>N</code> and its reference set.</p>
 </div>
-</div>
-</div>
-</section>
-<section id="step-3-remove-the-low-quality-genome-and-rebuild" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-remove-the-low-quality-genome-and-rebuild">Step 3 — Remove the low-quality genome and rebuild</h2>
-<p>OB24 has 23 % N. Remove it from the alignment and rebuild the tree:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> grep <span class="at">-v</span> <span class="at">-p</span> OB24 results/phylo/aln.fasta <span class="op">&gt;</span> results/phylo/aln_clean.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> results/phylo/aln_clean.fasta <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 2 <span class="at">--seed</span> 1 <span class="at">-o</span> TOYV1_ref <span class="at">--prefix</span> results/phylo/tree_clean <span class="at">-redo</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Question:</strong> does the tree change?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Answer
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>The main groups and their relationships <strong>do not change</strong>: OB24 was inside the TV.2.2 group, which stays the same without it. But its position had a <strong>lower reliability</strong> (a lot of missing data means that it can look closer to some genomes than it really is). Excluding it removes a source of doubt and shows that the conclusions do not depend on a poor genome. The excluded genome and the reason must be written in the report.</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>With few variable sites there is little resolution: many branches are short and some are supported weakly. A tree is only as good as the alignment and the data behind it.</p>
 </div>
 </div>
 <p><strong>Next:</strong> <a href="../course/03-read-tree.html">Read a phylogenetic tree</a>.</p>

@@ -213,7 +213,7 @@
     "href": "course/03-read-tree.html",
     "title": "Read a phylogenetic tree",
     "section": "",
-    "text": "Tips = the genomes you sequenced. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
+    "text": "Tips = the genomes you sequenced or downloaded. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
@@ -224,7 +224,7 @@
     "href": "course/03-read-tree.html#anatomy-of-a-tree",
     "title": "Read a phylogenetic tree",
     "section": "",
-    "text": "Tips = the genomes you sequenced. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
+    "text": "Tips = the genomes you sequenced or downloaded. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
@@ -242,11 +242,11 @@
     ]
   },
   {
-    "objectID": "course/03-read-tree.html#exercise-read-the-tree",
-    "href": "course/03-read-tree.html#exercise-read-the-tree",
+    "objectID": "course/03-read-tree.html#exercise-read-your-tree",
+    "href": "course/03-read-tree.html#exercise-read-your-tree",
     "title": "Read a phylogenetic tree",
-    "section": "Exercise — read the tree",
-    "text": "Exercise — read the tree\nThe figure below was made from the course data with the plan-B method (neighbour-joining). Open yours too: it should look similar.\n\n\n\nTree coloured by region\n\n\n\n\n\nSame tree coloured by lineage\n\n\nDates and regions are in data/outbreak/metadata.tsv. To sort the genomes by date:\nsort -t$'\\t' -k2,2 data/outbreak/metadata.tsv | column -t -s $'\\t'\nQuestions\n\nWhere is S01? Who are its closest relatives?\nHow many clusters do you see, and in which regions?\nWhich part of the tree is the oldest? (use the dates)\nDo the Region C cases form one cluster or several? What does it suggest?\n\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\n\nS01 is in the TV.2 group, next to OB10, OB25, OB15 and OB22 (2–3 SNPs away). OB10, OB25 and OB15 are Region A genomes from 2–4 March: S01 (2 March, Region A) fits perfectly with the start of the Region A outbreak. OB22 is a Region C genome (12 March).\nFour groups hang from the root: (i) background TV.1 genomes (Regions B and D, January–February), (ii) TV.3 (Region B, February–March), (iii) the TV.2 early group (Region A, with one Region C genome), and, derived from it, (iv) two sub-clades: TV.2.1 (almost all Region A) and TV.2.2 (Region C).\nThe oldest genomes are the TV.1 ones (January–February) and the TV.3 ones (February–March), close to the root. The TV.2 group starts in early March; TV.2.1 and TV.2.2 appear from late March: the tree order matches the dates.\nOne main cluster (TV.2.2: 7 genomes, from 25 March) plus two other Region C genomes that belong to other groups (OB22, an early TV.2, and OB14, a TV.2.1). This suggests several links between regions A and C: an introduction of the early TV.2 virus followed by local transmission (the TV.2.2 cluster), and a later exchange (OB14). Direction cannot be proved by the tree alone.",
+    "section": "Exercise — read your tree",
+    "text": "Exercise — read your tree\nOpen your tree in iTOL (results/phylo/tree.treefile), rooted on NC_045512.2 and coloured by lineage as in the previous page. The collection dates and countries of the references are in the table of NCBI Virus (you can add these columns with Customize columns).\nQuestions\n\nWhere is your sample, SRR26396743? Who are its closest relatives?\nDo the references of each lineage form a clade? Is there a lineage that does not?\nWhich part of the tree is the oldest? Check it against the collection dates.\nWhich are the longest branches? What do they mean?\nAre the bootstrap values high around your sample? What does it tell you?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own tree.\n\nYour sample sits in the clade of the closest reference found in Lineage assignment. If it is next to a reference of a given lineage, that lineage is a good candidate.\nReferences of the same lineage normally group together. A lineage that is split suggests a labelling issue, or too few genomes to resolve it.\nThe oldest genomes (early 2020) are close to the root; the tree order should match the collection dates.\nLong branches mean many substitutions between a genome and its relatives: either a lineage that evolved fast (for example the first Omicron lineages) or a sequence with errors or missing data.\nA bootstrap of 95 or more means that the grouping is well supported. Low values around the sample mean that its position is uncertain: the genome may be incomplete, or the closest references are too similar to be separated.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
@@ -257,7 +257,7 @@
     "href": "course/03-read-tree.html#final-question",
     "title": "Read a phylogenetic tree",
     "section": "Final question",
-    "text": "Final question\nTwo genomes are identical. List three explanations other than “A infected B”.\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n\nToo few mutations to tell them apart: viruses change slowly, so unrelated cases can have the same sequence over a short period.\nA common source (same event, same contaminated food/animal) that infected both without contact between them.\nA common ancestor several steps earlier, with unsampled intermediate cases (you only see part of the chain).\nLaboratory contamination or barcode bleed between the two samples.\nMissing data: identical on the positions that could be compared (N regions hide differences).\n\n\n\n\nNext: Communicating genomic evidence — module 4.",
+    "text": "Final question\nTwo genomes are identical. List three explanations other than “A infected B”.\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n\nToo few mutations to tell them apart: viruses change slowly, so unrelated cases can have the same sequence over a short period.\nA common source that infected both without contact between them.\nA common ancestor several steps earlier, with unsampled intermediate cases (you only see part of the chain).\nLaboratory contamination or barcode bleed between the two samples.\nMissing data: identical on the positions that could be compared (N regions hide differences).\n\n\n\n\nNext: Communicating genomic evidence — module 4.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
@@ -268,7 +268,7 @@
     "href": "course/02-reference-selection.html",
     "title": "Reference selection",
     "section": "",
-    "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / genotype\nis it the right virus, the right genotype, the right segment?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\nno gaps, no ambiguous bases\n\n\nWell documented\naccession number, source, date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
+    "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference. For a tree, we also need reference genomes of several lineages to place our own genome in context.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / lineage\nis it the right virus, the right lineage?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\ncomplete genome, few ambiguous bases (N)\n\n\nWell documented\naccession number, host, country, collection date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Reference selection"
@@ -279,40 +279,29 @@
     "href": "course/02-reference-selection.html#why-it-matters",
     "title": "Reference selection",
     "section": "",
-    "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / genotype\nis it the right virus, the right genotype, the right segment?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\nno gaps, no ambiguous bases\n\n\nWell documented\naccession number, source, date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
+    "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference. For a tree, we also need reference genomes of several lineages to place our own genome in context.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / lineage\nis it the right virus, the right lineage?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\ncomplete genome, few ambiguous bases (N)\n\n\nWell documented\naccession number, host, country, collection date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
   },
   {
-    "objectID": "course/02-reference-selection.html#step-1-look-at-the-three-candidates",
-    "href": "course/02-reference-selection.html#step-1-look-at-the-three-candidates",
+    "objectID": "course/02-reference-selection.html#our-sample",
+    "href": "course/02-reference-selection.html#our-sample",
     "title": "Reference selection",
-    "section": "Step 1 — Look at the three candidates",
-    "text": "Step 1 — Look at the three candidates\nThree candidate references are in data/reference/candidates/:\n\nTOYV1_TV1: the original (root) genotype;\nTOYV1_TV2: a genotype that appeared later (8 mutations);\nTOYV2_divergent: another, more distant virus (about 8 % different).\n\nseqkit stats data/reference/candidates/*.fasta",
+    "section": "Our sample",
+    "text": "Our sample\nOur sample is the consensus genome built in the previous exercises from the run SRR26396743:\nls results/consensus/\nseqkit stats results/consensus/SRR26396743.fa\nSince the mapping exercise we have used NC_045512.2 (Wuhan-Hu-1), the RefSeq reference of SARS-CoV-2, as the coordinate system for this sample.\nQuestions: what is the length of the consensus? Why was Wuhan-Hu-1 a good reference to map these reads?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe length should be close to 29.9 kb, that of the SARS-CoV-2 genome. Wuhan-Hu-1 is the RefSeq reference of the right virus, a complete and well-documented genome, and the coordinate system used by the whole community (variant calling, lineage tools, primer schemes).",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
   },
   {
-    "objectID": "course/02-reference-selection.html#step-2-which-one-is-closest-to-s01",
-    "href": "course/02-reference-selection.html#step-2-which-one-is-closest-to-s01",
+    "objectID": "course/02-reference-selection.html#step-1-download-references-of-several-lineages-from-ncbi-virus",
+    "href": "course/02-reference-selection.html#step-1-download-references-of-several-lineages-from-ncbi-virus",
     "title": "Reference selection",
-    "section": "Step 2 — Which one is closest to S01?",
-    "text": "Step 2 — Which one is closest to S01?\nWe count the differences between your S01 consensus and each candidate (positions with N are ignored):\npython3 scripts/10_pick_reference.py results/consensus/S01.fa\n(Plan B: precomputed/consensus/S01.fa. This small script is written for the course; in real life you would use a BLAST or Nextclade search against a database.)\nQuestions: which reference is the closest? How many mismatches? Is it what you expected?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n\n\n\nCandidate\nCompared sites\nMismatches\nIdentity\n\n\n\n\nTOYV1_TV2\n9,937\n2\n99.98 %\n\n\nTOYV1_TV1\n9,937\n10\n99.90 %\n\n\nTOYV2_divergent\n9,937\n807\n91.88 %\n\n\n\nTOYV1_TV2 is the closest: S01 carries the 8 lineage mutations of TV.2 and only 2 private ones, so it differs by 2 positions from that reference and by 10 from the root. The divergent virus is ~8 % different: it is another virus and unusable here. (Choosing between TV.1 and TV.2 changes little, but choosing the wrong virus changes everything.)",
-    "crumbs": [
-      "Alignment, lineage & reference selection",
-      "Reference selection"
-    ]
-  },
-  {
-    "objectID": "course/02-reference-selection.html#step-3-see-the-effect-of-a-bad-reference",
-    "href": "course/02-reference-selection.html#step-3-see-the-effect-of-a-bad-reference",
-    "title": "Reference selection",
-    "section": "Step 3 — See the effect of a bad reference",
-    "text": "Step 3 — See the effect of a bad reference\nMap S01 to the divergent reference and compare with the good mapping:\nbwa index data/reference/candidates/TOYV2_divergent.fasta\nbwa mem -t 2 data/reference/candidates/TOYV2_divergent.fasta results/trimmed/S01_R1.fastq.gz results/trimmed/S01_R2.fastq.gz \\\n  | samtools sort -o results/bam/S01_divergent.bam -\nsamtools flagstat results/bam/S01_divergent.bam\nQuestion: what changes compared with results/bam/S01.flagstat.txt?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nWith about 8 % divergence, a 150-base read has around 12 mismatches: fewer reads align (the exact % depends on the aligner), many alignments are soft-clipped (only part of the read aligns) and the reads that do map carry dozens of false differences. In IGV you would see a mosaic of coloured mismatches, and the consensus would be unreliable. The lesson: check that the reference is close to your virus before mapping.",
+    "section": "Step 1 — Download references of several lineages from NCBI Virus",
+    "text": "Step 1 — Download references of several lineages from NCBI Virus\nTo place our genome in a tree (next sessions), we need reference genomes of several lineages from the same database. Open NCBI Virus: https://www.ncbi.nlm.nih.gov/labs/virus and choose SARS-CoV-2 (taxid 2697049).\n\nIn the filters on the left, keep Nucleotide completeness: complete and Host: Homo sapiens.\nFilter by Pango lineage (or add the lineage column to the table with Customize columns) and choose one or two genomes per lineage.\nChoose lineages that span the pandemic: the ancestral lineage B (Wuhan-Hu-1, accession NC_045512.2), Alpha (B.1.1.7), Delta (B.1.617.2), Omicron (BA.1, BA.2, BA.5, XBB.1.5) and the lineages circulating when your sample was collected (look at the collection_date of the run SRR26396743 on its NCBI BioSample page).\nPrefer genomes with a full date and country, and with few ambiguous bases.\nSelect about 10–15 genomes, then Download → Nucleotide → FASTA → Build custom, and put Accession and Pango lineage in the definition line. Save the file as data/ncbi/lineage_refs.fasta.\n\nClean the names (no spaces, no |: the tree software does not like them):\nsed '/^&gt;/ { s/[ |][ |]*/_/g; s/_$// }' data/ncbi/lineage_refs.fasta &gt; data/ncbi/lineage_refs.clean.fasta\ngrep '&gt;' data/ncbi/lineage_refs.clean.fasta\nEach name should now look like ACCESSION_LINEAGE. Check that NC_045512.2 is in the list: it will be our root.\nQuestions: how many genomes did you keep? Which criteria did you use to choose them?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe criteria are the table at the top of the page: same species, complete genome, few N, documented (accession, lineage, date, country), and a good spread of lineages and dates so that the tree has meaningful comparisons. One genome per lineage is enough for this exercise; real studies use many more.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Reference selection"
@@ -323,7 +312,7 @@
     "href": "course/02-reference-selection.html#final-question",
     "title": "Reference selection",
     "section": "Final question",
-    "text": "Final question\nWhy should all the samples of an outbreak be mapped to the same reference?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nBecause the differences are measured against the reference, with its coordinates. If each sample used another reference, positions would not correspond, mutations would not be comparable, and differences between references would be mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align and compare.\n\n\n\nNext: Alignment.",
+    "text": "Final question\nWhy should all the samples of a study be mapped to the same reference?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nBecause differences are measured against the reference, with its coordinates. If each sample used another reference, positions would not correspond, mutations would not be comparable, and differences between references would be mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align and compare.\n\n\n\nNext: Alignment.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Reference selection"
@@ -334,7 +323,7 @@
     "href": "course/02-alignment.html",
     "title": "Multiple sequence alignment",
     "section": "",
-    "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but real data also contain indels and different lengths.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
+    "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
@@ -345,7 +334,7 @@
     "href": "course/02-alignment.html#idea",
     "title": "Multiple sequence alignment",
     "section": "",
-    "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but real data also contain indels and different lengths.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
+    "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
@@ -356,40 +345,51 @@
     "href": "course/02-alignment.html#step-1-put-all-the-genomes-in-one-file",
     "title": "Multiple sequence alignment",
     "section": "Step 1 — Put all the genomes in one file",
-    "text": "Step 1 — Put all the genomes in one file\nThe dataset has the reference, the 27 outbreak genomes (OB01–OB27) and your S01. The sed command renames the reference header.\nmkdir -p results/phylo\nsed 's/^&gt;.*/&gt;TOYV1_ref/' data/reference/TOYV1.fasta &gt; results/phylo/all.fasta\ncat data/outbreak/sequences.fasta &gt;&gt; results/phylo/all.fasta\ncat results/consensus/S01.fa &gt;&gt; results/phylo/all.fasta\ngrep -c '&gt;' results/phylo/all.fasta\nQuestion: how many sequences are there?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n29 sequences: 1 reference + 27 outbreak genomes + S01.",
+    "text": "Step 1 — Put all the genomes in one file\nWe combine the lineage references downloaded from NCBI Virus and your consensus from the previous exercises. seqkit seq rewrites the file cleanly, and sed renames the header of the consensus.\nmkdir -p results/phylo\nseqkit seq data/ncbi/lineage_refs.clean.fasta &gt; results/phylo/all.fasta\nsed 's/^&gt;.*/&gt;SRR26396743/' results/consensus/SRR26396743.fa | seqkit seq &gt;&gt; results/phylo/all.fasta\ngrep -c '&gt;' results/phylo/all.fasta\ngrep '&gt;' results/phylo/all.fasta\nQuestion: how many sequences are there, and which one is your sample?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe number of references you downloaded plus one (your consensus, named SRR26396743).",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
   },
   {
-    "objectID": "course/02-alignment.html#step-2-align-with-mafft",
-    "href": "course/02-alignment.html#step-2-align-with-mafft",
+    "objectID": "course/02-alignment.html#step-2-check-the-quality-of-each-genome-before-aligning",
+    "href": "course/02-alignment.html#step-2-check-the-quality-of-each-genome-before-aligning",
     "title": "Multiple sequence alignment",
-    "section": "Step 2 — Align with MAFFT",
-    "text": "Step 2 — Align with MAFFT\nmafft --auto --preservecase --thread 2 results/phylo/all.fasta &gt; results/phylo/aln.fasta\n(--preservecase keeps our upper-case letters. Plan B without MAFFT: the toy genomes have no insertion or deletion, so python3 scripts/11b_align_fallback.py just checks that all lengths are equal and writes the same file.)\nCheck the number of sequences and columns:\nseqkit stats results/phylo/aln.fasta\nQuestion: how many sequences and how many alignment columns?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n29 sequences × 10,000 columns (no insertion/deletion, so the length of the reference).",
+    "section": "Step 2 — Check the quality of each genome before aligning",
+    "text": "Step 2 — Check the quality of each genome before aligning\nCount the N in each sequence:\nseqkit fx2tab -n -l -B N results/phylo/all.fasta | awk '{printf \"%s\\t%d bp\\t%d N\\t%.2f%%\\n\", $1, $2, $3, 100*$3/$2}'\nQuestions\n\nWhich genome has the most N?\nIs your sample good enough to be placed on a tree? (remember the exercise Is this genome good enough?)\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own values. A genome with a large percentage of N (the course threshold is 10 %) has a position in the tree that is less reliable, because missing data can make it look closer to some genomes than it really is. If a reference has many N, replace it in NCBI Virus with a better one.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
   },
   {
-    "objectID": "course/02-alignment.html#step-3-inspect-the-alignment",
-    "href": "course/02-alignment.html#step-3-inspect-the-alignment",
+    "objectID": "course/02-alignment.html#step-3-align-with-mafft",
+    "href": "course/02-alignment.html#step-3-align-with-mafft",
     "title": "Multiple sequence alignment",
-    "section": "Step 3 — Inspect the alignment",
-    "text": "Step 3 — Inspect the alignment\nOpen results/phylo/aln.fasta in AliView or Jalview (https://www.jalview.org), or print the content of one column with:\nseqkit subseq -r 553:553 results/phylo/aln.fasta | seqkit fx2tab | cut -f1,2 | head -10\nQuestions\n\nS01 differs from the reference at which positions?\nWhich outbreak genome has a long block of N? Would you keep it?\n\nTo answer the second question, compute the percentage of N in each genome:\nawk '/^&gt;/{if(name) printf \"%s\\t%.1f%%\\n\", name, 100*n/len; name=substr($0,2); n=0; len=0; next} {n+=gsub(/N/,\"N\"); len+=length($0)} END{printf \"%s\\t%.1f%%\\n\", name, 100*n/len}' results/phylo/aln.fasta | sort -k2 -n -r | head -5\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\n\n10 positions: the 8 lineage-defining SNPs (553, 3299, 5753, 6605, 6663, 7748, 9419, 9784) plus 2 private SNPs (269 and 7782).\nOB24: about 23 % N (a block of ~2,300 N around positions 4,100–6,400, plus scattered N). Its tree position is unreliable. It should be excluded (the course threshold is 10 % N) — and the reason written in the report.",
+    "section": "Step 3 — Align with MAFFT",
+    "text": "Step 3 — Align with MAFFT\nmafft --auto --preservecase --thread 2 results/phylo/all.fasta &gt; results/phylo/aln.fasta\n(--preservecase keeps our upper-case letters. For a few dozen genomes of 30 kb this takes seconds to minutes.)\nseqkit stats results/phylo/aln.fasta\nQuestion: how many sequences and how many alignment columns? Why is the number of columns slightly larger than the genome length?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe number of sequences is the same as in all.fasta. The number of columns is at least the length of the longest genome: when one genome has an insertion or a different start or end, MAFFT adds gaps (-) in the others so that homologous positions stay in the same column.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
   },
   {
-    "objectID": "course/02-alignment.html#step-4-snp-distances",
-    "href": "course/02-alignment.html#step-4-snp-distances",
+    "objectID": "course/02-alignment.html#step-4-inspect-the-alignment",
+    "href": "course/02-alignment.html#step-4-inspect-the-alignment",
     "title": "Multiple sequence alignment",
-    "section": "Step 4 — SNP distances",
-    "text": "Step 4 — SNP distances\nHow many differences between genomes? (N and gaps are ignored in each pair.)\npython3 scripts/15_snp_matrix.py results/phylo/aln.fasta --ids S01,OB10,OB15,OB22,OB25,OB01\ncolumn -t results/phylo/snp_matrix.tsv\nQuestion: which genome(s) is the closest to S01?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nOB10 and OB25 are closest to S01 (2 SNPs); OB15 and OB22 are at 3 SNPs; OB01 (lineage TV.2.1) is at 7 SNPs. All the closest ones are early TV.2 genomes from Region A. The distance is tiny (2 SNPs) but remember that two genomes at 2 SNPs are not necessarily direct contacts.\n\n\n\nNext: Lineage assignment.",
+    "section": "Step 4 — Inspect the alignment",
+    "text": "Step 4 — Inspect the alignment\nOpen results/phylo/aln.fasta in AliView or Jalview (https://www.jalview.org).\nQuestions\n\nAre the ends of the genomes aligned in the same way for all the sequences?\nDo you see blocks of - or N? In which genomes?\nAre the differences between genomes spread over the genome or concentrated in some regions?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nLook at your own alignment. The ends of public genomes are often ragged (different start and stop, or poly-A tails), blocks of N come from regions that were not covered, and differences between lineages are concentrated in some genes (the spike gene carries many lineage-defining changes). Real surveillance pipelines trim the ragged ends and mask known problematic sites before building trees.",
+    "crumbs": [
+      "Alignment, lineage & reference selection",
+      "Multiple sequence alignment"
+    ]
+  },
+  {
+    "objectID": "course/02-alignment.html#step-5-snp-distances",
+    "href": "course/02-alignment.html#step-5-snp-distances",
+    "title": "Multiple sequence alignment",
+    "section": "Step 5 — SNP distances",
+    "text": "Step 5 — SNP distances\nHow many differences between your sample and each genome? snp-dists ignores N and gaps in each pair:\nsnp-dists -m results/phylo/aln.fasta | awk '$1==\"SRR26396743\" && $2!=\"SRR26396743\"' | sort -k3,3n | column -t\nQuestions\n\nWhich genomes are the closest to your sample, and how many SNPs apart?\nHow many SNPs separate your sample from Wuhan-Hu-1 (NC_045512.2)?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nRead the values in your own table. The closest genomes have the smallest numbers; the distance to Wuhan-Hu-1 gives the amount of evolution since the beginning of the pandemic. Keep this table, we use it for the lineage assignment.\n\n\n\nNext: Lineage assignment.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
@@ -507,7 +507,7 @@
     "href": "course/02-lineage.html",
     "title": "Lineage assignment",
     "section": "",
-    "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group (Pango lineages, Nextstrain clades…). Names are hierarchical: TV.2.1 descends from TV.2. Lineages give a common language to talk about genomes without exchanging full sequences.\ncolumn -t data/outbreak/lineage_definitions.tsv\n\n\n\nLineage\nParent\nDefining SNPs\n\n\n\n\nTV.1\nroot\nnone (reference-like)\n\n\nTV.2\nTV.1\n8 SNPs\n\n\nTV.2.1\nTV.2\n+ 3 SNPs\n\n\nTV.2.2\nTV.2\n+ 3 other SNPs\n\n\nTV.3\nTV.1\n6 SNPs",
+    "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group. For SARS-CoV-2 the standard nomenclature is Pango; names are hierarchical (BA.2 descends from the Omicron lineages, B.1.1.7 is Alpha), so lineages give a common language to talk about genomes without exchanging full sequences.\nThe references you downloaded from NCBI Virus already carry their Pango lineage in their name (ACCESSION_LINEAGE): they are our labelled landmarks.\ngrep '&gt;' results/phylo/aln.fasta",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Lineage assignment"
@@ -518,18 +518,29 @@
     "href": "course/02-lineage.html#what-is-a-lineage",
     "title": "Lineage assignment",
     "section": "",
-    "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group (Pango lineages, Nextstrain clades…). Names are hierarchical: TV.2.1 descends from TV.2. Lineages give a common language to talk about genomes without exchanging full sequences.\ncolumn -t data/outbreak/lineage_definitions.tsv\n\n\n\nLineage\nParent\nDefining SNPs\n\n\n\n\nTV.1\nroot\nnone (reference-like)\n\n\nTV.2\nTV.1\n8 SNPs\n\n\nTV.2.1\nTV.2\n+ 3 SNPs\n\n\nTV.2.2\nTV.2\n+ 3 other SNPs\n\n\nTV.3\nTV.1\n6 SNPs",
+    "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group. For SARS-CoV-2 the standard nomenclature is Pango; names are hierarchical (BA.2 descends from the Omicron lineages, B.1.1.7 is Alpha), so lineages give a common language to talk about genomes without exchanging full sequences.\nThe references you downloaded from NCBI Virus already carry their Pango lineage in their name (ACCESSION_LINEAGE): they are our labelled landmarks.\ngrep '&gt;' results/phylo/aln.fasta",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
   },
   {
-    "objectID": "course/02-lineage.html#step-1-assign-the-lineages",
-    "href": "course/02-lineage.html#step-1-assign-the-lineages",
+    "objectID": "course/02-lineage.html#step-1-find-the-closest-labelled-reference",
+    "href": "course/02-lineage.html#step-1-find-the-closest-labelled-reference",
     "title": "Lineage assignment",
-    "section": "Step 1 — Assign the lineages",
-    "text": "Step 1 — Assign the lineages\nWe use a small program written for the course (a miniature Pangolin): for each genome it looks for the defining SNPs and picks the most specific lineage whose SNPs are all present.\npython3 scripts/13_lineage.py results/phylo/aln.fasta\nQuestions\n\nWhat lineage is S01, and what is the evidence?\nOne genome has a masked defining SNP. What does the “evidence” column say? Is the call still reliable?\nMake a table: number of genomes per lineage and per region.\n\n(For question 3, join the lineages with the metadata: join -t $'\\t' &lt;(sort -k1,1 results/phylo/lineages.tsv) &lt;(sort -k1,1 data/outbreak/metadata.tsv) | cut -f1,2,4,5 | sort -k2.)\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\n\nS01 = TV.2, with evidence “8/8 defining SNPs”. It does not carry the TV.2.1 or TV.2.2 SNPs, so it stays at the parent level.\nOB24 says “TV.2.2 – 10/11 defining SNPs, 1 masked”: the 11th SNP lies in the block of N. All the 10 observed SNPs agree, so TV.2.2 is the best call, but it is less certain (missing data). Real tools such as Pangolin and Nextclade flag exactly this.\nNumber of genomes per lineage and region:\n\n\n\n\nLineage\nRegion A\nRegion B\nRegion C\nRegion D\n\n\n\n\nTV.1\n–\n2\n–\n1\n\n\nTV.3\n–\n5\n–\n–\n\n\nTV.2\n3 (+ S01)\n–\n1\n–\n\n\nTV.2.1\n7\n–\n1\n–\n\n\nTV.2.2\n–\n–\n7\n–\n\n\n\n\n\n\n\n\n\n\n\n\nNoteReal tools\n\n\n\nPangolin and Nextclade do the same with much larger nomenclatures, and also give quality flags (missing data, unexpected mutations, mixed sites). The principle — defining mutations, most specific complete match — is identical.",
+    "section": "Step 1 — Find the closest labelled reference",
+    "text": "Step 1 — Find the closest labelled reference\nThe simplest way to give a lineage to a new genome is to ask which labelled genome it resembles most. We reuse the SNP distances:\nsnp-dists -m results/phylo/aln.fasta | awk '$1==\"SRR26396743\" && $2!=\"SRR26396743\"' | sort -k3,3n | column -t\nQuestions\n\nWhich reference is the closest to your sample, and what is its lineage?\nIs the closest reference much closer than the others, or are several references at a similar distance?\nCan you already give a lineage to your sample?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own table. If one reference is clearly closer than all the others, your sample probably belongs to that lineage or to a sub-lineage of it. If several references from different lineages are at similar distances, the real lineage is probably not in your reference set and you need more references. The answer is a proposal, not a final call: it must be confirmed with the tree (next module).",
+    "crumbs": [
+      "Alignment, lineage & reference selection",
+      "Lineage assignment"
+    ]
+  },
+  {
+    "objectID": "course/02-lineage.html#step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser",
+    "href": "course/02-lineage.html#step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser",
+    "title": "Lineage assignment",
+    "section": "Step 2 — Cross-check with a dedicated tool (optional, in the browser)",
+    "text": "Step 2 — Cross-check with a dedicated tool (optional, in the browser)\nPangolin and Nextclade do this with a complete nomenclature of thousands of lineages and give quality flags (missing data, unexpected mutations). Nothing to install: open https://clades.nextstrain.org, drop results/consensus/SRR26396743.fa in the page and read the clade and Pango lineage it proposes.\nQuestion: does it agree with the lineage of the closest reference?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe tool may give a more precise lineage (a sub-lineage of the reference that you downloaded), because it knows many more lineages than our 10–15 references. A sub-lineage of the lineage found in Step 1 is a consistent result; a different family means you should re-check the consensus and the references.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Lineage assignment"
@@ -540,7 +551,7 @@
     "href": "course/02-lineage.html#final-question",
     "title": "Lineage assignment",
     "section": "Final question",
-    "text": "Final question\nCan two genomes of the same lineage still be unrelated cases? Why?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nYes. A lineage is defined by a few mutations, and many separate chains of transmission can carry the same lineage (for example if it was imported several times, or circulated widely before being sampled). A lineage says “belongs to this family”; to say “linked case” you need finer resolution (extra SNPs, as in the SNP matrix) and epidemiological information (dates, places, contacts).\n\n\n\nNext: Build a phylogenetic tree.",
+    "text": "Final question\nCan two genomes of the same lineage still be unrelated cases? Why?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nYes. A lineage is defined by a few mutations, and many separate chains of transmission can carry the same lineage (for example if it was imported several times, or circulated widely before being sampled). A lineage says “belongs to this family”; to say “linked case” you need finer resolution (extra SNPs, as in the SNP distances) and epidemiological information (dates, places, contacts).\n\n\n\nNext: Build a phylogenetic tree.",
     "crumbs": [
       "Alignment, lineage & reference selection",
       "Lineage assignment"
@@ -551,7 +562,7 @@
     "href": "course/03-build-tree.html",
     "title": "Build a phylogenetic tree",
     "section": "",
-    "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: here the reference genome TOYV1_ref).",
+    "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: a genome that branches off before all the others).\nThe outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use Wuhan-Hu-1 (NC_045512.2), the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
@@ -562,7 +573,7 @@
     "href": "course/03-build-tree.html#choosing-a-method",
     "title": "Build a phylogenetic tree",
     "section": "",
-    "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: here the reference genome TOYV1_ref).",
+    "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: a genome that branches off before all the others).\nThe outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use Wuhan-Hu-1 (NC_045512.2), the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
@@ -573,29 +584,18 @@
     "href": "course/03-build-tree.html#step-1-build-the-maximum-likelihood-tree",
     "title": "Build a phylogenetic tree",
     "section": "Step 1 — Build the maximum-likelihood tree",
-    "text": "Step 1 — Build the maximum-likelihood tree\niqtree2 -s results/phylo/aln.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree -redo\nWhat the options mean: -s alignment, -m MFP choose the best model automatically, -B 1000 1,000 ultrafast bootstrap replicates, -T 2 two threads, --seed 1 reproducible result, -o TOYV1_ref root on the reference, --prefix name of the output files.\nIQ-TREE writes several files; the useful ones are:\nls results/phylo/tree.*\n\n\n\n\n\n\n\nFile\nContent\n\n\n\n\ntree.treefile\nthe tree (Newick format, with bootstrap support)\n\n\ntree.iqtree\nthe full report (model chosen, log-likelihood, tree in text)\n\n\ntree.log\nwhat happened during the run\n\n\n\nWhich model was chosen?\ngrep \"Best-fit model\" results/phylo/tree.iqtree\n\n\n\n\n\n\nTipAbout the model\n\n\n\n\n\nWith so few variable sites a simple model (such as HKY or GTR variants) is chosen; the exact choice has almost no impact here. IQ-TREE may also warn that several sequences are identical: this is normal, they end up on the same branch tip.\n\n\n\nPlan B (no IQ-TREE): a neighbour-joining tree from SNP distances, good enough to read the course examples (but without bootstrap support):\npython3 scripts/12b_tree_fallback.py",
+    "text": "Step 1 — Build the maximum-likelihood tree\nFind the exact name of the root genome in the alignment, then run IQ-TREE:\nOUT=$(grep '&gt;' results/phylo/aln.fasta | grep 'NC_045512.2' | tr -d '&gt;')\necho $OUT\niqtree -s results/phylo/aln.fasta -m MFP -B 1000 -T 2  --prefix results/phylo/tree\nWhat the options mean: -s alignment, -m MFP choose the best model automatically, -B 1000 1,000 ultrafast bootstrap replicates, -T 2 two threads, --seed 1 reproducible result, -o root on the outgroup, --prefix name of the output files.\n(If the model test is too slow on your laptop, use -m GTR+G for a first look.)\n\n\n\n\n\n\n\nFile\nContent\n\n\n\n\ntree.treefile\nthe tree (Newick format, with bootstrap support)\n\n\ntree.iqtree\nthe full report (model chosen, log-likelihood, tree in text)\n\n\ntree.log\nwhat happened during the run\n\n\n\ngrep \"Best-fit model\" results/phylo/tree.iqtree\nQuestions: which model was chosen? Did IQ-TREE warn about identical sequences?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own report. IQ-TREE may warn that some sequences are identical (or nearly so): this is normal, they end up at the same position in the tree. The exact model matters little here; what matters more is the quality of the alignment.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
     ]
   },
   {
-    "objectID": "course/03-build-tree.html#step-2-draw-the-tree",
-    "href": "course/03-build-tree.html#step-2-draw-the-tree",
+    "objectID": "course/03-build-tree.html#step-2-draw-and-annotate-the-tree-in-itol",
+    "href": "course/03-build-tree.html#step-2-draw-and-annotate-the-tree-in-itol",
     "title": "Build a phylogenetic tree",
-    "section": "Step 2 — Draw the tree",
-    "text": "Step 2 — Draw the tree\nAssign the lineages (needed for the colours), then draw the tree twice:\npython3 scripts/13_lineage.py results/phylo/aln.fasta\npython3 scripts/14_plot_tree.py results/phylo/tree.treefile --color lineage --out results/phylo/tree_lineage.png\npython3 scripts/14_plot_tree.py results/phylo/tree.treefile --color region --out results/phylo/tree_region.png\n(Plan B: use results/phylo/tree.nwk instead of tree.treefile.) You can also open the Newick file in FigTree, iTOL (https://itol.embl.de) or Microreact (https://microreact.org).\nQuestions: do the lineages form clean groups on the tree? Where is S01?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nYes: each lineage forms its own group (clade). TV.3 and the TV.1 background genomes are close to the root; TV.2 and its two descendants TV.2.1 and TV.2.2 form one large clade. S01 is inside the TV.2 group, next to OB10, OB25, OB15 and OB22 (all early genomes of the outbreak).",
-    "crumbs": [
-      "Build and read a phylogenetic tree",
-      "Build a phylogenetic tree"
-    ]
-  },
-  {
-    "objectID": "course/03-build-tree.html#step-3-remove-the-low-quality-genome-and-rebuild",
-    "href": "course/03-build-tree.html#step-3-remove-the-low-quality-genome-and-rebuild",
-    "title": "Build a phylogenetic tree",
-    "section": "Step 3 — Remove the low-quality genome and rebuild",
-    "text": "Step 3 — Remove the low-quality genome and rebuild\nOB24 has 23 % N. Remove it from the alignment and rebuild the tree:\nseqkit grep -v -p OB24 results/phylo/aln.fasta &gt; results/phylo/aln_clean.fasta\niqtree2 -s results/phylo/aln_clean.fasta -m MFP -B 1000 -T 2 --seed 1 -o TOYV1_ref --prefix results/phylo/tree_clean -redo\nQuestion: does the tree change?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe main groups and their relationships do not change: OB24 was inside the TV.2.2 group, which stays the same without it. But its position had a lower reliability (a lot of missing data means that it can look closer to some genomes than it really is). Excluding it removes a source of doubt and shows that the conclusions do not depend on a poor genome. The excluded genome and the reason must be written in the report.\n\n\n\n\n\n\n\n\n\nWarning\n\n\n\nWith few variable sites there is little resolution: many branches are short and some are supported weakly. A tree is only as good as the alignment and the data behind it.\n\n\nNext: Read a phylogenetic tree.",
+    "section": "Step 2 — Draw and annotate the tree in iTOL",
+    "text": "Step 2 — Draw and annotate the tree in iTOL\n\nOpen https://itol.embl.de and click Upload; upload results/phylo/tree.treefile. (Create an account if you want to keep the tree.)\nIn the control panel, choose the Rectangular display.\nRoot: click on the branch of NC_045512.2 and choose Tree structure → Re-root the tree here.\nSupport: display the bootstrap values (Basic tab, or Advanced tab depending on the version).\nColors: click on an internal node and choose Colors/Styles to colour a clade; colour each lineage (the lineage is in the leaf name) and give your sample, SRR26396743, a different colour.\nExport the picture (PNG, SVG or PDF) from the Export tab.\n\nQuestions: do the lineages form clean groups on the tree? Where is your sample?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own tree. References of the same lineage should form a group (a clade); sister lineages sit next to each other. Your sample should fall next to the lineage found in the Lineage assignment page. If it sits alone on a long branch, check its percentage of N and its reference set.\n\n\n\nNext: Read a phylogenetic tree.",
     "crumbs": [
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"

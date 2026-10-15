@@ -292,9 +292,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#idea" id="toc-idea" class="nav-link active" data-scroll-target="#idea">Idea</a></li>
   <li><a href="#step-1-put-all-the-genomes-in-one-file" id="toc-step-1-put-all-the-genomes-in-one-file" class="nav-link" data-scroll-target="#step-1-put-all-the-genomes-in-one-file">Step 1 — Put all the genomes in one file</a></li>
-  <li><a href="#step-2-align-with-mafft" id="toc-step-2-align-with-mafft" class="nav-link" data-scroll-target="#step-2-align-with-mafft">Step 2 — Align with MAFFT</a></li>
-  <li><a href="#step-3-inspect-the-alignment" id="toc-step-3-inspect-the-alignment" class="nav-link" data-scroll-target="#step-3-inspect-the-alignment">Step 3 — Inspect the alignment</a></li>
-  <li><a href="#step-4-snp-distances" id="toc-step-4-snp-distances" class="nav-link" data-scroll-target="#step-4-snp-distances">Step 4 — SNP distances</a></li>
+  <li><a href="#step-2-check-the-quality-of-each-genome-before-aligning" id="toc-step-2-check-the-quality-of-each-genome-before-aligning" class="nav-link" data-scroll-target="#step-2-check-the-quality-of-each-genome-before-aligning">Step 2 — Check the quality of each genome before aligning</a></li>
+  <li><a href="#step-3-align-with-mafft" id="toc-step-3-align-with-mafft" class="nav-link" data-scroll-target="#step-3-align-with-mafft">Step 3 — Align with MAFFT</a></li>
+  <li><a href="#step-4-inspect-the-alignment" id="toc-step-4-inspect-the-alignment" class="nav-link" data-scroll-target="#step-4-inspect-the-alignment">Step 4 — Inspect the alignment</a></li>
+  <li><a href="#step-5-snp-distances" id="toc-step-5-snp-distances" class="nav-link" data-scroll-target="#step-5-snp-distances">Step 5 — SNP distances</a></li>
   </ul>
 </nav>
     </div>
@@ -325,7 +326,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="idea">Idea</h2>
 <p>A <strong>multiple sequence alignment</strong> puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.</p>
 <ul>
-<li>Consensus genomes obtained by mapping are already on the reference coordinates, but real data also contain indels and different lengths.</li>
+<li>Consensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.</li>
 <li><strong>MAFFT</strong> is a fast, standard aligner for viral genomes.</li>
 <li>Always look at the alignment (AliView, Jalview): never trust it blindly.</li>
 <li>Columns full of N or gaps carry no information.</li>
@@ -333,14 +334,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="step-1-put-all-the-genomes-in-one-file" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-put-all-the-genomes-in-one-file">Step 1 — Put all the genomes in one file</h2>
-<p>The dataset has the reference, the 27 outbreak genomes (OB01–OB27) and your S01. The <code>sed</code> command renames the reference header.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/phylo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^&gt;.*/&gt;TOYV1_ref/'</span> data/reference/TOYV1.fasta <span class="op">&gt;</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> data/outbreak/sequences.fasta <span class="op">&gt;&gt;</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> results/consensus/S01.fa <span class="op">&gt;&gt;</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Question:</strong> how many sequences are there?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<p>We combine the lineage references downloaded from NCBI Virus and your consensus from the previous exercises. <code>seqkit seq</code> rewrites the file cleanly, and <code>sed</code> renames the header of the consensus.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/phylo</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq data/ncbi/lineage_refs.clean.fasta <span class="op">&gt;</span> results/phylo/all.fasta</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^&gt;.*/&gt;SRR26396743/'</span> results/consensus/SRR26396743.fa <span class="kw">|</span> <span class="ex">seqkit</span> seq <span class="op">&gt;&gt;</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> results/phylo/all.fasta</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'&gt;'</span> results/phylo/all.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Question:</strong> how many sequences are there, and which one is your sample?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -352,19 +353,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p><strong>29</strong> sequences: 1 reference + 27 outbreak genomes + S01.</p>
+<p>The number of references you downloaded <strong>plus one</strong> (your consensus, named <code>SRR26396743</code>).</p>
 </div>
 </div>
 </div>
 </section>
-<section id="step-2-align-with-mafft" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-align-with-mafft">Step 2 — Align with MAFFT</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--preservecase</span> <span class="at">--thread</span> 2 results/phylo/all.fasta <span class="op">&gt;</span> results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>(<code>--preservecase</code> keeps our upper-case letters. Plan B without MAFFT: the toy genomes have no insertion or deletion, so <code>python3 scripts/11b_align_fallback.py</code> just checks that all lengths are equal and writes the same file.)</p>
-<p>Check the number of sequences and columns:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Question:</strong> how many sequences and how many alignment columns?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="step-2-check-the-quality-of-each-genome-before-aligning" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-check-the-quality-of-each-genome-before-aligning">Step 2 — Check the quality of each genome before aligning</h2>
+<p>Count the <code>N</code> in each sequence:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> fx2tab <span class="at">-n</span> <span class="at">-l</span> <span class="at">-B</span> N results/phylo/all.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{printf "%s\t%d bp\t%d N\t%.2f%%\n", $1, $2, $3, 100*$3/$2}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Questions</strong></p>
+<ol type="1">
+<li>Which genome has the most <code>N</code>?</li>
+<li>Is your sample good enough to be placed on a tree? (remember the exercise <em>Is this genome good enough?</em>)</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -376,49 +379,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p><strong>29 sequences × 10,000 columns</strong> (no insertion/deletion, so the length of the reference).</p>
+<p>Use your own values. A genome with a large percentage of <code>N</code> (the course threshold is 10 %) has a position in the tree that is less reliable, because missing data can make it look closer to some genomes than it really is. If a reference has many <code>N</code>, replace it in NCBI Virus with a better one.</p>
 </div>
 </div>
 </div>
 </section>
-<section id="step-3-inspect-the-alignment" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-inspect-the-alignment">Step 3 — Inspect the alignment</h2>
-<p>Open <code>results/phylo/aln.fasta</code> in AliView or Jalview (<a href="https://www.jalview.org" class="uri">https://www.jalview.org</a>), or print the content of one column with:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> subseq <span class="at">-r</span> 553:553 results/phylo/aln.fasta <span class="kw">|</span> <span class="ex">seqkit</span> fx2tab <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,2</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>S01 differs from the reference at which positions?</li>
-<li>Which outbreak genome has a long block of N? Would you keep it?</li>
-</ol>
-<p>To answer the second question, compute the percentage of N in each genome:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{if(name) printf "%s\t%.1f%%\n", name, 100*n/len; name=substr($0,2); n=0; len=0; next} {n+=gsub(/N/,"N"); len+=length($0)} END{printf "%s\t%.1f%%\n", name, 100*n/len}'</span> results/phylo/aln.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k2</span> <span class="at">-n</span> <span class="at">-r</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="step-3-align-with-mafft" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-align-with-mafft">Step 3 — Align with MAFFT</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--preservecase</span> <span class="at">--thread</span> 2 results/phylo/all.fasta <span class="op">&gt;</span> results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>(<code>--preservecase</code> keeps our upper-case letters. For a few dozen genomes of 30 kb this takes seconds to minutes.)</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Question:</strong> how many sequences and how many alignment columns? Why is the number of columns slightly larger than the genome length?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Answers
+<span class="screen-reader-only">Tip</span>Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li><strong>10 positions</strong>: the 8 lineage-defining SNPs (553, 3299, 5753, 6605, 6663, 7748, 9419, 9784) plus 2 private SNPs (269 and 7782).</li>
-<li><strong>OB24</strong>: about 23 % N (a block of ~2,300 N around positions 4,100–6,400, plus scattered N). Its tree position is unreliable. It should be <strong>excluded</strong> (the course threshold is 10 % N) — and the reason written in the report.</li>
-</ol>
+<p>The number of sequences is the same as in <code>all.fasta</code>. The number of columns is at least the length of the longest genome: when one genome has an insertion or a different start or end, MAFFT adds gaps (<code>-</code>) in the others so that homologous positions stay in the same column.</p>
 </div>
 </div>
 </div>
 </section>
-<section id="step-4-snp-distances" class="level2">
-<h2 class="anchored" data-anchor-id="step-4-snp-distances">Step 4 — SNP distances</h2>
-<p>How many differences between genomes? (N and gaps are ignored in each pair.)</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/15_snp_matrix.py results/phylo/aln.fasta <span class="at">--ids</span> S01,OB10,OB15,OB22,OB25,OB01</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">column</span> <span class="at">-t</span> results/phylo/snp_matrix.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Question:</strong> which genome(s) is the closest to S01?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="step-4-inspect-the-alignment" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-inspect-the-alignment">Step 4 — Inspect the alignment</h2>
+<p>Open <code>results/phylo/aln.fasta</code> in <strong>AliView</strong> or <strong>Jalview</strong> (<a href="https://www.jalview.org" class="uri">https://www.jalview.org</a>).</p>
+<p><strong>Questions</strong></p>
+<ol type="1">
+<li>Are the ends of the genomes aligned in the same way for all the sequences?</li>
+<li>Do you see blocks of <code>-</code> or <code>N</code>? In which genomes?</li>
+<li>Are the differences between genomes spread over the genome or concentrated in some regions?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -430,7 +428,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p><strong>OB10 and OB25</strong> are closest to S01 (<strong>2 SNPs</strong>); OB15 and OB22 are at 3 SNPs; OB01 (lineage TV.2.1) is at 7 SNPs. All the closest ones are early TV.2 genomes from Region A. The distance is tiny (2 SNPs) but remember that two genomes at 2 SNPs are not necessarily direct contacts.</p>
+<p>Look at your own alignment. The ends of public genomes are often ragged (different start and stop, or poly-A tails), blocks of <code>N</code> come from regions that were not covered, and differences between lineages are concentrated in some genes (the spike gene carries many lineage-defining changes). Real surveillance pipelines trim the ragged ends and mask known problematic sites before building trees.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="step-5-snp-distances" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-snp-distances">Step 5 — SNP distances</h2>
+<p>How many differences between your sample and each genome? <code>snp-dists</code> ignores <code>N</code> and gaps in each pair:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snp-dists</span> <span class="at">-m</span> results/phylo/aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'$1=="SRR26396743" &amp;&amp; $2!="SRR26396743"'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k3,3n</span> <span class="kw">|</span> <span class="ex">column</span> <span class="at">-t</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Questions</strong></p>
+<ol type="1">
+<li>Which genomes are the closest to your sample, and how many SNPs apart?</li>
+<li>How many SNPs separate your sample from Wuhan-Hu-1 (<code>NC_045512.2</code>)?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Read the values in your own table. The closest genomes have the smallest numbers; the distance to Wuhan-Hu-1 gives the amount of evolution since the beginning of the pandemic. Keep this table, we use it for the lineage assignment.</p>
 </div>
 </div>
 </div>

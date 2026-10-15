@@ -291,7 +291,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#what-is-a-lineage" id="toc-what-is-a-lineage" class="nav-link active" data-scroll-target="#what-is-a-lineage">What is a lineage?</a></li>
-  <li><a href="#step-1-assign-the-lineages" id="toc-step-1-assign-the-lineages" class="nav-link" data-scroll-target="#step-1-assign-the-lineages">Step 1 — Assign the lineages</a></li>
+  <li><a href="#step-1-find-the-closest-labelled-reference" id="toc-step-1-find-the-closest-labelled-reference" class="nav-link" data-scroll-target="#step-1-find-the-closest-labelled-reference">Step 1 — Find the closest labelled reference</a></li>
+  <li><a href="#step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser" id="toc-step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser" class="nav-link" data-scroll-target="#step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser">Step 2 — Cross-check with a dedicated tool (optional, in the browser)</a></li>
   <li><a href="#final-question" id="toc-final-question" class="nav-link" data-scroll-target="#final-question">Final question</a></li>
   </ul>
 </nav>
@@ -321,142 +322,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="what-is-a-lineage" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-a-lineage">What is a lineage?</h2>
-<p>A lineage is a named group of genomes sharing a common ancestor, defined by <strong>mutations specific to that group</strong> (Pango lineages, Nextstrain clades…). Names are hierarchical: <code>TV.2.1</code> descends from <code>TV.2</code>. Lineages give a common language to talk about genomes without exchanging full sequences.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">column</span> <span class="at">-t</span> data/outbreak/lineage_definitions.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Lineage</th>
-<th>Parent</th>
-<th>Defining SNPs</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>TV.1</td>
-<td>root</td>
-<td>none (reference-like)</td>
-</tr>
-<tr class="even">
-<td>TV.2</td>
-<td>TV.1</td>
-<td>8 SNPs</td>
-</tr>
-<tr class="odd">
-<td>TV.2.1</td>
-<td>TV.2</td>
-<td>+ 3 SNPs</td>
-</tr>
-<tr class="even">
-<td>TV.2.2</td>
-<td>TV.2</td>
-<td>+ 3 other SNPs</td>
-</tr>
-<tr class="odd">
-<td>TV.3</td>
-<td>TV.1</td>
-<td>6 SNPs</td>
-</tr>
-</tbody>
-</table>
+<p>A lineage is a named group of genomes sharing a common ancestor, defined by <strong>mutations specific to that group</strong>. For SARS-CoV-2 the standard nomenclature is <strong>Pango</strong>; names are hierarchical (<code>BA.2</code> descends from the Omicron lineages, <code>B.1.1.7</code> is Alpha), so lineages give a common language to talk about genomes without exchanging full sequences.</p>
+<p>The references you downloaded from NCBI Virus already carry their Pango lineage in their name (<code>ACCESSION_LINEAGE</code>): they are our <strong>labelled landmarks</strong>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'&gt;'</span> results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-1-assign-the-lineages" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-assign-the-lineages">Step 1 — Assign the lineages</h2>
-<p>We use a small program written for the course (a miniature Pangolin): for each genome it looks for the defining SNPs and picks the <strong>most specific</strong> lineage whose SNPs are <strong>all</strong> present.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> scripts/13_lineage.py results/phylo/aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="step-1-find-the-closest-labelled-reference" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-find-the-closest-labelled-reference">Step 1 — Find the closest labelled reference</h2>
+<p>The simplest way to give a lineage to a new genome is to ask which labelled genome it resembles most. We reuse the SNP distances:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snp-dists</span> <span class="at">-m</span> results/phylo/aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'$1=="SRR26396743" &amp;&amp; $2!="SRR26396743"'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k3,3n</span> <span class="kw">|</span> <span class="ex">column</span> <span class="at">-t</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Questions</strong></p>
 <ol type="1">
-<li>What lineage is S01, and what is the evidence?</li>
-<li>One genome has a masked defining SNP. What does the “evidence” column say? Is the call still reliable?</li>
-<li>Make a table: number of genomes per lineage and per region.</li>
+<li>Which reference is the closest to your sample, and what is its lineage?</li>
+<li>Is the closest reference much closer than the others, or are several references at a similar distance?</li>
+<li>Can you already give a lineage to your sample?</li>
 </ol>
-<p>(For question 3, join the lineages with the metadata: <code>join -t $'\t' &lt;(sort -k1,1 results/phylo/lineages.tsv) &lt;(sort -k1,1 data/outbreak/metadata.tsv) | cut -f1,2,4,5 | sort -k2</code>.)</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Answers
+<span class="screen-reader-only">Tip</span>Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li><strong>S01 = TV.2</strong>, with evidence “8/8 defining SNPs”. It does not carry the TV.2.1 or TV.2.2 SNPs, so it stays at the parent level.</li>
-<li><strong>OB24</strong> says “TV.2.2 – 10/11 defining SNPs, 1 masked”: the 11th SNP lies in the block of N. All the 10 observed SNPs agree, so TV.2.2 is the best call, but it is <strong>less certain</strong> (missing data). Real tools such as Pangolin and Nextclade flag exactly this.</li>
-<li>Number of genomes per lineage and region:</li>
-</ol>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Lineage</th>
-<th>Region A</th>
-<th>Region B</th>
-<th>Region C</th>
-<th>Region D</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>TV.1</td>
-<td>–</td>
-<td>2</td>
-<td>–</td>
-<td>1</td>
-</tr>
-<tr class="even">
-<td>TV.3</td>
-<td>–</td>
-<td>5</td>
-<td>–</td>
-<td>–</td>
-</tr>
-<tr class="odd">
-<td>TV.2</td>
-<td>3 (+ S01)</td>
-<td>–</td>
-<td>1</td>
-<td>–</td>
-</tr>
-<tr class="even">
-<td>TV.2.1</td>
-<td>7</td>
-<td>–</td>
-<td>1</td>
-<td>–</td>
-</tr>
-<tr class="odd">
-<td>TV.2.2</td>
-<td>–</td>
-<td>–</td>
-<td>7</td>
-<td>–</td>
-</tr>
-</tbody>
-</table>
+<p>Use your own table. If one reference is clearly closer than all the others, your sample probably belongs to that lineage or to a sub-lineage of it. If several references from different lineages are at similar distances, the real lineage is probably not in your reference set and you need more references. The answer is a <strong>proposal</strong>, not a final call: it must be confirmed with the tree (next module).</p>
 </div>
 </div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
+</section>
+<section id="step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-cross-check-with-a-dedicated-tool-optional-in-the-browser">Step 2 — Cross-check with a dedicated tool (optional, in the browser)</h2>
+<p>Pangolin and Nextclade do this with a complete nomenclature of thousands of lineages and give quality flags (missing data, unexpected mutations). Nothing to install: open <a href="https://clades.nextstrain.org" class="uri">https://clades.nextstrain.org</a>, drop <code>results/consensus/SRR26396743.fa</code> in the page and read the clade and Pango lineage it proposes.</p>
+<p><strong>Question:</strong> does it agree with the lineage of the closest reference?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Real tools
+<span class="screen-reader-only">Tip</span>Answer
 </div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p><strong>Pangolin</strong> and <strong>Nextclade</strong> do the same with much larger nomenclatures, and also give quality flags (missing data, unexpected mutations, mixed sites). The principle — defining mutations, most specific complete match — is identical.</p>
+<p>The tool may give a <strong>more precise</strong> lineage (a sub-lineage of the reference that you downloaded), because it knows many more lineages than our 10–15 references. A sub-lineage of the lineage found in Step 1 is a consistent result; a different family means you should re-check the consensus and the references.</p>
+</div>
 </div>
 </div>
 </section>
 <section id="final-question" class="level2">
 <h2 class="anchored" data-anchor-id="final-question">Final question</h2>
 <p>Can two genomes of the same lineage still be unrelated cases? Why?</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout callout-style-default callout-tip callout-titled" title="Answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
@@ -468,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Yes. A lineage is defined by <strong>a few mutations</strong>, and many separate chains of transmission can carry the same lineage (for example if it was imported several times, or circulated widely before being sampled). A lineage says “belongs to this family”; to say “linked case” you need <strong>finer resolution</strong> (extra SNPs, as in the SNP matrix) <strong>and</strong> epidemiological information (dates, places, contacts).</p>
+<p>Yes. A lineage is defined by <strong>a few mutations</strong>, and many separate chains of transmission can carry the same lineage (for example if it was imported several times, or circulated widely before being sampled). A lineage says “belongs to this family”; to say “linked case” you need <strong>finer resolution</strong> (extra SNPs, as in the SNP distances) <strong>and</strong> epidemiological information (dates, places, contacts).</p>
 </div>
 </div>
 </div>
