@@ -38,7 +38,7 @@ To place our genome in a tree (next sessions), we need **reference genomes of se
 
 1. In the filters on the left, keep **Nucleotide completeness: complete** and **Host: *Homo sapiens***.
 2. Filter by **Pango lineage** (or add the lineage column to the table with *Customize columns*) and choose **one or two genomes per lineage**.
-3. Choose lineages that span the pandemic: the ancestral lineage **B** (Wuhan-Hu-1, accession NC_045512.2), Alpha (B.1.1.7), Delta (B.1.617.2), Omicron (BA.1, BA.2, BA.5) **and the lineages circulating when your sample was collected** (look at the `collection_date` of the run `SRR26396743` on its NCBI BioSample page).
+3. Choose lineages that span the pandemic: the ancestral lineage **B** (Wuhan-Hu-1, accession NC_045512.2), Alpha (B.1.1.7), Delta (B.1.617.2), Omicron (BA.1, BA.2, BA.5, XBB.1.5) **and the lineages circulating when your sample was collected** (look at the `collection_date` of the run `SRR26396743` on its NCBI BioSample page).
 4. Prefer genomes with a full date and country, and with few ambiguous bases.
 5. Select about 10–15 genomes, then **Download → Nucleotide → FASTA → Build custom**, and put **Accession** and **Pango lineage** in the definition line. Save the file as `data/ncbi/lineage_refs.fasta`.
 

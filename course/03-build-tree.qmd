@@ -25,7 +25,7 @@ echo $OUT
 ```
 
 ```bash
-iqtree2 -s results/phylo/aln.fasta -m MFP -B 1000 -T 2 --seed 1 -o $OUT --prefix results/phylo/tree -redo
+iqtree -s results/phylo/aln.fasta -m MFP -B 1000 -T 2  --prefix results/phylo/tree
 ```
 
 What the options mean: `-s` alignment, `-m MFP` choose the best model automatically, `-B 1000` 1,000 ultrafast bootstrap replicates, `-T 2` two threads, `--seed 1` reproducible result, `-o` root on the outgroup, `--prefix` name of the output files.
@@ -61,51 +61,6 @@ Use your own report. IQ-TREE may warn that some sequences are **identical** (or 
 
 ::: {.callout-tip title="Answer" collapse="true"}
 Use your own tree. References of the same lineage should form a group (a clade); sister lineages sit next to each other. Your sample should fall next to the lineage found in the *Lineage assignment* page. If it sits alone on a long branch, check its percentage of `N` and its reference set.
-:::
-
-## Step 3 — Choose the outgroup: compare with a distant virus
-
-A real outgroup is not always a good idea. Download the bat coronavirus RaTG13 (roughly 96 % identical to SARS-CoV-2), add it to the alignment and rebuild the tree rooted on it:
-
-```bash
-mkdir -p data/ncbi/candidates
-efetch -db nuccore -id MN996532.2 -format fasta | sed 's/^>.*/>MN996532.2_RaTG13/' > data/ncbi/candidates/RaTG13_MN996532.2.fasta
-```
-
-(Plan B without `efetch`: search the accession on <https://www.ncbi.nlm.nih.gov/nuccore>, then **Send to → Complete record → File → FASTA**, and rename the header to `>MN996532.2_RaTG13`.)
-
-```bash
-seqkit seq data/ncbi/candidates/RaTG13_MN996532.2.fasta | cat results/phylo/all.fasta - > results/phylo/all_rat.fasta
-mafft --auto --preservecase --thread 2 results/phylo/all_rat.fasta > results/phylo/aln_rat.fasta
-iqtree2 -s results/phylo/aln_rat.fasta -m MFP -B 1000 -T 2 --seed 1 -o MN996532.2_RaTG13 --prefix results/phylo/tree_rat -redo
-```
-
-Upload `tree_rat.treefile` in iTOL and compare with the first tree.
-
-**Question:** what changes? Which outgroup would you use for a routine analysis, and why?
-
-::: {.callout-tip title="Answer" collapse="true"}
-The distant outgroup sits on a **very long branch**, which squeezes all the SARS-CoV-2 genomes into a small part of the figure and makes the short branches between them hard to read. A very divergent virus is also harder to align and can mislead the placement of the root (coronaviruses recombine). A close, early genome such as Wuhan-Hu-1 gives a root that is easier to interpret for within-outbreak questions.
-:::
-
-## Step 4 — Does the consensus threshold change the tree?
-
-In the *Coverage and consensus* exercise you built a second, stricter consensus (`results/consensus/SRR26396743.m30.fa`, at least 30 reads per position). Add it to the dataset:
-
-```bash
-sed 's/^>.*/>SRR26396743_m30/' results/consensus/SRR26396743.m30.fa | seqkit seq | cat results/phylo/all.fasta - > results/phylo/all_m30.fasta
-mafft --auto --preservecase --thread 2 results/phylo/all_m30.fasta > results/phylo/aln_m30.fasta
-iqtree2 -s results/phylo/aln_m30.fasta -m MFP -B 1000 -T 2 --seed 1 -o $OUT --prefix results/phylo/tree_m30 -redo
-```
-
-**Question:** where do `SRR26396743` and `SRR26396743_m30` sit in the new tree?
-
-::: {.callout-tip title="Answer" collapse="true"}
-They should sit next to each other: the two consensus sequences come from the same reads and differ only by the positions masked as `N`. The more `N` a consensus has, the less reliable its position, because missing data hides differences. The threshold used must be written in the report.
-:::
-
-::: {.callout-warning}
-With few variable sites there is little resolution: many branches are short and some are supported weakly. A tree is only as good as the alignment and the data behind it.
 :::
 
 **Next:** [Read a phylogenetic tree](03-read-tree.qmd).
