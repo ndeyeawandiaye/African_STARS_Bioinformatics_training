@@ -177,8 +177,8 @@ Run SPAdes on the trimmed reads:
 
 ```bash
 spades.py \
-  -1 results/trimmed/SRR26396743_1.fastq.gz \
-  -2 results/trimmed/SRR26396743_2.fastq.gz \
+  -1 results/trimmed/SRR26396743_1_paired.fastq.gz \
+  -2 results/trimmed/SRR26396743_2_paired.fastq.gz \
   --meta \
   -t 2 \
   -o results/spades
