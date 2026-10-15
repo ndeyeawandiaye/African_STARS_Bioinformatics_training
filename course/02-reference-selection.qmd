@@ -5,7 +5,7 @@ subtitle: "Module 2 — 30 min"
 
 ## Why it matters
 
-Reads are mapped to **one** reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and **biases the consensus towards the reference**.
+Reads are mapped to **one** reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and **biases the consensus towards the reference**. For a tree, we also need **reference genomes of several lineages** to place our own genome in context.
 
 | Criterion                   | Question                                                      |
 | --------------------------- | ------------------------------------------------------------- |
@@ -15,61 +15,26 @@ Reads are mapped to **one** reference, and the consensus is built from that mapp
 | Well documented             | accession number, host, country, collection date              |
 | Consistent across the study | the **same** reference for all the samples you compare        |
 
-## Step 1 — Download three candidate references from NCBI
+## Our sample
 
-Since the mapping exercise you have used **NC_045512.2** (Wuhan-Hu-1), the RefSeq reference of SARS-CoV-2. Where does it come from, and is it the only possible choice? Download it again, together with two other viruses, directly from NCBI:
-
-```bash
-mkdir -p data/ncbi/candidates
-efetch -db nuccore -id NC_045512.2 -format fasta > data/ncbi/candidates/SARS-CoV-2_NC_045512.2.fasta
-efetch -db nuccore -id MN996532.2  -format fasta > data/ncbi/candidates/RaTG13_MN996532.2.fasta
-efetch -db nuccore -id NC_004718.3 -format fasta > data/ncbi/candidates/SARS-CoV-1_NC_004718.3.fasta
-```
-
-(Plan B without `efetch`: search the accession on <https://www.ncbi.nlm.nih.gov/nuccore>, then **Send to → Complete record → File → FASTA**.)
+Our sample is the consensus genome built in the previous exercises from the run `SRR26396743`:
 
 ```bash
-seqkit stats data/ncbi/candidates/*.fasta
+ls results/consensus/
+seqkit stats results/consensus/SRR26396743.fa
 ```
 
-- `NC_045512.2`: SARS-CoV-2, the reference used in this course;
-- `MN996532.2` (RaTG13): a bat coronavirus, roughly 96 % identical to SARS-CoV-2;
-- `NC_004718.3`: SARS-CoV-1, another virus, roughly 80 % identical.
+Since the mapping exercise we have used **NC_045512.2** (Wuhan-Hu-1), the RefSeq reference of SARS-CoV-2, as the coordinate system for this sample.
 
-**Questions:** what are the lengths of the three genomes? Which one is the same species as your sample?
-
-## Step 2 — Which candidate is closest to your sample?
-
-Use a subset of the trimmed reads from the previous exercises (100,000 read pairs is enough) and map it to each candidate:
-
-```bash
-mkdir -p results/ref_test
-seqkit head -n 100000 results/trimmed/SRR26396743_1_paired.fastq.gz -o results/ref_test/sub_1.fastq.gz
-seqkit head -n 100000 results/trimmed/SRR26396743_2_paired.fastq.gz -o results/ref_test/sub_2.fastq.gz
-```
-
-```bash
-for ref in SARS-CoV-2_NC_045512.2 RaTG13_MN996532.2 SARS-CoV-1_NC_004718.3; do
-  bwa index data/ncbi/candidates/$ref.fasta 2> /dev/null
-  echo "== $ref"
-  bwa mem -t 2 data/ncbi/candidates/$ref.fasta results/ref_test/sub_1.fastq.gz results/ref_test/sub_2.fastq.gz 2> /dev/null \
-    | samtools flagstat - | grep -E "in total|mapped \("
-done
-```
-
-**Questions**
-
-1. Which reference gives the highest percentage of mapped reads?
-2. What happens with RaTG13? With SARS-CoV-1?
-3. What would this change in the consensus (think of IGV and of Step 5 of the consensus exercise)?
+**Questions:** what is the length of the consensus? Why was Wuhan-Hu-1 a good reference to map these reads?
 
 ::: {.callout-tip title="Answer" collapse="true"}
-Use the values from your own run. You should see that the SARS-CoV-2 reference maps the most reads and that the other viruses map fewer, with the most distant one the worst. With about 4 % divergence (RaTG13) a 150-base read already carries several mismatches; with about 20 % (SARS-CoV-1) most reads cannot be placed. Reads that do map to a divergent reference carry many false differences, and the consensus becomes biased towards the reference. The lesson: **check that the reference is close to your virus before mapping**.
+The length should be close to 29.9 kb, that of the SARS-CoV-2 genome. Wuhan-Hu-1 is the RefSeq reference of the right virus, a complete and well-documented genome, and the coordinate system used by the whole community (variant calling, lineage tools, primer schemes).
 :::
 
-## Step 3 — Download references of several lineages from NCBI Virus
+## Step 1 — Download references of several lineages from NCBI Virus
 
-To place your genome in a tree (next sessions), we need **reference genomes of several lineages**, from the same database. Open NCBI Virus: <https://www.ncbi.nlm.nih.gov/labs/virus> and choose **SARS-CoV-2** (taxid 2697049).
+To place our genome in a tree (next sessions), we need **reference genomes of several lineages** from the same database. Open NCBI Virus: <https://www.ncbi.nlm.nih.gov/labs/virus> and choose **SARS-CoV-2** (taxid 2697049).
 
 1. In the filters on the left, keep **Nucleotide completeness: complete** and **Host: *Homo sapiens***.
 2. Filter by **Pango lineage** (or add the lineage column to the table with *Customize columns*) and choose **one or two genomes per lineage**.

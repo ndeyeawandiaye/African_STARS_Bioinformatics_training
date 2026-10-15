@@ -65,15 +65,22 @@ Use your own tree. References of the same lineage should form a group (a clade);
 
 ## Step 3 — Choose the outgroup: compare with a distant virus
 
-A real outgroup is not always a good idea. Add the bat virus RaTG13 (downloaded in the *Reference selection* page) to the alignment and rebuild the tree rooted on it:
+A real outgroup is not always a good idea. Download the bat coronavirus RaTG13 (roughly 96 % identical to SARS-CoV-2), add it to the alignment and rebuild the tree rooted on it:
+
+```bash
+mkdir -p data/ncbi/candidates
+efetch -db nuccore -id MN996532.2 -format fasta | sed 's/^>.*/>MN996532.2_RaTG13/' > data/ncbi/candidates/RaTG13_MN996532.2.fasta
+```
+
+(Plan B without `efetch`: search the accession on <https://www.ncbi.nlm.nih.gov/nuccore>, then **Send to → Complete record → File → FASTA**, and rename the header to `>MN996532.2_RaTG13`.)
 
 ```bash
 seqkit seq data/ncbi/candidates/RaTG13_MN996532.2.fasta | cat results/phylo/all.fasta - > results/phylo/all_rat.fasta
 mafft --auto --preservecase --thread 2 results/phylo/all_rat.fasta > results/phylo/aln_rat.fasta
-iqtree2 -s results/phylo/aln_rat.fasta -m MFP -B 1000 -T 2 --seed 1 -o MN996532.2 --prefix results/phylo/tree_rat -redo
+iqtree2 -s results/phylo/aln_rat.fasta -m MFP -B 1000 -T 2 --seed 1 -o MN996532.2_RaTG13 --prefix results/phylo/tree_rat -redo
 ```
 
-(The name of the outgroup is the first word of its FASTA header: check with `grep MN996532 results/phylo/aln_rat.fasta`.) Upload `tree_rat.treefile` in iTOL and compare with the first tree.
+Upload `tree_rat.treefile` in iTOL and compare with the first tree.
 
 **Question:** what changes? Which outgroup would you use for a routine analysis, and why?
 
