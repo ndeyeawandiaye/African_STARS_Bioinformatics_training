@@ -500,8 +500,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>An assembler joins overlapping reads into longer sequences called <strong>contigs</strong>. When paired-end information links contigs together, they can be ordered into <strong>scaffolds</strong>. <strong>SPAdes</strong> builds a de Bruijn graph from the reads and uses the R1/R2 pairing to resolve ambiguities.</p>
 <p>Run SPAdes on the trimmed reads:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">spades.py</span> <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-1</span> results/trimmed/SRR26396743_1.fastq.gz <span class="dt">\</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-2</span> results/trimmed/SRR26396743_2.fastq.gz <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-1</span> results/trimmed/SRR26396743_1_paired.fastq.gz <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-2</span> results/trimmed/SRR26396743_2_paired.fastq.gz <span class="dt">\</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--meta</span> <span class="dt">\</span></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-t</span> 2 <span class="dt">\</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> results/spades</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
