@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../exercises/04_genome_qc_verdict.html" rel="next">
+<link href="../course/02-reference-selection.html" rel="next">
 <link href="../exercises/02_mapping.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -226,12 +226,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Coverage and consensus</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../exercises/04_genome_qc_verdict.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Is this genome good enough?</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -296,15 +290,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#step-1-calculate-depth-at-every-position" id="toc-step-1-calculate-depth-at-every-position" class="nav-link active" data-scroll-target="#step-1-calculate-depth-at-every-position">Step 1 — Calculate depth at every position</a></li>
-  <li><a href="#step-2-calculate-mean-depth-and-genome-breadth-at-10" id="toc-step-2-calculate-mean-depth-and-genome-breadth-at-10" class="nav-link" data-scroll-target="#step-2-calculate-mean-depth-and-genome-breadth-at-10">Step 2 — Calculate mean depth and genome breadth at ≥10×</a></li>
-  <li><a href="#step-3-identify-low-depth-regions" id="toc-step-3-identify-low-depth-regions" class="nav-link" data-scroll-target="#step-3-identify-low-depth-regions">Step 3 — Identify low-depth regions</a></li>
-  <li><a href="#step-4-visualize-coverage-in-igv" id="toc-step-4-visualize-coverage-in-igv" class="nav-link" data-scroll-target="#step-4-visualize-coverage-in-igv">Step 4 — Visualize coverage in IGV</a></li>
-  <li><a href="#step-5-build-the-consensus-genome-with-ivar" id="toc-step-5-build-the-consensus-genome-with-ivar" class="nav-link" data-scroll-target="#step-5-build-the-consensus-genome-with-ivar">Step 5 — Build the consensus genome with iVar</a></li>
-  <li><a href="#step-6-measure-the-number-of-ambiguous-bases" id="toc-step-6-measure-the-number-of-ambiguous-bases" class="nav-link" data-scroll-target="#step-6-measure-the-number-of-ambiguous-bases">Step 6 — Measure the number of ambiguous bases</a></li>
-  <li><a href="#step-7-identify-candidate-variants-with-bcftools" id="toc-step-7-identify-candidate-variants-with-bcftools" class="nav-link" data-scroll-target="#step-7-identify-candidate-variants-with-bcftools">Step 7 — Identify candidate variants with bcftools</a></li>
-  <li><a href="#step-8-change-the-consensus-depth-threshold" id="toc-step-8-change-the-consensus-depth-threshold" class="nav-link" data-scroll-target="#step-8-change-the-consensus-depth-threshold">Step 8 — Change the consensus depth threshold</a></li>
-  <li><a href="#final-question" id="toc-final-question" class="nav-link" data-scroll-target="#final-question">Final question</a></li>
+  <li><a href="#step-1-calculate-mean-depth-and-genome-breadth-at-10" id="toc-step-1-calculate-mean-depth-and-genome-breadth-at-10" class="nav-link active" data-scroll-target="#step-1-calculate-mean-depth-and-genome-breadth-at-10">Step 1 — Calculate mean depth and genome breadth at ≥10×</a></li>
+  <li><a href="#step-2-build-the-consensus-genome-with-ivar" id="toc-step-2-build-the-consensus-genome-with-ivar" class="nav-link" data-scroll-target="#step-2-build-the-consensus-genome-with-ivar">Step 2 — Build the consensus genome with iVar</a></li>
+  <li><a href="#step-3-measure-the-number-of-ambiguous-bases" id="toc-step-3-measure-the-number-of-ambiguous-bases" class="nav-link" data-scroll-target="#step-3-measure-the-number-of-ambiguous-bases">Step 3 — Measure the number of ambiguous bases</a></li>
+  <li><a href="#step-4-identify-candidate-variants-with-bcftools" id="toc-step-4-identify-candidate-variants-with-bcftools" class="nav-link" data-scroll-target="#step-4-identify-candidate-variants-with-bcftools">Step 4 — Identify candidate variants with bcftools</a></li>
+  <li><a href="#step-5-change-the-consensus-depth-threshold" id="toc-step-5-change-the-consensus-depth-threshold" class="nav-link" data-scroll-target="#step-5-change-the-consensus-depth-threshold">Step 5 — Change the consensus depth threshold</a></li>
+  <li><a href="#step-6-is-this-genome-good-enough" id="toc-step-6-is-this-genome-good-enough" class="nav-link" data-scroll-target="#step-6-is-this-genome-good-enough">Step 6 — Is this genome good enough?</a></li>
+  <li><a href="#the-numbers-that-matter" id="toc-the-numbers-that-matter" class="nav-link" data-scroll-target="#the-numbers-that-matter">The numbers that matter</a></li>
+  <li><a href="#illustrative-thresholds" id="toc-illustrative-thresholds" class="nav-link" data-scroll-target="#illustrative-thresholds">illustrative thresholds</a></li>
   </ul>
 </nav>
     </div>
@@ -335,120 +328,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We will analyze the SARS-CoV-2 sequencing run <code>SRR26396743</code> from NCBI, using the trimmed reads and BAM file generated in the previous sessions.</p>
 <p><strong>Input files</strong></p>
 <ul>
-<li>Reference genome: <code>data/ncbi/SARS-CoV-2_NC_045512.2.fasta</code></li>
-<li>Aligned reads: <code>results/bam/SRR26396743.bam</code></li>
-<li>BAM index: <code>results/bam/SRR26396743.bam.bai</code></li>
+<li>Reference genome: <code>data/NC_045512.2.fasta</code></li>
+<li>Aligned reads: <code>results/bam/SRR26396743.sorted.bam</code></li>
+<li>BAM index: <code>results/bam/SRR26396743.sorted.bam.bai</code></li>
 </ul>
 <p>If a previous step failed, use the corresponding precomputed files provided with the course, if available.</p>
-<section id="step-1-calculate-depth-at-every-position" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-calculate-depth-at-every-position">Step 1 — Calculate depth at every position</h2>
-<p><strong>Depth</strong> is the number of reads covering a reference position. We use <code>-a</code> to include positions with zero coverage.</p>
-<p>Create the output directories:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/coverage results/consensus results/variants</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Calculate the depth:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> depth <span class="at">-aa</span> <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/coverage/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Inspect the first three lines:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> results/coverage/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The output contains three columns:</p>
-<ol type="1">
-<li>Reference sequence name</li>
-<li>Position</li>
-<li>Read depth</li>
-</ol>
-<p>Obtain a summary with Samtools:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> coverage results/bam/SRR26396743.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>What is the depth at the first three reference positions?</li>
-<li>Are there positions with zero coverage?</li>
-<li>What are the mean depth and percentage of the reference covered by at least one read?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>The depth varies along the genome. A position with zero coverage has no aligned reads supporting a base call. The summary values must be obtained from your own output.</p>
-</section>
-<section id="step-2-calculate-mean-depth-and-genome-breadth-at-10" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-calculate-mean-depth-and-genome-breadth-at-10">Step 2 — Calculate mean depth and genome breadth at ≥10×</h2>
+<section id="step-1-calculate-mean-depth-and-genome-breadth-at-10" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-calculate-mean-depth-and-genome-breadth-at-10">Step 1 — Calculate mean depth and genome breadth at ≥10×</h2>
 <p>For this exercise, we will use <strong>10× depth</strong> as a practical threshold for assessing genome completeness.</p>
 <ul>
 <li><strong>Mean depth:</strong> average number of reads covering each reference position.</li>
 <li><strong>Breadth at ≥10×:</strong> percentage of reference positions covered by at least 10 reads.</li>
 </ul>
 <p>Run:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="st">  total += $3</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="st">  if ($3 &gt;= 10) covered++</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="st">  positions++</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="st">END {</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="st">  if (positions &gt; 0) {</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Mean depth: %.1f\n", total/positions</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Genome at &gt;=10x: %.1f%%\n", 100*covered/positions</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/coverage/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>What is the mean depth?</li>
-<li>What percentage of the genome has at least 10× coverage?</li>
-<li>Does the mean depth alone tell you whether the genome is complete?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>No.&nbsp;A high mean depth can coexist with poorly covered regions. Always examine both mean depth and breadth of coverage.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="st">  total += $3</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="st">  if ($3 &gt;= 10) covered++</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">  positions++</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="st">END {</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="st">  if (positions &gt; 0) {</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Mean depth: %.1f\n", total/positions</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Genome at &gt;=10x: %.1f%%\n", 100*covered/positions</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/coverage/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-3-identify-low-depth-regions" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-identify-low-depth-regions">Step 3 — Identify low-depth regions</h2>
-<p>We will identify consecutive positions with depth below 10× and report them as intervals.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN {OFS="\t"}</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="st">{</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="st">  if ($3 &lt; 10) {</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="st">    if (!on) {</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">      start = $2</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">      on = 1</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">    end = $2</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">  } else if (on) {</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">    print $1, start-1, end</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">    on = 0</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="st">END {</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="st">  if (on) print $1, start-1, end</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/coverage/SRR26396743.depth.tsv <span class="dt">\</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/coverage/SRR26396743.low_depth.bed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Inspect the intervals:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> results/coverage/SRR26396743.low_depth.bed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Each line contains the reference name, interval start, and interval end in BED format.</p>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>How many low-depth intervals were identified?</li>
-<li>What are their coordinates?</li>
-<li>Which interval is the longest?</li>
-<li>Are the low-depth regions located near the ends of the genome or in internal regions?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>Use the generated BED file to identify the actual intervals. Low coverage near the genome ends can result from limitations in library preparation, read trimming, or the sequencing design. Internal gaps can have several causes, including uneven coverage, amplicon dropout, or local alignment issues. Coverage alone does not establish the cause.</p>
-</section>
-<section id="step-4-visualize-coverage-in-igv" class="level2">
-<h2 class="anchored" data-anchor-id="step-4-visualize-coverage-in-igv">Step 4 — Visualize coverage in IGV</h2>
-<p>Open IGV and load:</p>
-<ul>
-<li>Reference: <code>data/ncbi/SARS-CoV-2_NC_045512.2.fasta</code></li>
-<li>Alignment: <code>results/bam/SRR26396743.bam</code></li>
-</ul>
-<p>Inspect one of the low-depth intervals identified in Step 3.</p>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>Is coverage uniform across the region?</li>
-<li>Is the region completely uncovered or only poorly covered?</li>
-<li>Do reads stop abruptly at a particular coordinate?</li>
-<li>What additional information would help determine why the region has low coverage?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>IGV helps distinguish a complete coverage gap from a region with reduced depth. The shape of the coverage profile may suggest a technical issue, but further information about the library preparation and sequencing protocol is needed to establish the cause.</p>
-</section>
-<section id="step-5-build-the-consensus-genome-with-ivar" class="level2">
-<h2 class="anchored" data-anchor-id="step-5-build-the-consensus-genome-with-ivar">Step 5 — Build the consensus genome with iVar</h2>
+<section id="step-2-build-the-consensus-genome-with-ivar" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-build-the-consensus-genome-with-ivar">Step 2 — Build the consensus genome with iVar</h2>
 <p>A <strong>consensus genome</strong> represents the most strongly supported nucleotide at each reference position, subject to the calling thresholds.</p>
 <p>Here, we will use:</p>
 <ul>
@@ -457,89 +363,233 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Minimum proportion of reads supporting a base: 50%</li>
 <li>Missing or insufficiently supported positions: <code>N</code></li>
 </ul>
+<p>Create the output directories:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/coverage results/consensus results/variants</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Run <code>samtools mpileup</code> and pass its output to <code>ivar consensus</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> mpileup <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-aa</span> <span class="at">-A</span> <span class="at">-d</span> 0 <span class="at">-Q</span> 0 <span class="dt">\</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/ncbi/SARS-CoV-2_NC_045512.2.fasta <span class="dt">\</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">ivar</span> consensus <span class="dt">\</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">-p</span> results/consensus/SRR26396743 <span class="dt">\</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-q</span> 20 <span class="dt">\</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-t</span> 0.5 <span class="dt">\</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">-m</span> 10 <span class="dt">\</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-n</span> N</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> mpileup <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-aa</span> <span class="at">-A</span> <span class="at">-d</span> 0 <span class="at">-Q</span> 0 <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.sorted.bam <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">ivar</span> consensus <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">-p</span> results/consensus/SRR26396743 <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-q</span> 20 <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-t</span> 0.5 <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">-m</span> 10 <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-n</span> N</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command / Option</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>samtools mpileup</code></td>
+<td>Generates per-position alignment information from the BAM file.</td>
+</tr>
+<tr class="even">
+<td><code>-aa</code></td>
+<td>Includes all reference positions, including positions with zero coverage.</td>
+</tr>
+<tr class="odd">
+<td><code>-A</code></td>
+<td>Includes anomalous read pairs/orphan reads that would otherwise be skipped.</td>
+</tr>
+<tr class="even">
+<td><code>-d 0</code></td>
+<td>Removes the maximum depth limit.</td>
+</tr>
+<tr class="odd">
+<td><code>-Q 0</code></td>
+<td>Sets the minimum base quality threshold in mpileup to Q0.</td>
+</tr>
+<tr class="even">
+<td><code>-f data/NC_045512.2.fasta</code></td>
+<td>Specifies the reference genome in FASTA format.</td>
+</tr>
+<tr class="odd">
+<td><code>results/bam/SRR26396743.sorted.bam</code></td>
+<td>Input BAM file containing coordinate-sorted alignments.</td>
+</tr>
+<tr class="even">
+<td><code>ivar consensus</code></td>
+<td>Generates a consensus sequence from the pileup data.</td>
+</tr>
+<tr class="odd">
+<td><code>-p results/consensus/SRR26396743</code></td>
+<td>Sets the output file prefix.</td>
+</tr>
+<tr class="even">
+<td><code>-q 20</code></td>
+<td>Uses a minimum base quality of Q20 for consensus calling.</td>
+</tr>
+<tr class="odd">
+<td><code>-t 0.5</code></td>
+<td>Requires a minimum base frequency of 50% to call a consensus base.</td>
+</tr>
+<tr class="even">
+<td><code>-m 10</code></td>
+<td>Requires at least 10 reads covering a position.</td>
+</tr>
+<tr class="odd">
+<td><code>-n N</code></td>
+<td>Uses <code>N</code> for positions where a consensus base cannot be called.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 <p>This produces a consensus FASTA file, normally named:</p>
 <p><code>results/consensus/SRR26396743.fa</code></p>
 <p>Inspect its header and sequence:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-c</span> 300 results/consensus/SRR26396743.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>What is the length of the consensus?</li>
-<li>Why are some positions represented by <code>N</code>?</li>
-<li>What happens when a position has fewer than 10 reads?</li>
-<li>Does a consensus sequence necessarily represent a perfect reconstruction of the original viral genome?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>A consensus can contain <code>N</code> where the evidence is insufficient under the selected thresholds. It is an estimate derived from the available reads, not a guarantee of a perfectly reconstructed genome.</p>
-<p>The consensus quality depends on depth, base quality, mapping quality, the consensus thresholds, and the quality of the underlying sequencing data.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-c</span> 300 results/consensus/SRR26396743.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-6-measure-the-number-of-ambiguous-bases" class="level2">
-<h2 class="anchored" data-anchor-id="step-6-measure-the-number-of-ambiguous-bases">Step 6 — Measure the number of ambiguous bases</h2>
+<section id="step-3-measure-the-number-of-ambiguous-bases" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-measure-the-number-of-ambiguous-bases">Step 3 — Measure the number of ambiguous bases</h2>
 <p>Count the number of <code>N</code> bases:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> results/consensus/SRR26396743.fa <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'N'</span> <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> results/consensus/SRR26396743.fa <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'N'</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Calculate the percentage of the consensus represented by <code>N</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">  /^&gt;/ {next}</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">    n += gsub(/N/, "&amp;")</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="st">    length_total += length($0)</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="st">  END {</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="st">    if (length_total &gt; 0)</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="st">      printf "N bases: %d\nN percentage: %.2f%%\n",</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="st">             n, 100*n/length_total</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> results/consensus/SRR26396743.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Find the longest consecutive run of <code>N</code> bases:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> results/consensus/SRR26396743.fa <span class="dt">\</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\n'</span> <span class="dt">\</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-o</span> <span class="st">'N\+'</span> <span class="dt">\</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print length}'</span> <span class="dt">\</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-n</span> <span class="dt">\</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If no <code>N</code> bases are present, the last command produces no output; interpret that as zero.</p>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>How many <code>N</code> bases are present?</li>
-<li>What percentage of the consensus is ambiguous?</li>
-<li>What is the longest consecutive run of <code>N</code>?</li>
-<li>Where are the longest ambiguous regions located?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>All values should be measured from the generated consensus. A large number of <code>N</code> bases or a long consecutive run indicates regions that cannot be confidently resolved with the chosen thresholds.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="st">  /^&gt;/ {next}</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="st">    n += gsub(/N/, "&amp;")</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">    length_total += length($0)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">  END {</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">    if (length_total &gt; 0)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">      printf "N bases: %d\nN percentage: %.2f%%\n",</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">             n, 100*n/length_total</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> results/consensus/SRR26396743.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-7-identify-candidate-variants-with-bcftools" class="level2">
-<h2 class="anchored" data-anchor-id="step-7-identify-candidate-variants-with-bcftools">Step 7 — Identify candidate variants with bcftools</h2>
+<section id="step-4-identify-candidate-variants-with-bcftools" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-identify-candidate-variants-with-bcftools">Step 4 — Identify candidate variants with bcftools</h2>
 <p>We will compare the aligned reads with the reference to identify candidate single-nucleotide variants and short insertions or deletions.</p>
 <p>Generate a VCF file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> mpileup <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/ncbi/SARS-CoV-2_NC_045512.2.fasta <span class="dt">\</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-Q</span> 20 <span class="dt">\</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> 1000000 <span class="dt">\</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> AD <span class="dt">\</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">bcftools</span> call <span class="dt">\</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-mv</span> <span class="dt">\</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">--ploidy</span> 1 <span class="dt">\</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-Oz</span> <span class="dt">\</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">-o</span> results/variants/SRR26396743.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> mpileup <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-Q</span> 20 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> 1000000 <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> AD <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.sorted.bam <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">bcftools</span> call <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-mv</span> <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">--ploidy</span> 1 <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-Oz</span> <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">-o</span> results/variants/SRR26396743.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command / Option</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>bcftools mpileup</code></td>
+<td>Generates per-position read data for variant detection.</td>
+</tr>
+<tr class="even">
+<td><code>-f data/NC_045512.2.fasta</code></td>
+<td>Specifies the reference genome in FASTA format.</td>
+</tr>
+<tr class="odd">
+<td><code>-Q 20</code></td>
+<td>Excludes bases with a base quality below Q20.</td>
+</tr>
+<tr class="even">
+<td><code>-d 1000000</code></td>
+<td>Sets the maximum read depth per position to 1,000,000.</td>
+</tr>
+<tr class="odd">
+<td><code>-a AD</code></td>
+<td>Adds allele-depth (<code>AD</code>) information.</td>
+</tr>
+<tr class="even">
+<td><code>results/bam/SRR26396743.sorted.bam</code></td>
+<td>Input BAM file containing aligned reads.</td>
+</tr>
+<tr class="odd">
+<td><code>bcftools call</code></td>
+<td>Identifies candidate variants from the read data.</td>
+</tr>
+<tr class="even">
+<td><code>-m</code></td>
+<td>Uses the multiallelic variant-calling model.</td>
+</tr>
+<tr class="odd">
+<td><code>-v</code></td>
+<td>Outputs variant sites only.</td>
+</tr>
+<tr class="even">
+<td><code>--ploidy 1</code></td>
+<td>Assumes a haploid genome.</td>
+</tr>
+<tr class="odd">
+<td><code>-Oz</code></td>
+<td>Writes the VCF output in compressed BGZF format.</td>
+</tr>
+<tr class="even">
+<td><code>-o results/variants/SRR26396743.vcf.gz</code></td>
+<td>Specifies the output VCF file.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output:</strong> A compressed VCF file containing candidate variants identified by comparing the sequencing reads with the SARS-CoV-2 reference genome.</p>
+</div>
+</div>
+</div>
 <p>Index the VCF:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> index results/variants/SRR26396743.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> index results/variants/SRR26396743.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Display the variant records:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> results/variants/SRR26396743.vcf.gz <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,2,4,5,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> results/variants/SRR26396743.vcf.gz <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,2,4,5,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
 <p>The columns displayed are:</p>
 <ol type="1">
 <li>Reference sequence</li>
@@ -548,55 +598,119 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Alternative allele</li>
 <li>Variant quality (QUAL)</li>
 </ol>
+</div>
+</div>
 <p>Count the reported variant records:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> results/variants/SRR26396743.vcf.gz <span class="dt">\</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>How many variant records were reported?</li>
-<li>Which reference positions contain candidate variants?</li>
-<li>Do the variants have good read support?</li>
-<li>Can you confirm that a variant is real based only on its presence in the VCF?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>The VCF contains candidate variants identified by the caller. Each candidate must be interpreted using its read depth, allele support, base quality, mapping quality, and alignment context.</p>
-<p>A variant record is not automatically proof of a biological mutation. Examine suspicious calls in IGV and apply suitable quality filters before downstream analyses.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> results/variants/SRR26396743.vcf.gz <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="step-8-change-the-consensus-depth-threshold" class="level2">
-<h2 class="anchored" data-anchor-id="step-8-change-the-consensus-depth-threshold">Step 8 — Change the consensus depth threshold</h2>
+<section id="step-5-change-the-consensus-depth-threshold" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-change-the-consensus-depth-threshold">Step 5 — Change the consensus depth threshold</h2>
 <p>A higher minimum depth can make the consensus more conservative, but it can also increase the number of ambiguous bases.</p>
 <p>Build a second consensus requiring at least 30 reads per position:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> mpileup <span class="dt">\</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-aa</span> <span class="at">-A</span> <span class="at">-d</span> 0 <span class="at">-Q</span> 0 <span class="dt">\</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/ncbi/SARS-CoV-2_NC_045512.2.fasta <span class="dt">\</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">ivar</span> consensus <span class="dt">\</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">-p</span> results/consensus/SRR26396743.m30 <span class="dt">\</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-q</span> 20 <span class="dt">\</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-t</span> 0.5 <span class="dt">\</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">-m</span> 30 <span class="dt">\</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-n</span> N</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> mpileup <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-aa</span> <span class="at">-A</span> <span class="at">-d</span> 0 <span class="at">-Q</span> 0 <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> data/NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.sorted.bam <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">ivar</span> consensus <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">-p</span> results/consensus/SRR26396743.m30 <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-q</span> 20 <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">-t</span> 0.5 <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">-m</span> 30 <span class="dt">\</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">-n</span> N</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Count the ambiguous bases in the second consensus:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> results/consensus/SRR26396743.m30.fa <span class="dt">\</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'N'</span> <span class="dt">\</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> results/consensus/SRR26396743.m30.fa <span class="dt">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'N'</span> <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compare the results with the consensus generated at 10×.</p>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>Did the number of <code>N</code> bases change?</li>
-<li>Did the consensus become more or less complete?</li>
-<li>Why might a laboratory choose a higher depth threshold?</li>
-</ol>
-<p><strong>Answer</strong></p>
-<p>A higher threshold may increase the number of ambiguous bases because positions supported by 10–29 reads no longer meet the minimum-depth requirement. This illustrates the trade-off between the completeness of the consensus and the strictness of the calling criteria.</p>
-<p>A suitable threshold depends on the sequencing protocol, the intended use, and the laboratory’s validated quality criteria.</p>
 </section>
-<section id="final-question" class="level2">
-<h2 class="anchored" data-anchor-id="final-question">Final question</h2>
-<p>The genome has a mean depth of 100×, but 15% of its positions have zero coverage. Can you consider the consensus complete?</p>
-<p><strong>Answer</strong></p>
-<p>No.&nbsp;Mean depth is an average and can conceal large coverage gaps. Assess mean depth, breadth at relevant thresholds, low-depth intervals, and the number and distribution of <code>N</code> bases before deciding whether a consensus is suitable for its intended purpose.</p>
-<p><strong>Next:</strong> <a href="../exercises/04_genome_qc_verdict.html">Is this genome good enough?</a></p>
+<section id="step-6-is-this-genome-good-enough" class="level2">
+<h2 class="anchored" data-anchor-id="step-6-is-this-genome-good-enough">Step 6 — Is this genome good enough?</h2>
+<p>A genome is not simply “good” or “bad”: it is <strong>good enough for a specific purpose</strong>, based on several quality metrics.</p>
+</section>
+<section id="the-numbers-that-matter" class="level2">
+<h2 class="anchored" data-anchor-id="the-numbers-that-matter">The numbers that matter</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Total reads / % mapped</strong></td>
+<td>Indicates the amount of sequencing data and the proportion mapping to the virus. A low mapping rate may indicate contamination or poor enrichment.</td>
+</tr>
+<tr class="even">
+<td><strong>Mean depth</strong></td>
+<td>Indicates the average sequencing coverage at each reference position.</td>
+</tr>
+<tr class="odd">
+<td><strong>% of genome at ≥ 10× depth</strong></td>
+<td>Measures how much of the genome has sufficient coverage for reliable consensus calling.</td>
+</tr>
+<tr class="even">
+<td><strong>% N / longest run of Ns</strong></td>
+<td>Indicates missing sequence information. Long runs of Ns may correspond to missing genomic regions.</td>
+</tr>
+<tr class="odd">
+<td><strong>Negative control (NTC)</strong></td>
+<td>Checks whether viral reads are detected in a sample that should contain no viral material.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="illustrative-thresholds" class="level2">
+<h2 class="anchored" data-anchor-id="illustrative-thresholds">illustrative thresholds</h2>
+<p>These are <strong>illustrative thresholds</strong>, not universal standards. Adapt them to the sequencing protocol and intended analysis.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Criterion</th>
+<th>Good</th>
+<th>To review</th>
+<th>Poor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>% mapped</strong></td>
+<td>≥ 90%</td>
+<td>70–89.9%</td>
+<td>&lt; 70%</td>
+</tr>
+<tr class="even">
+<td><strong>Genome at ≥ 10×</strong></td>
+<td>≥ 90%</td>
+<td>70–89.9%</td>
+<td>&lt; 70%</td>
+</tr>
+<tr class="odd">
+<td><strong>% N</strong></td>
+<td>≤ 10%</td>
+<td>&gt; 10–20%</td>
+<td>&gt; 20%</td>
+</tr>
+<tr class="even">
+<td><strong>Negative control</strong></td>
+<td>No concerning viral signal</td>
+<td>Investigate low-level signal</td>
+<td>Clear evidence of contamination</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Next:</strong> <a href="04_genome_qc_verdict.md">Is this genome good enough?</a></p>
 
 
 </section>
@@ -1014,8 +1128,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../exercises/04_genome_qc_verdict.html" class="pagination-link" aria-label="Is this genome good enough?">
-        <span class="nav-page-text">Is this genome good enough?</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../course/02-reference-selection.html" class="pagination-link" aria-label="Reference selection">
+        <span class="nav-page-text">Reference selection</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

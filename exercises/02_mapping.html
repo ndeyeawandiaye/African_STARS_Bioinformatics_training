@@ -226,12 +226,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Coverage and consensus</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../exercises/04_genome_qc_verdict.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Is this genome good enough?</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -301,7 +295,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#step-3-read-the-mapping-statistics" id="toc-step-3-read-the-mapping-statistics" class="nav-link" data-scroll-target="#step-3-read-the-mapping-statistics">Step 3 — Read the mapping statistics</a></li>
   <li><a href="#step-4-visualize-the-alignments-in-igv" id="toc-step-4-visualize-the-alignments-in-igv" class="nav-link" data-scroll-target="#step-4-visualize-the-alignments-in-igv">Step 4 — Visualize the alignments in IGV</a></li>
   <li><a href="#step-5-explore-read-coverage" id="toc-step-5-explore-read-coverage" class="nav-link" data-scroll-target="#step-5-explore-read-coverage">Step 5 — Explore read coverage</a></li>
-  <li><a href="#final-question" id="toc-final-question" class="nav-link" data-scroll-target="#final-question">Final question</a></li>
   </ul>
 </nav>
     </div>
@@ -335,8 +328,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="step-1-index-the-reference-genome" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-index-the-reference-genome">Step 1 — Index the reference genome</h2>
 <p>BWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> index data/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> faidx data/SARS-CoV-2_NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> index data/NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> faidx data/NC_045512.2.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Questions</strong></p>
 <ol type="1">
 <li>What files are created by <code>bwa index</code>?</li>
@@ -368,13 +361,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="step-2-map-the-trimmed-reads">Step 2 — Map the trimmed reads</h2>
 <p>Create an output directory:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Run BWA-MEM and sort the resulting alignments with Samtools:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Align the paired-end reads :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  data/NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_1_paired.fastq.gz <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_2_paired.fastq.gz <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/bam/SRR26396743.sam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert to BAM and sort the alignments</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> sort <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-@</span> 2 <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> results/bam/SRR26396743.sorted.bam <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  results/bam/SRR26396743.sam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Index the sorted BAM file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> index results/bam/SRR26396743.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> index results/bam/SRR26396743.sorted.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Calculate the mapping statistics and save them:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> flagstat results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">tee</span> results/bam/SRR26396743.flagstat.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> flagstat results/bam/SRR26396743.sorted.bam  <span class="op">&gt;</span> results/bam/SRR26396743.flagstat.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>What do these commands do?</strong></p>
 <ul>
 <li><code>bwa mem</code> aligns the paired-end reads to the reference genome.</li>
@@ -383,7 +385,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>samtools sort</code> sorts alignments by genomic coordinate and writes a BAM file.</li>
 <li><code>samtools index</code> creates an index for the BAM file.</li>
 <li><code>samtools flagstat</code> summarizes alignment and pairing statistics.</li>
-<li><code>tee</code> displays the results and saves them to a text file.</li>
 </ul>
 <p><strong>Questions</strong></p>
 <ol type="1">
@@ -391,50 +392,168 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Why do we use a reference genome?</li>
 <li>Why are the reads sorted after alignment?</li>
 </ol>
-<p><strong>Answers</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <p>FASTQ files contain read sequences and their base-quality scores. BAM files contain alignment records, including read positions, mapping information, and flags.</p>
 <p>The reference genome provides the coordinate system used to locate reads along the viral genome.</p>
 <p>Sorting arranges the alignments by genomic position, making downstream analysis and regional access more efficient.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="step-3-read-the-mapping-statistics" class="level2">
 <h2 class="anchored" data-anchor-id="step-3-read-the-mapping-statistics">Step 3 — Read the mapping statistics</h2>
 <p>Display the report:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> results/bam/SRR26396743.flagstat.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Pay particular attention to these lines:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> results/bam/SRR26396743.flagstat.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Pay particular attention to these lines:
+</div>
+</div>
+<div class="callout-body-container callout-body">
 <ul>
 <li><strong>in total:</strong> total number of alignment records examined.</li>
 <li><strong>mapped:</strong> number and percentage of mapped alignment records.</li>
 <li><strong>properly paired:</strong> number and percentage of records belonging to pairs aligned in the expected orientation and distance.</li>
 <li><strong>primary:</strong> primary alignment records, excluding secondary and supplementary alignments.</li>
 </ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Alignment Quality Assessment
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>After mapping the paired-end reads to the SARS-CoV-2 reference genome using BWA-MEM, <code>samtools flagstat</code> was used to summarize the alignment results.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th style="text-align: right;">Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Total reads</td>
+<td style="text-align: right;">662,332</td>
+<td>Total number of alignment records, including primary, secondary, and supplementary records.</td>
+</tr>
+<tr class="even">
+<td>Primary alignments</td>
+<td style="text-align: right;">659,100</td>
+<td>Number of primary alignment records, representing the main alignment for each read.</td>
+</tr>
+<tr class="odd">
+<td>Secondary alignments</td>
+<td style="text-align: right;">0</td>
+<td>No secondary alignment records were reported.</td>
+</tr>
+<tr class="even">
+<td>Supplementary alignments</td>
+<td style="text-align: right;">3,232</td>
+<td>Additional alignment records for reads whose alignments are split across multiple genomic regions.</td>
+</tr>
+<tr class="odd">
+<td>Duplicates</td>
+<td style="text-align: right;">0</td>
+<td>No reads were marked as duplicates in this BAM file. This does not prove that PCR or optical duplicates are absent.</td>
+</tr>
+<tr class="even">
+<td>Mapped reads</td>
+<td style="text-align: right;">662,193 (99.98%)</td>
+<td>Percentage of alignment records classified as mapped.</td>
+</tr>
+<tr class="odd">
+<td>Primary mapped reads</td>
+<td style="text-align: right;">658,961 (99.98%)</td>
+<td>Percentage of primary alignment records classified as mapped.</td>
+</tr>
+<tr class="even">
+<td>Paired reads</td>
+<td style="text-align: right;">659,100</td>
+<td>Number of primary records identified as belonging to paired-end sequencing data.</td>
+</tr>
+<tr class="odd">
+<td>Read 1</td>
+<td style="text-align: right;">329,550</td>
+<td>Number of primary records identified as the first mate.</td>
+</tr>
+<tr class="even">
+<td>Read 2</td>
+<td style="text-align: right;">329,550</td>
+<td>Number of primary records identified as the second mate.</td>
+</tr>
+<tr class="odd">
+<td>Properly paired</td>
+<td style="text-align: right;">640,776 (97.22%)</td>
+<td>Number of reads whose pairs satisfy BWA-MEM’s expected pairing criteria.</td>
+</tr>
+<tr class="even">
+<td>Both mates mapped</td>
+<td style="text-align: right;">658,958</td>
+<td>Number of primary reads for which both the read and its mate are mapped.</td>
+</tr>
+<tr class="odd">
+<td>Singletons</td>
+<td style="text-align: right;">3 (0.00%)</td>
+<td>Number of primary reads mapped while their mate is unmapped.</td>
+</tr>
+</tbody>
+</table>
+<section id="interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="interpretation">Interpretation</h3>
+<p><strong>Mapping rate:</strong> Approximately 99.98% of primary reads mapped to the reference genome. This high mapping rate indicates that the reads are highly compatible with the SARS-CoV-2 reference sequence.</p>
+<p><strong>Properly paired reads:</strong> Approximately 97.22% of primary reads were classified as properly paired. This suggests that most read pairs have an expected orientation and insert size.</p>
+<p><strong>Supplementary alignments:</strong> The 3,232 supplementary records represent additional alignments, often produced when a read aligns in multiple segments. These are alignment records, not necessarily additional sequencing reads.</p>
+<p><strong>Singletons:</strong> Only three primary reads were mapped while their mates were unmapped, representing a very small fraction of the data.</p>
+<p><strong>Important limitation:</strong> A high mapping rate does not, by itself, confirm that the genome assembly is complete or that all mapped bases are accurate. Coverage depth, coverage uniformity, mapping quality, and variant-level evidence should also be examined.</p>
+</section>
+</div>
+</div>
+</div>
 <p>Remember that <code>samtools flagstat</code> reports alignment records, not necessarily read pairs. For paired-end data, one read pair normally produces two alignment records.</p>
 <p>You can also obtain a compact summary of the BAM file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> idxstats results/bam/SRR26396743.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> idxstats results/bam/SRR26396743.sorted.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The output lists reference sequences, their lengths, the number of mapped records, and the number of unmapped records associated with each reference.</p>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>What percentage of alignment records are mapped?</li>
-<li>What percentage are properly paired?</li>
-<li>How many alignment records are unmapped?</li>
-<li>Does the mapping result suggest that the reads are compatible with the SARS-CoV-2 reference?</li>
-<li>What other factors could explain a low mapping percentage?</li>
-</ol>
-<p><strong>Answers</strong></p>
-<p>Use the values obtained from your own run. Do not assume a particular mapping percentage before analyzing the data.</p>
-<p>A high mapping percentage indicates that many reads align to the reference, but it does not by itself prove that the sample is free of contamination or that the resulting genome is accurate.</p>
-<p>A low mapping percentage may reflect low-quality reads, residual adapters, a reference mismatch, contamination, or a dataset that does not contain the expected organism.</p>
 </section>
 <section id="step-4-visualize-the-alignments-in-igv" class="level2">
 <h2 class="anchored" data-anchor-id="step-4-visualize-the-alignments-in-igv">Step 4 — Visualize the alignments in IGV</h2>
 <p>IGV (Integrative Genomics Viewer) allows you to inspect aligned reads and compare their bases with the reference genome.</p>
 <p>First, confirm that both the BAM file and its index exist:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> results/bam/SRR26396743.bam<span class="pp">*</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> results/bam/SRR26396743.sorted.bam<span class="pp">*</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Open IGV and load the reference genome:</p>
 <ol type="1">
 <li>Select <strong>Genomes → Load Genome from File…</strong></li>
-<li>Choose <code>data/ncbi/SARS-CoV-2_NC_045512.2.fasta</code>.</li>
+<li>Choose <code>data/NC_045512.2.fasta</code>.</li>
 <li>Select <strong>File → Load from File…</strong></li>
-<li>Load <code>results/bam/SRR26396743.bam</code>.</li>
+<li>Load <code>results/bam/SRR26396743.sorted.bam</code>.</li>
 <li>Navigate to a genomic region by entering a coordinate, for example <code>NC_045512.2:1000-2000</code>, if that is the chromosome label displayed by IGV.</li>
 </ol>
 <p>Zoom in to examine individual reads and their mismatches relative to the reference.</p>
@@ -446,46 +565,104 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Do the supporting reads have good base quality?</li>
 <li>Can you conclude that a mismatch is a true variant simply because it appears in one read?</li>
 </ol>
-<p><strong>Answers</strong></p>
-<p>A mismatch may represent a genuine variant, a sequencing error, an alignment artifact, or another technical issue.</p>
-<p>Before interpreting a mismatch, examine its supporting read depth, base quality, mapping quality, strand distribution, and position within the reads. A single observation is not sufficient to establish a true variant.</p>
-<p>No specific variant positions or allele frequencies are assumed in this exercise; these must be determined from the actual data.</p>
 </section>
 <section id="step-5-explore-read-coverage" class="level2">
 <h2 class="anchored" data-anchor-id="step-5-explore-read-coverage">Step 5 — Explore read coverage</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results/coverage</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Use Samtools to calculate the number of reads covering each reference position:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> depth <span class="at">-aa</span> results/bam/SRR26396743.bam <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/bam/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> depth <span class="at">-aa</span> results/bam/SRR26396743.sorted.bam <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/coverage/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Obtain a summary with Samtools:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> coverage results/bam/SRR26396743.sorted.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Coverage statistics
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th style="text-align: right;">Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>rname</code></td>
+<td style="text-align: right;"><code>NC_045512.2</code></td>
+<td>Name of the reference sequence.</td>
+</tr>
+<tr class="even">
+<td><code>startpos</code></td>
+<td style="text-align: right;">1</td>
+<td>First reference position included in the analysis.</td>
+</tr>
+<tr class="odd">
+<td><code>endpos</code></td>
+<td style="text-align: right;">29,903</td>
+<td>Last reference position included in the analysis.</td>
+</tr>
+<tr class="even">
+<td><code>numreads</code></td>
+<td style="text-align: right;">662,193</td>
+<td>Number of alignment records overlapping the reference region.</td>
+</tr>
+<tr class="odd">
+<td><code>covbases</code></td>
+<td style="text-align: right;">29,785</td>
+<td>Number of reference bases covered by at least one aligned read.</td>
+</tr>
+<tr class="even">
+<td><code>coverage (%)</code></td>
+<td style="text-align: right;">99.605%</td>
+<td>Percentage of reference bases covered by at least one aligned read.</td>
+</tr>
+<tr class="odd">
+<td><code>meandepth</code></td>
+<td style="text-align: right;">99.61×</td>
+<td>Average sequencing depth across the reference region.</td>
+</tr>
+<tr class="even">
+<td><code>meanbaseq</code></td>
+<td style="text-align: right;">38</td>
+<td>Mean base quality score, indicating high confidence in the sequenced nucleotides.</td>
+</tr>
+<tr class="odd">
+<td><code>meanmapq</code></td>
+<td style="text-align: right;">60</td>
+<td>Mean mapping quality score, indicating high confidence in read placement.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 <p>Calculate the mean depth across the reference, including positions with zero coverage:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{sum += $3; n++} END {</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">  if (n &gt; 0) printf "Mean depth: %.2f\n", sum/n;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">  else print "No positions found"</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/bam/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{sum += $3; n++} END {</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="st">  if (n &gt; 0) printf "Mean depth: %.2f\n", sum/n;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="st">  else print "No positions found"</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/bam/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Calculate the proportion of reference positions covered by at least one read:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{total++; if ($3 &gt; 0) covered++}</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="st">END {</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="st">  if (total &gt; 0)</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Reference covered: %.2f%%\n", 100*covered/total;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="st">  else</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="st">    print "No positions found"</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/bam/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Questions</strong></p>
-<ol type="1">
-<li>What is the mean read depth?</li>
-<li>What percentage of the reference is covered by at least one read?</li>
-<li>Are there regions with zero coverage?</li>
-<li>Why can a high mapping percentage coexist with low coverage in some regions?</li>
-</ol>
-<p><strong>Answers</strong></p>
-<p>Mapping percentage measures how many alignment records map to the reference. Coverage describes how many reads support each reference position.</p>
-<p>A dataset may have a high mapping percentage while still containing poorly covered regions. Those regions may be unreliable for consensus generation or variant analysis.</p>
-</section>
-<section id="final-question" class="level2">
-<h2 class="anchored" data-anchor-id="final-question">Final question</h2>
-<p>Why do we <strong>sort and index</strong> a BAM file?</p>
-<p><strong>Answer</strong></p>
-<p>Sorting arranges the alignments by genomic coordinate. Indexing creates a lookup structure that allows programs such as IGV and Samtools to access a specific genomic region without scanning the entire file.</p>
-<p>Many downstream tools require a coordinate-sorted BAM file and its index.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{total++; if ($3 &gt; 0) covered++}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">END {</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">  if (total &gt; 0)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">    printf "Reference covered: %.2f%%\n", 100*covered/total;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">  else</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">    print "No positions found"</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">}'</span> results/bam/SRR26396743.depth.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Next:</strong> <a href="../exercises/03_coverage_consensus.html">Coverage and consensus</a>.</p>
 
 

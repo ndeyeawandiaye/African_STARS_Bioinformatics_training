@@ -226,12 +226,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Coverage and consensus</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../exercises/04_genome_qc_verdict.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Is this genome good enough?</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -466,8 +460,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trimmomatic</span> PE <span class="dt">\</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-threads</span> 2 <span class="dt">\</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-phred33</span> <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  data/SRR26396743_1.fastq <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  data/SRR26396743_2.fastq <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  data/SRR26396743_1.fastq.gz <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  data/SRR26396743_2.fastq.gz <span class="dt">\</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_1_paired.fastq.gz <span class="dt">\</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_1_unpaired.fastq.gz <span class="dt">\</span></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  results/trimmed/SRR26396743_2_paired.fastq.gz <span class="dt">\</span></span>
@@ -663,7 +657,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quast.py</span> <span class="dt">\</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  results/spades/contigs.fasta <span class="dt">\</span></span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  results/spades/scaffolds.fasta <span class="dt">\</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-r</span> data/reference/NC_045512.2.fasta <span class="dt">\</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-r</span> data/NC_045512.2.fasta <span class="dt">\</span></span>
 <span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--min-contig</span> 200 <span class="dt">\</span></span>
 <span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-t</span> 2 <span class="dt">\</span></span>
 <span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> results/quast</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -700,7 +694,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Display the text report and open the HTML report:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> results/quast/report.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> results/quast/report.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Key metrics:</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Interpretation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<section id="key-assembly-quality-metrics" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="key-assembly-quality-metrics">Key Assembly Quality Metrics</h3>
+<section id="assembly-statistics-reference-independent" class="level4">
+<h4 class="anchored" data-anchor-id="assembly-statistics-reference-independent">1. Assembly statistics (reference-independent)</h4>
+<p>These metrics describe the assembled sequences without requiring a reference genome.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -715,38 +724,120 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><code># contigs</code></td>
-<td>Number of contigs (fewer is generally better)</td>
+<td>Number of assembled contigs meeting the specified minimum length. Fewer contigs can indicate a more continuous assembly.</td>
 </tr>
 <tr class="even">
 <td><code>Largest contig</code></td>
-<td>Length of the longest contig</td>
+<td>Length of the longest assembled contig, in base pairs (bp).</td>
 </tr>
 <tr class="odd">
 <td><code>Total length</code></td>
-<td>Sum of all contig lengths</td>
+<td>Sum of the lengths of all assembled contigs or scaffolds.</td>
 </tr>
 <tr class="even">
+<td><code>Total length (&gt;= 1,000 bp)</code></td>
+<td>Combined length of sequences that are at least 1,000 bp long.</td>
+</tr>
+<tr class="odd">
+<td><code>Total length (&gt;= 10,000 bp)</code></td>
+<td>Combined length of sequences that are at least 10,000 bp long.</td>
+</tr>
+<tr class="even">
+<td><code>Total length (&gt;= 50,000 bp)</code></td>
+<td>Combined length of sequences that are at least 50,000 bp long.</td>
+</tr>
+<tr class="odd">
 <td><code>N50</code></td>
-<td>Length such that contigs of at least this size contain 50% of the assembly</td>
+<td>Length of the contig or scaffold at which sequences of that length or longer account for at least 50% of the total assembly length.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>L50</code></td>
-<td>Number of contigs needed to reach 50% of the assembly</td>
-</tr>
-<tr class="even">
-<td><code>Genome fraction (%)</code></td>
-<td>Percentage of the reference covered by the assembly</td>
+<td>Minimum number of the longest contigs or scaffolds needed to account for at least 50% of the total assembly length.</td>
 </tr>
 <tr class="odd">
-<td><code># misassemblies</code></td>
-<td>Contigs that do not align consistently to the reference</td>
-</tr>
-<tr class="even">
-<td><code># N's per 100 kbp</code></td>
-<td>Amount of undefined bases (gaps)</td>
+<td><code># N's</code></td>
+<td>Total number of ambiguous nucleotide positions (<code>N</code>) in the assembly, usually representing unresolved sequence gaps.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="alignment-based-statistics-reference-dependent" class="level4">
+<h4 class="anchored" data-anchor-id="alignment-based-statistics-reference-dependent">2. Alignment-based statistics (reference-dependent)</h4>
+<p>These metrics evaluate the assembly by comparing it with a reference genome.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Genome fraction (%)</code></td>
+<td>Percentage of the reference genome covered by the assembled sequences.</td>
+</tr>
+<tr class="even">
+<td><code>Duplication ratio</code></td>
+<td>Ratio of the total aligned length, including overlapping or duplicated alignments, to the reference genome length. A value near 1 generally indicates limited excess aligned sequence.</td>
+</tr>
+<tr class="odd">
+<td><code>Largest alignment</code></td>
+<td>Length of the longest alignment between an assembled sequence and the reference genome.</td>
+</tr>
+<tr class="even">
+<td><code>Total aligned length</code></td>
+<td>Sum of the lengths of assembly regions aligned to the reference, according to the tool’s alignment rules.</td>
+</tr>
+<tr class="odd">
+<td><code>NGA50</code></td>
+<td>Reference-based continuity metric calculated from aligned assembly blocks using the reference genome length as the benchmark.</td>
+</tr>
+<tr class="even">
+<td><code>LGA50</code></td>
+<td>Minimum number of the longest aligned blocks needed to cover at least 50% of the reference genome.</td>
+</tr>
+<tr class="odd">
+<td><code># misassemblies</code></td>
+<td>Number of structural inconsistencies detected when aligning the assembly to the reference genome.</td>
+</tr>
+<tr class="even">
+<td><code>Misassembled contigs length</code></td>
+<td>Total length of contigs classified as misassembled by the evaluation tool.</td>
+</tr>
+<tr class="odd">
+<td><code># mismatches per 100 kbp</code></td>
+<td>Number of aligned nucleotide positions that differ from the reference, normalized to 100,000 aligned bases.</td>
+</tr>
+<tr class="even">
+<td><code># indels per 100 kbp</code></td>
+<td>Number of insertion and deletion events detected in the alignments, normalized to 100,000 aligned bases.</td>
+</tr>
+<tr class="odd">
+<td><code># N's per 100 kbp</code></td>
+<td>Number of ambiguous bases (<code>N</code>) per 100,000 bases of assembly sequence.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="interpretation-guidelines" class="level4">
+<h4 class="anchored" data-anchor-id="interpretation-guidelines">3. Interpretation guidelines</h4>
+<ul>
+<li><strong>Continuity:</strong> Fewer contigs, a larger longest contig, and higher N50/NGA50 values generally indicate a more continuous assembly.</li>
+<li><strong>Completeness:</strong> A higher genome fraction indicates that more of the reference genome is represented in the assembly.</li>
+<li><strong>Structural consistency:</strong> Fewer detected misassemblies indicate better agreement with the reference structure.</li>
+<li><strong>Sequence accuracy:</strong> Lower mismatch and indel rates indicate fewer differences from the reference, although genuine biological variation can also contribute to these differences.</li>
+<li><strong>Ambiguous bases:</strong> A high number of <code>N</code> bases indicates unresolved sequence positions, often associated with gaps in scaffolds.</li>
+<li><strong>Total length:</strong> An assembly length close to the expected genome length can be reassuring, but does not by itself demonstrate completeness or accuracy.</li>
+</ul>
+<p><strong>Important:</strong> No single metric is sufficient to assess assembly quality. Interpret continuity, completeness, structural consistency, and sequence accuracy together. Metrics such as N50 and NGA50 are not directly interchangeable because they use different reference-length benchmarks.</p>
+</section>
+</section>
+</div>
+</div>
 <hr>
 </section>
 <section id="step-8-summarize-your-results" class="level2">

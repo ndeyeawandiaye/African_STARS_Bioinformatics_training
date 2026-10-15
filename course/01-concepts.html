@@ -194,12 +194,6 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Coverage and consensus</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../exercises/04_genome_qc_verdict.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Is this genome good enough?</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -320,7 +314,7 @@ ul.task-list li input[type="checkbox"] {
 <pre class="mermaid mermaid-js">flowchart TD
   A["FASTQ (R1 + R2)"] --&gt; B["1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads"]
   B --&gt; C["2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases"]
-  C --&gt; D["3. Assmbly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds"]
+  C --&gt; D["3. Assembly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds"]
   D --&gt; E["4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?"]
   E --&gt; F["5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction"]
   classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;

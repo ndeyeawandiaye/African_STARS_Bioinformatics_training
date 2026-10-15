@@ -298,7 +298,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#the-numbers-that-matter" id="toc-the-numbers-that-matter" class="nav-link active" data-scroll-target="#the-numbers-that-matter">The numbers that matter</a></li>
   <li><a href="#step-1-build-the-summary-table" id="toc-step-1-build-the-summary-table" class="nav-link" data-scroll-target="#step-1-build-the-summary-table">Step 1 — Build the summary table</a></li>
-  <li><a href="#step-2-take-a-decision-for-each-sample" id="toc-step-2-take-a-decision-for-each-sample" class="nav-link" data-scroll-target="#step-2-take-a-decision-for-each-sample">Step 2 — Take a decision for each sample</a></li>
+  <li><a href="#step-2-decide-what-to-do-with-each-sample" id="toc-step-2-decide-what-to-do-with-each-sample" class="nav-link" data-scroll-target="#step-2-decide-what-to-do-with-each-sample">Step 2 — Decide what to do with each sample</a></li>
   <li><a href="#step-3-discussion-questions" id="toc-step-3-discussion-questions" class="nav-link" data-scroll-target="#step-3-discussion-questions">Step 3 — Discussion questions</a></li>
   </ul>
 </nav>
@@ -326,7 +326,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p><strong>Goal:</strong> for each sample, gather the quality numbers in one table, then take a <strong>decision</strong>: is the genome usable for phylogenetics (Day 4), does it need review or re-sequencing, or must it be discarded? A genome is never “good” or “bad” in itself: it is good <strong>enough for a purpose</strong>, judged on a handful of numbers.</p>
+<p><strong>Goal:</strong> For each sample, gather the quality metrics in one table and make a decision: is the genome usable for phylogenetics (Day 4), does it need review or re-sequencing, or should it be excluded?</p>
+<p>A genome is not simply “good” or “bad”: it is <strong>good enough for a specific purpose</strong>, based on several quality metrics.</p>
 <section id="the-numbers-that-matter" class="level2">
 <h2 class="anchored" data-anchor-id="the-numbers-that-matter">The numbers that matter</h2>
 <table class="caption-top table">
@@ -343,84 +344,121 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><strong>Total reads / % mapped</strong></td>
-<td>how much data, and how much of it is the virus (low % = contamination, poor enrichment)</td>
+<td>Indicates the amount of sequencing data and the proportion mapping to the virus. A low mapping rate may indicate contamination or poor enrichment.</td>
 </tr>
 <tr class="even">
 <td><strong>Mean depth</strong></td>
-<td>average confidence of the base calls</td>
+<td>Indicates the average sequencing coverage at each reference position.</td>
 </tr>
 <tr class="odd">
-<td><strong>% of genome ≥ 10x</strong> (breadth)</td>
-<td>how much of the genome can really be called</td>
+<td><strong>% of genome at ≥ 10× depth</strong></td>
+<td>Measures how much of the genome has sufficient coverage for reliable consensus calling.</td>
 </tr>
 <tr class="even">
-<td><strong>% N</strong> and <strong>longest run of N</strong></td>
-<td>missing information; a long run = a whole region (gene) is missing</td>
+<td><strong>% N / longest run of Ns</strong></td>
+<td>Indicates missing sequence information. Long runs of Ns may correspond to missing genomic regions.</td>
 </tr>
 <tr class="odd">
-<td><strong>Negative control</strong></td>
-<td>are there viral reads where there should be none?</td>
+<td><strong>Negative control (NTC)</strong></td>
+<td>Checks whether viral reads are detected in a sample that should contain no viral material.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="step-1-build-the-summary-table" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-build-the-summary-table">Step 1 — Build the summary table</h2>
-<p>This one command collects, for every sample, the numbers you computed in the previous exercises:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"sample\ttotal_reads\tpct_mapped\tmean_depth\tpct_ge10x\tN_bases\tlongest_N_run\n"</span> <span class="op">&gt;</span> results/qc_summary.tsv</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> S01 S02 S03 S04 S05<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">total</span><span class="op">=</span><span class="va">$(</span><span class="ex">samtools</span> view <span class="at">-c</span> <span class="at">-F</span> 2304 results/bam/<span class="va">$s</span>.bam<span class="va">)</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">mapped</span><span class="op">=</span><span class="va">$(</span><span class="ex">samtools</span> view <span class="at">-c</span> <span class="at">-F</span> 2308 results/bam/<span class="va">$s</span>.bam<span class="va">)</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">pm</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> m=<span class="va">$mapped</span> <span class="at">-v</span> t=<span class="va">$total</span> <span class="st">'BEGIN{printf "%.1f", 100*m/t}'</span><span class="va">)</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">dp</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="st">'{t+=$3; if($3&gt;=10) n++} END{printf "%.1f\t%.1f", t/NR, 100*n/NR}'</span> results/coverage/<span class="va">$s</span>.depth.tsv<span class="va">)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">nb</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'&gt;'</span> results/consensus/<span class="va">$s</span>.fa <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'N'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span><span class="va">)</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">run</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'&gt;'</span> results/consensus/<span class="va">$s</span>.fa <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\n'</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-o</span> <span class="st">'N\+'</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print length}'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-n</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-1</span><span class="va">)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">"%s\t%s\t%s\t%s\t%s\t%s\n"</span> <span class="st">"</span><span class="va">$s</span><span class="st">"</span> <span class="st">"</span><span class="va">$total</span><span class="st">"</span> <span class="st">"</span><span class="va">$pm</span><span class="st">"</span> <span class="st">"</span><span class="va">$dp</span><span class="st">"</span> <span class="st">"</span><span class="va">$nb</span><span class="st">"</span> <span class="st">"</span><span class="va">${run</span><span class="op">:-</span>0<span class="va">}</span><span class="st">"</span> <span class="op">&gt;&gt;</span> results/qc_summary.tsv</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">column</span> <span class="at">-t</span> <span class="at">-s</span> <span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> results/qc_summary.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>(<code>samtools view -c -F 2304</code> counts the primary reads; <code>-F 2308</code> the primary reads that are mapped.)</p>
-<p><em>Cross-check:</em> compare your table with <code>precomputed/qc_summary.tsv</code> (same numbers, plus a PASS / REVIEW / FAIL column).</p>
+<p>The following commands collect the metrics for each sample using the outputs generated in previous exercises.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> results</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"sample\ttotal_reads\tpct_mapped\tmean_depth\tpct_ge10x\tN_bases\tpct_N\tlongest_N_run\n"</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> results/qc_summary.tsv</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> S01 S02 S03 S04 S05<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">bam</span><span class="op">=</span><span class="st">"results/bam/</span><span class="va">${s}</span><span class="st">.bam"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">depth</span><span class="op">=</span><span class="st">"results/coverage/</span><span class="va">${s}</span><span class="st">.depth.tsv"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">fasta</span><span class="op">=</span><span class="st">"results/consensus/</span><span class="va">${s}</span><span class="st">.fa"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="va">total</span><span class="op">=</span><span class="va">$(</span><span class="ex">samtools</span> view <span class="at">-c</span> <span class="at">-F</span> 2304 <span class="st">"</span><span class="va">$bam</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="va">mapped</span><span class="op">=</span><span class="va">$(</span><span class="ex">samtools</span> view <span class="at">-c</span> <span class="at">-F</span> 2308 <span class="st">"</span><span class="va">$bam</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="va">pm</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> m=<span class="st">"</span><span class="va">$mapped</span><span class="st">"</span> <span class="at">-v</span> t=<span class="st">"</span><span class="va">$total</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'BEGIN {if (t&gt;0) printf "%.1f",100*m/t; else print "NA"}'</span><span class="va">)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">read</span> <span class="at">-r</span> <span class="va">dp</span> <span class="va">ge10x</span> <span class="op">&lt;</span> <span class="op">&lt;(</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">awk</span> <span class="st">'{</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="st">      t += $3</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="st">      if ($3 &gt;= 10) n++</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="st">      i++</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="st">    } END {</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="st">      if (i&gt;0) printf "%.1f %.1f",t/i,100*n/i</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="st">      else print "NA NA"</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="st">    }'</span> <span class="st">"</span><span class="va">$depth</span><span class="st">"</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">)</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="va">nb</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> <span class="st">"</span><span class="va">$fasta</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\n'</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'Nn'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">' '</span><span class="va">)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="va">genome_length</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> <span class="st">"</span><span class="va">$fasta</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\n'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">' '</span><span class="va">)</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="va">pct_n</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="at">-v</span> n=<span class="st">"</span><span class="va">$nb</span><span class="st">"</span> <span class="at">-v</span> l=<span class="st">"</span><span class="va">$genome_length</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">'BEGIN {if (l&gt;0) printf "%.1f",100*n/l; else print "NA"}'</span><span class="va">)</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="va">run</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^&gt;'</span> <span class="st">"</span><span class="va">$fasta</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\n'</span> <span class="kw">|</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">grep</span> <span class="at">-oE</span> <span class="st">'[Nn]+'</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{if(length&gt;$1) max=length} END {print max+0}'</span><span class="va">)</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"</span> <span class="dt">\</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="va">$s</span><span class="st">"</span> <span class="st">"</span><span class="va">$total</span><span class="st">"</span> <span class="st">"</span><span class="va">$pm</span><span class="st">"</span> <span class="st">"</span><span class="va">$dp</span><span class="st">"</span> <span class="st">"</span><span class="va">$ge10x</span><span class="st">"</span> <span class="st">"</span><span class="va">$nb</span><span class="st">"</span> <span class="st">"</span><span class="va">$pct_n</span><span class="st">"</span> <span class="st">"</span><span class="va">$run</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;&gt;</span> results/qc_summary.tsv</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="ex">column</span> <span class="at">-t</span> <span class="at">-s</span> <span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> results/qc_summary.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Important:</strong> This example assumes the BAM, depth and consensus files follow the paths shown above. Adapt the filenames if your workflow uses a different naming convention. The negative control should be evaluated separately from patient samples.</p>
+<p><strong>Cross-check:</strong> Compare your results with <code>precomputed/qc_summary.tsv</code>, which contains the expected metrics and a <code>PASS / REVIEW / FAIL</code> classification.</p>
 </section>
-<section id="step-2-take-a-decision-for-each-sample" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-take-a-decision-for-each-sample">Step 2 — Take a decision for each sample</h2>
-<p>Use these <strong>example thresholds</strong> (many laboratories use similar ones; adapt them to your protocol):</p>
+<section id="step-2-decide-what-to-do-with-each-sample" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-decide-what-to-do-with-each-sample">Step 2 — Decide what to do with each sample</h2>
+<p>These are <strong>illustrative thresholds</strong>, not universal standards. Adapt them to the sequencing protocol and intended analysis.</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Criterion</th>
 <th>Good</th>
 <th>To review</th>
-<th>Bad</th>
+<th>Poor</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>% mapped</td>
-<td>≥ 90 %</td>
-<td>70–90 %</td>
-<td>&lt; 70 %</td>
+<td><strong>% mapped</strong></td>
+<td>≥ 90%</td>
+<td>70–89.9%</td>
+<td>&lt; 70%</td>
 </tr>
 <tr class="even">
-<td>Genome ≥ 10x</td>
-<td>≥ 90 %</td>
-<td>70–90 %</td>
-<td>&lt; 70 %</td>
+<td><strong>Genome at ≥ 10×</strong></td>
+<td>≥ 90%</td>
+<td>70–89.9%</td>
+<td>&lt; 70%</td>
 </tr>
 <tr class="odd">
-<td>% N</td>
-<td>≤ 10 %</td>
-<td>10–20 %</td>
-<td>&gt; 20 %</td>
+<td><strong>% N</strong></td>
+<td>≤ 10%</td>
+<td>&gt; 10–20%</td>
+<td>&gt; 20%</td>
 </tr>
 <tr class="even">
-<td>Negative control</td>
-<td>≤ 10 viral reads</td>
-<td>–</td>
-<td>more</td>
+<td><strong>Negative control</strong></td>
+<td>No concerning viral signal</td>
+<td>Investigate low-level signal</td>
+<td>Clear evidence of contamination</td>
 </tr>
 </tbody>
 </table>
-<p>Fill in <code>exercises/answer_sheet.tsv</code>: for each sample, the numbers, a verdict (<strong>use / review–re-sequence / discard</strong>) and a one-line justification. Then compare with your neighbour.</p>
+<p>Use <code>exercises/answer_sheet.tsv</code> to record the metrics, a verdict (<strong>use / review or re-sequence / exclude</strong>) and a one-line justification for each sample. Then compare your decisions with a neighbour.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -435,25 +473,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="callout-body-container callout-body">
 <table class="caption-top table">
 <colgroup>
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 9%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Sample</th>
-<th>Reads</th>
-<th>% mapped</th>
-<th>Mean depth</th>
-<th>% ≥ 10x</th>
-<th>% N</th>
-<th>Longest N</th>
+<th style="text-align: right;">Reads</th>
+<th style="text-align: right;">% mapped</th>
+<th style="text-align: right;">Mean depth</th>
+<th style="text-align: right;">% ≥ 10×</th>
+<th style="text-align: right;">% N</th>
+<th style="text-align: right;">Longest N run</th>
 <th>Verdict</th>
 <th>Why</th>
 </tr>
@@ -461,61 +499,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>S01</td>
-<td>6,666</td>
-<td>100</td>
-<td>99.8</td>
-<td>99.4</td>
-<td>0.6</td>
-<td>33</td>
+<td style="text-align: right;">6,666</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">99.8×</td>
+<td style="text-align: right;">99.4</td>
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">33</td>
 <td><strong>Use</strong></td>
-<td>complete, deep, clean</td>
+<td>High coverage and nearly complete genome.</td>
 </tr>
 <tr class="even">
 <td>S02</td>
-<td>6,666</td>
-<td>100</td>
-<td>99.7</td>
-<td>84.3</td>
-<td>15.7</td>
-<td>1,526</td>
+<td style="text-align: right;">6,666</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">99.7×</td>
+<td style="text-align: right;">84.3</td>
+<td style="text-align: right;">15.7</td>
+<td style="text-align: right;">1,526</td>
 <td><strong>Review / re-sequence</strong></td>
-<td>good depth, but a 1.5 kb gap (amplicon dropout)</td>
+<td>Long missing region, possibly due to amplicon dropout.</td>
 </tr>
 <tr class="odd">
 <td>S03</td>
-<td>340</td>
-<td>100</td>
-<td>5.1</td>
-<td>5.0</td>
-<td>95.1</td>
-<td>2,248</td>
-<td><strong>Discard / re-sequence</strong></td>
-<td>far too little data, 95 % N</td>
+<td style="text-align: right;">340</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">5.1×</td>
+<td style="text-align: right;">5.0</td>
+<td style="text-align: right;">95.1</td>
+<td style="text-align: right;">2,248</td>
+<td><strong>Re-sequence</strong></td>
+<td>Very low coverage and extensive missing sequence.</td>
 </tr>
 <tr class="even">
 <td>S04</td>
-<td>6,666</td>
-<td><strong>75.0</strong></td>
-<td>74.7</td>
-<td>99.4</td>
-<td>0.6</td>
-<td>30</td>
-<td><strong>Review</strong> (then use)</td>
-<td>genome complete, but 25 % off-target reads: find the contamination source</td>
+<td style="text-align: right;">6,666</td>
+<td style="text-align: right;">75.0</td>
+<td style="text-align: right;">74.7×</td>
+<td style="text-align: right;">99.4</td>
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">30</td>
+<td><strong>Review</strong></td>
+<td>Genome is well covered, but the low mapping rate requires investigation.</td>
 </tr>
 <tr class="odd">
 <td>S05 (NTC)</td>
-<td>450</td>
-<td>11.1</td>
-<td>0.8</td>
-<td>0.0</td>
-<td>100</td>
-<td>10,000</td>
-<td><strong>Control: to report</strong></td>
-<td>50 viral reads in a negative control</td>
+<td style="text-align: right;">450</td>
+<td style="text-align: right;">11.1</td>
+<td style="text-align: right;">0.8×</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">10,000</td>
+<td><strong>Investigate control</strong></td>
+<td>Viral reads detected in a negative control.</td>
 </tr>
 </tbody>
 </table>
+<p>These values are teaching examples. The NTC must be assessed using its actual mapping results and the laboratory’s contamination criteria.</p>
 </div>
 </div>
 </div>
@@ -536,14 +575,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ul>
-<li><strong>S03</strong>: re-sequence from a new library with more input material (re-extract, concentrate the RNA, more reads in the pool) — it has only 5x depth, repeating the same run will not help.</li>
-<li><strong>S02</strong>: do not repeat everything: <strong>re-amplify only the failed region</strong> (around 3,500–5,000). Check whether a known mutation falls in a primer site; if so, add or redesign primers, or use a different primer scheme for this lineage.</li>
-<li><strong>S04</strong>: the genome is complete; the question is the laboratory source of the off-target reads (host DNA, contaminated reagents). Consider host depletion or a cleaner extraction, and identify the reads with Kraken2.</li>
+<li><strong>S03:</strong> Investigate the low read count and repeat the extraction or library preparation if needed. Increase sequencing depth if insufficient read allocation is the cause.</li>
+<li><strong>S02:</strong> Investigate the missing region. If amplicon dropout is confirmed, re-amplify the affected region, inspect primer-binding sites and consider redesigning the primers.</li>
+<li><strong>S04:</strong> Investigate why only 75% of reads map to the reference. Check read quality, possible contamination and off-target sequences before deciding whether re-sequencing is necessary.</li>
 </ul>
 </div>
 </div>
 </div>
-<p><strong>2. What do you report about the negative control?</strong></p>
+<p><strong>2. What should you report about the negative control?</strong></p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -556,7 +595,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Always report it, even if it looks “clean”. Say: the number of reads in the NTC (450), how many map to the virus (50, i.e.&nbsp;25 pairs), their likely origin (barcode bleed from S01, whose variants they carry), and the <strong>consequence for the run</strong>: samples with a signal close to that level (S03) cannot be interpreted; high-depth samples (S01, S02, S04) are not affected. If the contamination were larger than a few reads, the whole run should be repeated.</p>
+<p>Report the total number of reads, the number and proportion mapping to the virus, and any evidence of contamination. Investigate possible sources such as barcode cross-talk, carry-over contamination or contaminated reagents.</p>
+<p>Do not automatically conclude that other samples are unaffected. Assess whether the control signal could compromise the results, especially for samples with low viral read counts.</p>
 </div>
 </div>
 </div>
@@ -573,17 +613,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>There is no universal answer; the thresholds depend on <strong>what the genome is used for</strong>:</p>
+<p>Thresholds depend on the intended application:</p>
 <ul>
-<li><em>Lineage assignment</em>: tolerates more N (as long as the lineage-defining positions are covered), e.g.&nbsp;≥ 80–90 % of the genome.</li>
-<li><em>Phylogenetics and transmission</em>: stricter, e.g.&nbsp;≥ 90–95 % of the genome at ≥ 10–20x, no long run of N.</li>
-<li><em>Negative controls</em>: a maximum number of viral reads (e.g.&nbsp;≤ 10), or a ratio to the samples.</li>
+<li><strong>Lineage assignment:</strong> may tolerate some missing sequence if lineage-defining positions are covered.</li>
+<li><strong>Phylogenetics and transmission analysis:</strong> generally requires high genome completeness, adequate depth and careful assessment of ambiguous positions.</li>
+<li><strong>Negative controls:</strong> define an acceptable background signal and investigate unexpected viral reads.</li>
 </ul>
-<p>Write them down, test them on known samples (positive controls, replicates), apply them the same way to every run, and review them when the protocol changes.</p>
+<p>Document the thresholds, test them using known samples and replicates, and apply them consistently across sequencing runs.</p>
 </div>
 </div>
 </div>
-<p><strong>Next:</strong> <a href="../course/02-reference-selection.html">Reference selection</a> — module 2.</p>
+<p><strong>Next:</strong> <a href="../course/02-reference-selection.html">Reference selection</a> — Module 2.</p>
 
 
 </section>
@@ -662,7 +702,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/ndeyeawandiaye\.github\.io\/African_STARS_Bioinformatics_training\/");
+        var filterRegex = new RegExp('/' + window.location.host + '/');
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
