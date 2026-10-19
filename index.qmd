@@ -1,5 +1,5 @@
 ---
-title: "From FASTQ to Outbreak Insights"
+title: "Bioinformatics Training"
 subtitle: "Genomic surveillance training — African STARS Fellowship · CARE · Institut Pasteur"
 ---
 

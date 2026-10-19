@@ -28,28 +28,37 @@ website:
     contents:
       - href: index.qmd
         text: Home
-      - section: "Preparations"
+      - section: "Basic command line"
         contents:
-          - exercises/00_setup.md
-      - section: "FASTQ → consensus genome"
+          - exercises/00-first_command_line.md
+          - exercises/00_second_command_line.md
+
+      - section: "Viral Genomics"
         contents:
-          - course/01-concepts.qmd
-          - exercises/01_fastq_and_qc.md
-          - exercises/02_mapping.md
-          - exercises/03_coverage_consensus.md
-      - section: "Alignment, lineage & reference selection"
+        - section: "Preparations"
+          contents:
+            - exercises/00_setup.md
+        - section: "FASTQ → consensus genome"
+          contents:
+            - course/01-concepts.qmd
+            - exercises/01_fastq_and_qc.md
+            - exercises/02_mapping.md
+            - exercises/03_coverage_consensus.md
+        - section: "Alignment, lineage & reference selection"
+          contents:
+            - course/02-reference-selection.qmd
+            - course/02-alignment.qmd
+            - course/02-lineage.qmd
+        - section: "Build and read a phylogenetic tree"
+          contents:
+            - course/03-build-tree.qmd
+            - course/03-read-tree.qmd
+      - section: "Human genomic"
         contents:
-          - course/02-reference-selection.qmd
-          - course/02-alignment.qmd
-          - course/02-lineage.qmd
-      - section: "Build and read a phylogenetic tree"
-        contents:
-          - course/03-build-tree.qmd
-          - course/03-read-tree.qmd
+          - course/Fastq-to-bcl.qmd
 
   page-footer:
     left: "African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only"
-    right: "Built with [Quarto](https://quarto.org)"
 
 format:
   html:
