@@ -1,0 +1,278 @@
+---
+title: "Alignment and Variant Calling"
+description: "From reads to variants: why we align the case-study exome to hg19, what each DRAGEN Germline option does, which settings we use, and how to read the alignment and coverage metrics."
+categories: [human-genomics, alignment, variant-calling, dragen, basespace, quality-control]
+---
+
+
+## Learning objectives
+
+By the end of this section, participants should be able to:
+
+- Explain why the reference genome (here **hg19**) must match the capture kit and target BED file.
+- Identify the input data required by DRAGEN Germline.
+- Explain the main steps of germline variant analysis (alignment, duplicate marking, variant calling).
+- Distinguish essential parameters from optional, advanced settings.
+- Choose appropriate settings for a whole-exome (WES) analysis.
+- Understand the main output files and their purpose.
+
+::: {.callout-note}
+## Example used in this training
+Paired-end whole-exome data of the normal cell line HCC1395BL (run **SRR37849526**, NimbleGen Exome v3 capture). The goal is to align the reads to a reference genome and call small variants (SNVs and small insertions or deletions, called *indels*). Exact labels and behaviour of some options depend on the DRAGEN version and the environment.
+:::
+
+
+## 1. What DRAGEN Germline does {#sec-pipeline}
+
+| Step | What happens | Main output |
+|---|---|---|
+| **Map / align** | Each read is placed on the reference genome | Alignment file (BAM or CRAM) |
+| **Duplicate marking** | Reads from the same original DNA fragment are flagged | Flags inside the alignment file |
+| **Small variant calling** | Positions that differ from the reference are detected and genotyped | VCF (and optionally gVCF) |
+| **Metrics** | Mapping, coverage and quality summaries | Metrics files and a summary |
+
+## 2. Why we choose the hg19 reference {#sec-hg19}
+
+A reference genome is the sequence the reads are compared with. It exists in several **builds**, and coordinates differ between builds: the same base has a different position in hg19 (GRCh37) and in GRCh38 (hg38).
+
+**For this exercise we align to hg19. The reasons come from the data, not from a preference.**
+
+| Reason | Explanation |
+|---|---|
+| **The capture kit was designed on hg19** | The exome was captured with NimbleGen SeqCap EZ Exome v3.0, whose target regions are published in hg19 coordinates. The BED file we use, `NimbleGen_v3_Exome.hg19.bed`, is in hg19. |
+| **The BED and the reference must match** | The *Target BED for Small Variant Caller* tells DRAGEN where the targets are. With a build mismatch, targets are shifted or missed, and variants can be lost without any error message. |
+| **Converting to hg38 loses information** | Converting the BED with `liftOver` can drop regions that do not map, and it adds a step that is hard to check. Using the BED in its own build keeps the analysis simple and traceable. |
+| **Tools and databases support it** | DRAGEN offers hg19 as a built-in reference. Ensembl VEP, ClinVar and population databases also provide GRCh37 resources. |
+| **The variant exists in both builds** | The *BRCA1* variant of interest is at **chr17:41209095** in hg19 and **chr17:43057078** in hg38 (G>A on the forward strand in both). |
+
+::: {.callout-warning}
+## hg19 is not "better"
+GRCh38 is the current standard assembly, with corrections and a better representation of difficult regions. For a **new** project with a **modern** kit, GRCh38 is the usual choice. For this older exome kit, matching the build of the target file matters more. **The lesson: choose the reference according to your data and your tools, record it, and use the same build at every step.**
+:::
+
+### hg19, GRCh37 and hs37d5
+
+These names refer to related versions of the same assembly, with different chromosome naming and extra sequences.
+
+| Name | Chromosome names | Note |
+|---|---|---|
+| **hg19** (UCSC) | `chr1`, `chr2`, ... `chrX` | Matches a BED whose first column starts with `chr` |
+| GRCh37 | `1`, `2`, ... `X` | Same coordinates, different names |
+| hs37d5 | `1`, `2`, ... `X` | GRCh37 plus decoy sequences |
+
+Check the first column of the BED (`head NimbleGen_v3_Exome.hg19.bed`). If it starts with `chr`, pick **hg19**. If it does not, the reference with names without `chr` (GRCh37 or hs37d5) is the one that matches.
+
+### Consequences for the rest of the course
+
+| Step | Use |
+|---|---|
+| Alignment and calling (DRAGEN) | hg19 |
+| Target BED | `NimbleGen_v3_Exome.hg19.bed` (no conversion) |
+| IGV genome | hg19 |
+| Annotation with VEP | **GRCh37**, for example <https://grch37.ensembl.org/Tools/VEP> |
+| Gene coordinates from Ensembl | <https://grch37.rest.ensembl.org> |
+| Variant of interest | `chr17:41209095` (G>A) |
+| Population frequencies | Check which fields exist in the GRCh37 resources |
+
+## 3. The DRAGEN Germline form, option by option {#sec-options}
+
+Asterisks (`*`) mark required fields. Some are required only when the related option is switched on.
+
+### 3.1 Input data and configuration {#sec-input}
+
+**Input Data.** How DRAGEN finds the sequencing files.
+
+| Option | What it does | When to use it |
+|---|---|---|
+| **Biosamples**: launch with FASTQs across multiple sequencing runs | Takes a biosample and combines all its FASTQ datasets, even from several runs | The same biological sample was sequenced several times and the data must be analysed together |
+| **Samples**: launch with FASTQs from a single sequencing run | Takes a sample from one run | The FASTQ files come from one run |
+
+For this case there is one run, so use the option under which `HCC1395BL_normal_WES` appears when you click **Select Samples**. A biological sample, a sequencing sample and a sequencing run are different concepts; how the data are organised in BaseSpace decides the choice.
+
+| Field | Meaning | Value for the case |
+|---|---|---|
+| **Analysis Name** * | Name of the job | `SRR37849526_DRAGEN_Germline_hg19` (include the dataset and the build) |
+| **Save Results To** * | Project that receives the outputs | `African_STARS_Training` (the instructor must have write access) |
+| **Select Samples** | The sample(s) to analyse; one row per sample (#1, #2, ...) | `HCC1395BL_normal_WES`: check that the FASTQ pair (R1 and R2) is attached |
+| **Sample Sex** | Recorded sex of the sample | **Female** (documented donor sex; use reliable metadata, not a guess) |
+
+**Input file types.** Each row can take FASTQ, BAM, BAI, CRAM or CRAI files.
+
+| File | Content | Use |
+|---|---|---|
+| **FASTQ** | Raw reads and quality scores | Start from raw reads (our case): DRAGEN must align them |
+| **BAM** + **BAI** | Aligned reads and the index that allows fast access to regions | Start from existing alignments |
+| **CRAM** + **CRAI** | A more compact aligned format and its index | Same, smaller; needs the right reference |
+
+### 3.2 Pipeline configuration and reference {#sec-pipeline-config}
+
+**Pipeline Configuration** * decides which major steps run.
+
+| Option | What it does | Use |
+|---|---|---|
+| **Map/Align** | Alignment only | To study mapping and coverage; no variants |
+| **Map/Align + Small Variant Caller** | Alignment, then small-variant calling | **Our case**: FASTQ to VCF |
+| **Small Variant Caller** | Calls variants from already aligned BAM or CRAM | When alignments exist |
+
+**Reference** * (see section 2): **hg19**.
+
+**Custom DRAGEN Reference File:** a reference built with the DRAGEN Reference Builder app, for special organisms or modified sequences. **Leave empty**: the built-in human reference is simpler and sufficient.
+
+### 3.3 Target BED and coverage metrics {#sec-bed}
+
+**Target BED for Small Variant Caller.** A BED file lists genomic intervals (chromosome, start, end). For an exome it is the set of captured regions. The small variant caller works **only inside these regions**.
+
+- Value: `NimbleGen_v3_Exome.hg19.bed`, which matches both the capture kit and the hg19 build.
+- **Check before launching** that it contains the position of interest: `awk '$1=="chr17" && $2<=41209095 && $3>=41209095' NimbleGen_v3_Exome.hg19.bed` must print a line.
+- A BED for another kit or another build would drop relevant regions or include untargeted ones.
+
+**QC Coverage Metrics.** Coverage tells you whether reads cover the regions of interest. This section computes coverage over regions you choose. Several sets can be defined (#1, #2, ...).
+
+| Parameter | What it controls |
+|---|---|
+| **Regions / BED File** | The intervals over which coverage is calculated. Use the same exome BED |
+| **MAPQ** | Minimum mapping quality of a read to be counted (reads that align ambiguously are ignored) |
+| **BQ** | Minimum base quality of a base to be counted |
+| **Tag** (Output Tag) | A label added to the output file names, to tell sets apart |
+| **Metrics Resolution / Full-Res** | Level of detail: a summary, or a full-resolution (per-position) output, which is much larger |
+
+For the training, set one region set with the exome BED and keep the default thresholds and summary-level resolution. A high average depth does not guarantee that every exon is well covered: exome capture efficiency varies from exon to exon.
+
+### 3.4 Alignment output and duplicate marking {#sec-align-output}
+
+| Option | What it does | Value for the case |
+|---|---|---|
+| **Map/Align Output** * | Which alignment file to keep (BAM, CRAM or none) | **BAM**: opens directly in IGV. CRAM saves space but needs the reference to be read |
+| **Enable Duplicate Marking** | Flags reads that come from the same original DNA fragment (PCR or optical duplicates). Flagging is not deleting: the caller then handles them | **On** (recommended). Duplicates inflate apparent depth |
+
+### 3.5 Small variant caller output and options {#sec-vc-output}
+
+**Small Variant Caller Output** *
+
+| Output | What it contains | Why |
+|---|---|---|
+| **VCF** | The called variants: position, alleles, genotype and quality fields | The file we inspect, filter and annotate |
+| **gVCF** ("VCF and GVCF") | Variants plus reference-confidence blocks for non-variant regions | Needed for joint genotyping of several samples |
+| **... with BP_RESOLUTION** | The same, with one record per base | Larger files; rarely needed |
+| **ForceGT VCF** | Forces genotyping at a list of given sites | To check known positions even if they are not called |
+
+**Value for the case: "VCF and GVCF"**, so that the VCF is produced (the gVCF is not used on the next pages). **ForceGT** and **BP_RESOLUTION** are not needed.
+
+**Advanced calling options.** These go beyond routine calling. Switch them on only to answer a specific scientific question.
+
+| Option | Purpose | Needed here? |
+|---|---|---|
+| **Enable Personalization** | A DRAGEN feature that adapts the analysis to the sample (check the documentation of your version) | No |
+| **Combine Phased Variants** (+ **Combine Distance**) | Merges nearby variants on the same haplotype into one record; *Combine Distance* sets how close they must be | No |
+| **Enable High Sensitivity Mosaic Detection** | Looks for variants present in only a fraction of cells | No (mosaicism is not our question) |
+| **Evidence BAM** | An extra BAM with the reads supporting each call | Optional, for advanced review |
+| **Enable ROH Caller** | Detects long runs of homozygosity | No |
+
+### 3.6 Specialised modules (left off) {#sec-modules}
+
+Each module answers a different biological question and may need specific inputs. **Leave all of them off for this exercise.**
+
+| Module | What it does | Why it is off here |
+|---|---|---|
+| **CNV** (Enable CNV Caller, Normalization Mode, Low pass filtering, Combined Counts File, Reference Calls, Allele-specific, Cytogenetics, Segmentation BED) | Detects deletions and duplications of whole exons or regions | Needs assay-specific set-up and normal samples. **A SNV and indel analysis does not detect them**: a limitation to state |
+| **SV** (Enable SV Caller, SV Target BED, Custom SV Target BED) | Detects larger rearrangements: inversions, translocations, large indels | Depends on read type and coverage; not an exome question |
+| **STR Caller** (+ Repeat Specification, **REViewer**) | Genotypes short tandem repeats and displays the evidence | For repeat-expansion studies |
+| **Proximity Mode for TruPath Genome** | Mode for a specific long-range library technology | Not our assay |
+| **Targeted Callers**, **MRJD** | Specialised calling for hard, homologous regions | Specific targeted analyses |
+| **HLA Typing** | Infers HLA alleles | Immunogenetics |
+| **Star Allele Caller** | Infers pharmacogenomic star alleles | Pharmacogenomics |
+| **Epstein-Barr Virus Detection** | Looks for EBV evidence in the data | Our cell line is EBV-transformed, but an exome capture is not designed to measure it |
+| **Methylation** (5-base algorithms, Targeted Cytosine Reporting, Methylation at variants) | Reports DNA methylation | Needs methylation-aware chemistry, not conventional exome data |
+
+### 3.7 Annotation, quality control and checksums {#sec-annotation}
+
+| Option | What it does | Value for the case |
+|---|---|---|
+| **Enable Variant Annotation**, **Annotation Catalog**, **Annotation VCF Output** | DRAGEN adds gene and consequence information to the VCF | **Off**: the course teaches annotation with Ensembl VEP. It could be enabled to compare, if a catalog for hg19 is available |
+| **QC Detect Contamination** | Estimates whether DNA from another sample is mixed in. It is a QC indicator, not proof of a cause | **On**: it is a useful sanity check |
+| **MD5 Checksums** | Computes a checksum of each output file, to verify later that a download is intact | On (optional). It does not prove the sample is the right one |
+| **Downsampler Fraction** | Uses only a fraction of the reads. Useful for benchmarking | **Leave empty**: downsampling lowers sensitivity |
+
+Annotation is not interpretation: a "damaging" prediction does not make a variant pathogenic.
+
+### 3.8 CRAM, compute and advanced fields {#sec-advanced}
+
+| Field | Purpose | Value for the case |
+|---|---|---|
+| **CRAM Decompression Reference**, **CRAM Custom Reference** | Reference needed to read or write CRAM | Leave empty (we start from FASTQ and keep a BAM) |
+| **ICA Storage Size** *, **ICA Scratch Size Per Node**, **F2 Node Type** * | Storage and compute allocated to the job | Use the defaults, unless an error message calls for more. A bigger allocation is not always better, and it affects cost |
+| **Additional DRAGEN Commandline Arguments** | Free-text options passed to DRAGEN, **with no verification** | **Leave empty**. A wrong argument can break the run or give results that are hard to reproduce |
+| **Additional Resource File** | Extra resource files for custom annotation or assays | Leave empty |
+| **Enable Automation** and settings | Triggers analyses automatically | Off |
+| **Input FASTQs / BAMs / CRAMs** | The input files, per row, by type | Check that both FASTQ files of the pair are listed |
+
+## 4. Settings for the case study {#sec-summary}
+
+| Setting | Value | Reason |
+|---|---|---|
+| Input Data | Samples or Biosamples, as the data appear | Matches how the FASTQ is organised |
+| Analysis Name | `SRR37849526_DRAGEN_Germline_hg19` | Identifies dataset and build |
+| Save Results To | `African_STARS_Training` | Keeps outputs together |
+| Select Samples | `HCC1395BL_normal_WES` (R1 + R2) | Our sample |
+| Sample Sex | Female | Documented in the donor metadata |
+| Pipeline Configuration | Map/Align + Small Variant Caller | FASTQ to VCF |
+| Reference | **hg19** | Matches the kit and the BED |
+| Target BED | `NimbleGen_v3_Exome.hg19.bed` | The captured regions |
+| QC Coverage Metrics | One region set with the same BED, default filters | Exome coverage check |
+| Map/Align Output | BAM | Easy to open in IGV |
+| Duplicate Marking | On | Standard practice |
+| Small Variant Caller Output | VCF and GVCF | Provides the VCF we need |
+| QC Detect Contamination | On | Sanity check |
+| CNV, SV, STR, HLA, Star Allele, EBV, Methylation, Annotation | Off | Not needed; keep the run focused |
+| Compute / extra arguments / extra resources | Defaults / empty | Avoids errors |
+
+::: {.callout-warning}
+## Before launching
+- The FASTQ pair is accessible in the selected project.
+- The reference (hg19) and the BED (hg19, `chr` names) match.
+- The BED contains `chr17:41209095`.
+- The iCredit estimate has been read.
+:::
+
+**Common mistakes:** an hg19 BED with an hg38 reference; names with and without `chr` mixed; the wrong sample selected; modules enabled "because they are there".
+
+## 5. Read the results {#sec-results}
+
+In the project, open **Analyses**, then the DRAGEN Germline analysis, then **Files** and the summary or metrics.
+
+| Output | What it is |
+|---|---|
+| `*.hard-filtered.vcf.gz` (+ `.tbi`) | Calls that pass DRAGEN's filters. **The file to use** |
+| `*.vcf.gz` (not hard-filtered) | All calls, with filters flagged |
+| `*.gvcf.gz` | Also describes non-variant positions; not needed here |
+| `*.bam` (+ `.bai`) | The aligned reads |
+| Metrics files (mapping, coverage, contamination) | The quality numbers below |
+
+Exact file names depend on the DRAGEN version.
+
+### Alignment and coverage metrics
+
+| Metric | What it tells you | Rough expectation for an exome |
+|---|---|---|
+| Mapped reads (%) | Did the reads align to the reference? | Above 99 % |
+| Duplicate reads (%) | Library complexity | Moderate; higher than a PCR-free genome |
+| Mean coverage on target | Average depth over the captured regions | Many tens of times, often more than 100x |
+| Target bases at 20x or more (%) | How much of the target is well covered | High (often above 90 %) |
+| Contamination | Foreign DNA in the sample | Very low |
+| Estimated sex | Consistency with the metadata | Female |
+
+These are rough expectations; they depend on the kit and the library.
+
+
+
+## Key takeaways
+
+DRAGEN Germline has many settings because it serves different assays and research questions. For a first exome analysis, the priorities are:
+
+- the **input data** and the sample information;
+- the **reference build**, which must match the capture kit and the target BED (hg19 here, and the same build at every later step);
+- **alignment**, duplicate marking and **small-variant calling**;
+- **coverage and quality metrics**.
+
+Advanced options should be introduced only when their biological purpose and input requirements are clear.
+

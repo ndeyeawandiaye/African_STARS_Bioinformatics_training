@@ -1,5 +1,5 @@
 ---
-title: "Command line basics"
+title: "Exos - Command line basics"
 subtitle: "Bridge talk — module 2"
 ---
 

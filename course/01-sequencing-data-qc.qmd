@@ -1,0 +1,229 @@
+---
+title: "1. Sequencing data and quality control"
+description: "Understand the data before the analysis: BCL to FASTQ, FASTQ structure, sequencing QC, alignment and coverage metrics, and how to download the teaching data."
+categories: [human-genomics, fastq, quality-control, basespace]
+---
+
+*Comprendre les données avant l'analyse.*
+
+## Learning objectives
+
+By the end of this page, participants will be able to:
+
+- Explain how a sequencer's raw output becomes per-sample FASTQ files.
+- Read a FASTQ record and its quality scores.
+- Run and interpret basic sequencing QC.
+- Read alignment and coverage metrics and decide whether a sample is fit for variant calling.
+- Download the teaching data from BaseSpace or from public archives.
+
+::: {.callout-note}
+## Where this page fits
+**BCL → FASTQ → QC → alignment → coverage metrics**, then variant calling (next page).
+:::
+
+## BCL to FASTQ and sample sheets {#sec-bcl}
+
+A NovaSeq run does not produce FASTQ files directly. The instrument writes **BCL files** (base calls with quality scores) plus run metadata. A conversion step then creates FASTQ files:
+
+```
+NovaSeq run → BCL files + run metadata → BCL Convert → per-sample FASTQ files
+```
+
+**BCL Convert** performs the base-call conversion and **demultiplexing**: it separates reads by sample using the index sequences. The mapping from index to sample comes from the **sample sheet**.
+
+### The sample sheet
+
+`SampleSheet.csv` tells the software which index combination belongs to which sample. A minimal, simplified example:
+
+```text
+[Header]
+FileFormatVersion,2
+
+[BCLConvert_Data]
+Lane,Sample_ID,Index,Index2
+1,Sample_A,ATTACTCG,TATAGCCT
+1,Sample_B,TCCGGAGA,ATAGAGGC
+```
+
+The exact sections and column names depend on the software version. Check the BCL Convert documentation for the version you use.
+
+### Output
+
+For paired-end sequencing, each sample usually produces two files: `*_R1_001.fastq.gz` and `*_R2_001.fastq.gz`. Reads that cannot be assigned to a sample are written to an *Undetermined* file.
+
+Illumina provides a BCL Convert app in BaseSpace as well as command-line software.
+
+::: {.callout-important}
+## Concept session only
+Spend 10–15 minutes on this section: show what a BCL run folder contains, read a sample sheet, and show how per-sample FASTQ files appear. Do not convert a real NovaSeq run in the training. The data are very large and the settings depend on the instrument and run configuration. Continue with the prepared FASTQ files.
+:::
+
+## FASTQ structure and sequencing QC {#sec-fastq}
+
+### Anatomy of a FASTQ record
+
+Each read uses four lines:
+
+| Line | Content |
+|---|---|
+| 1 | Header, starting with `@` (instrument, run, flowcell, lane, tile, coordinates, read number, index) |
+| 2 | The base sequence |
+| 3 | A separator, `+` |
+| 4 | Base qualities, one character per base (Phred scores) |
+
+```bash
+#| eval: false
+# First two reads (8 lines) of the R1 file
+zcat sample_R1.fastq.gz | head -n 8
+
+# Number of reads in the file
+echo $(( $(zcat sample_R1.fastq.gz | wc -l) / 4 ))
+```
+
+A Phred score Q expresses the probability of a wrong base call: Q20 is about 1 error in 100 and Q30 about 1 in 1,000. In Illumina FASTQ files each score is stored as a character (ASCII offset 33). R1 and R2 must contain the same number of reads, in the same order.
+
+### Run FastQC
+
+```bash
+#| eval: false
+mkdir -p qc/fastqc
+fastqc sample_R1.fastq.gz sample_R2.fastq.gz -o qc/fastqc -t 4
+
+# Combine the reports of several samples into one page
+multiqc qc/fastqc -o qc/multiqc
+```
+
+BaseSpace also offers FastQC and FASTQ Toolkit apps. Illumina run metrics and FastQC outputs measure different things, so do not compare them directly.
+
+### What to look at in FastQC
+
+| Module | What to check | Concern |
+|---|---|---|
+| Per-base sequence quality | Quality along the read | Drop at the 3' end is common. A drop across the whole read is not. |
+| Per-sequence quality scores | Distribution of mean read quality | A large low-quality peak |
+| Adapter content | Share of adapter sequence | Rising adapter content calls for trimming |
+| Sequence duplication | Duplicate reads | High levels can reflect low library complexity |
+| GC content | Shape of the GC distribution | A shifted or bimodal curve can indicate contamination |
+| Overrepresented sequences | Repeated sequences | Adapters or contaminants |
+
+Some FastQC flags (for example per-base content in the first bases) are expected for particular library types. Judge them in context.
+
+**Exercise:** open the prepared FastQC report for the teaching sample. For each module, decide: normal, expected for this library type, or a real problem.
+
+## Alignment and coverage metrics {#sec-alignment}
+
+Reads are aligned to the **GRCh38** reference, producing BAM or CRAM files. In the teaching workflow the aligner is DRAGEN (next page). The aligned file and the metrics report let you judge whether the sample is good enough for variant calling.
+
+| Metric | What to check | Rough expectation (human WGS, about 30x) |
+|---|---|---|
+| Mapping rate | Share of reads aligned to GRCh38 | Above 99 % |
+| Duplicate rate | Library complexity | Low (a few %) for PCR-free libraries |
+| Mean coverage | Average depth | About 30x |
+| Coverage at 20x or more | Share of the genome well covered | About 85–90 % or more |
+| Insert size | Fragment length distribution | Single peak, consistent with the library |
+| Contamination | Foreign DNA in the sample | Very low |
+| Estimated sex | Consistency with sample metadata | Matches |
+
+These are rough expectations. They vary with the library type, the platform and the sample.
+
+### Quick checks on an aligned file
+
+```bash
+#| eval: false
+# Alignment summary
+samtools flagstat sample.cram
+
+# Mean depth and breadth per chromosome (a CRAM needs the reference: -T ref.fa)
+samtools coverage sample.cram | head
+
+# Detailed depth over the genome
+mosdepth --by 1000000 sample sample.cram
+```
+
+**Decision rule for the practical:** if the mapping rate, coverage or contamination are far from the expected values, stop and investigate before calling variants. A wrong sample, a wrong reference build or low coverage will make every later step unreliable.
+
+**Expected output:** a short written QC assessment (pass, concerns, or stop).
+
+## Downloading the data {#sec-download}
+
+Three routes are possible. For a training session, prepare the data in advance and share a small subset: a full 30x human genome in FASTQ is tens of GB, and BAM or CRAM files are similar in size.
+
+### Option A: BaseSpace
+
+BaseSpace requires a free account (<https://basespace.illumina.com>). It also hosts public datasets.
+
+**From the web interface**
+
+1. Open the project containing your data (or the one shared with you).
+2. Select the dataset or files to download.
+3. Choose the file type (for example FASTQ) and download.
+
+**With the BaseSpace command-line tool (`bs`)**
+
+The CLI is better for large downloads. Install it from Illumina's BaseSpace CLI page, then:
+
+```bash
+#| eval: false
+# Log in (opens a link to authenticate your account)
+bs auth
+
+# Find the project ID (it also appears in the project's web address)
+bs list projects
+
+# Download only the FASTQ files of a project
+bs download project -i <PROJECT_ID> -o ./data/fastq --extension fastq.gz
+```
+
+Downloading BCL files is only possible with the CLI. Check `bs download --help` for the options available in your version.
+
+**Share a project with a participant:** the project owner can share it with another BaseSpace account. The participant can then download it with the same commands.
+
+### Option B: Public archives (ENA and the 1000 Genomes data)
+
+For open human data, the European Nucleotide Archive (ENA) lets you list and download the files of any study, sample or run through a file report.
+
+The 1000 Genomes Project 30x resequencing from the New York Genome Center (study **PRJEB31736**, aligned to GRCh38) is a good source, with consented open access. The data portal at <https://www.internationalgenome.org/data-portal> lists the samples with their population (including the West African populations YRI, ESN, GWD and MSL).
+
+```bash
+#| eval: false
+# List the files of one run: accession, FASTQ URLs, sizes and checksums
+curl -s "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=ERR3239334&result=read_run&fields=run_accession,sample_accession,fastq_ftp,fastq_bytes,fastq_md5&format=tsv"
+
+# Download both FASTQ files of that run (resumable)
+wget -c ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR323/004/ERR3239334/ERR3239334_1.fastq.gz
+wget -c ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR323/004/ERR3239334/ERR3239334_2.fastq.gz
+
+# Verify integrity against the MD5 from the file report
+md5sum ERR3239334_*.fastq.gz
+```
+
+To choose another sample, give ENA the study accession (`PRJEB31736`) in the same file report URL, find the run for your sample, and take the `fastq_ftp` links. The `ERR3239334` run above is NA12878 (a reference sample of European ancestry). Confirm the file links in the file report before downloading, as archive paths can change.
+
+### Option C: Prepare a small teaching subset
+
+For the session, work on a subset so that the commands run in seconds:
+
+```bash
+#| eval: false
+# Keep the first 1 million read pairs (4 lines per read)
+zcat sample_R1.fastq.gz | head -n 4000000 | gzip > subset_R1.fastq.gz
+zcat sample_R2.fastq.gz | head -n 4000000 | gzip > subset_R2.fastq.gz
+```
+
+A subset is fine for the FASTQ and QC exercises. It will not give genome-wide coverage, so run the variant calling steps on the prepared full dataset or on a prepared exome.
+
+::: {.callout-warning}
+## Data protection
+Use synthetic or open, appropriately authorised public data. Do not upload identifiable patient genomic data to external services without institutional approval and data-protection safeguards.
+:::
+
+## Summary
+
+| Step | Tool | Question answered |
+|---|---|---|
+| BCL → FASTQ | BCL Convert, sample sheet | Which reads belong to which sample? |
+| FASTQ QC | FastQC, MultiQC | Are the raw reads of good quality? |
+| Alignment metrics | DRAGEN report, `samtools` | Did the reads map, and how deep are they? |
+| Decision | Written QC assessment | Is the sample fit for variant calling? |
+
+Next page: alignment and variant calling with BaseSpace.

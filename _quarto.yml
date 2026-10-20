@@ -55,7 +55,9 @@ website:
             - course/03-read-tree.qmd
       - section: "Human genomic"
         contents:
-          - course/Fastq-to-bcl.qmd
+          - course/04-sequencing-data-QC.qmd
+          - course/04-alignement-variant-calling.qmd
+
 
   page-footer:
     left: "African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only"
