@@ -3,6 +3,7 @@ project:
   output-dir: _site
   render:
     - index.qmd
+    - course/00-command_line.md
     - course/*.qmd
     - exercises/*.md
 
@@ -30,8 +31,7 @@ website:
         text: Home
       - section: "Basic command line"
         contents:
-          - exercises/00-first_command_line.md
-          - exercises/00_second_command_line.md
+          - course/00-command_line.md
 
       - section: "Viral Genomics"
         contents:

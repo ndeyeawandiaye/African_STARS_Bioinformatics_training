@@ -1,5 +1,5 @@
 ---
-title: "Exercise 0 — Command line basics"
+title: "Exercises  — Command line basics"
 subtitle: "Bridge talk — module 1"
 ---
 
