@@ -6,6 +6,7 @@
     "section": "",
     "text": "Goal: Measure genome coverage, identify low-depth regions, build a consensus genome, and identify candidate variants.\nWe will analyze the SARS-CoV-2 sequencing run SRR26396743 from NCBI, using the trimmed reads and BAM file generated in the previous sessions.\nInput files\nIf a previous step failed, use the corresponding precomputed files provided with the course, if available.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -17,6 +18,7 @@
     "section": "Step 1 — Calculate mean depth and genome breadth at ≥10×",
     "text": "Step 1 — Calculate mean depth and genome breadth at ≥10×\nFor this exercise, we will use 10× depth as a practical threshold for assessing genome completeness.\n\nMean depth: average number of reads covering each reference position.\nBreadth at ≥10×: percentage of reference positions covered by at least 10 reads.\n\nRun:\nawk '{\n  total += $3\n  if ($3 &gt;= 10) covered++\n  positions++\n}\nEND {\n  if (positions &gt; 0) {\n    printf \"Mean depth: %.1f\\n\", total/positions\n    printf \"Genome at &gt;=10x: %.1f%%\\n\", 100*covered/positions\n  }\n}' results/coverage/SRR26396743.depth.tsv",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -28,6 +30,7 @@
     "section": "Step 2 — Build the consensus genome with iVar",
     "text": "Step 2 — Build the consensus genome with iVar\nA consensus genome represents the most strongly supported nucleotide at each reference position, subject to the calling thresholds.\nHere, we will use:\n\nMinimum base quality: Q20\nMinimum depth: 10 reads\nMinimum proportion of reads supporting a base: 50%\nMissing or insufficiently supported positions: N\n\nCreate the output directories:\nmkdir -p results/coverage results/consensus results/variants\nRun samtools mpileup and pass its output to ivar consensus:\nsamtools mpileup \\\n  -aa -A -d 0 -Q 0 \\\n  -f data/NC_045512.2.fasta \\\n  results/bam/SRR26396743.sorted.bam \\\n  | ivar consensus \\\n      -p results/consensus/SRR26396743 \\\n      -q 20 \\\n      -t 0.5 \\\n      -m 10 \\\n      -n N\n\n\n\n\n\n\nTipOptions\n\n\n\n\n\n\n\n\n\n\n\n\nCommand / Option\nExplanation\n\n\n\n\nsamtools mpileup\nGenerates per-position alignment information from the BAM file.\n\n\n-aa\nIncludes all reference positions, including positions with zero coverage.\n\n\n-A\nIncludes anomalous read pairs/orphan reads that would otherwise be skipped.\n\n\n-d 0\nRemoves the maximum depth limit.\n\n\n-Q 0\nSets the minimum base quality threshold in mpileup to Q0.\n\n\n-f data/NC_045512.2.fasta\nSpecifies the reference genome in FASTA format.\n\n\nresults/bam/SRR26396743.sorted.bam\nInput BAM file containing coordinate-sorted alignments.\n\n\nivar consensus\nGenerates a consensus sequence from the pileup data.\n\n\n-p results/consensus/SRR26396743\nSets the output file prefix.\n\n\n-q 20\nUses a minimum base quality of Q20 for consensus calling.\n\n\n-t 0.5\nRequires a minimum base frequency of 50% to call a consensus base.\n\n\n-m 10\nRequires at least 10 reads covering a position.\n\n\n-n N\nUses N for positions where a consensus base cannot be called.\n\n\n\n\n\n\nThis produces a consensus FASTA file, normally named:\nresults/consensus/SRR26396743.fa\nInspect its header and sequence:\nhead -c 300 results/consensus/SRR26396743.fa",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -39,6 +42,7 @@
     "section": "Step 3 — Measure the number of ambiguous bases",
     "text": "Step 3 — Measure the number of ambiguous bases\nCount the number of N bases:\ngrep -v '^&gt;' results/consensus/SRR26396743.fa \\\n  | tr -cd 'N' \\\n  | wc -c\nCalculate the percentage of the consensus represented by N:\nawk '\n  /^&gt;/ {next}\n  {\n    n += gsub(/N/, \"&\")\n    length_total += length($0)\n  }\n  END {\n    if (length_total &gt; 0)\n      printf \"N bases: %d\\nN percentage: %.2f%%\\n\",\n             n, 100*n/length_total\n  }\n' results/consensus/SRR26396743.fa",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -50,6 +54,7 @@
     "section": "Step 4 — Identify candidate variants with bcftools",
     "text": "Step 4 — Identify candidate variants with bcftools\nWe will compare the aligned reads with the reference to identify candidate single-nucleotide variants and short insertions or deletions.\nGenerate a VCF file:\nbcftools mpileup \\\n  -f data/NC_045512.2.fasta \\\n  -Q 20 \\\n  -d 1000000 \\\n  -a AD \\\n  results/bam/SRR26396743.sorted.bam \\\n  | bcftools call \\\n      -mv \\\n      --ploidy 1 \\\n      -Oz \\\n      -o results/variants/SRR26396743.vcf.gz\n\n\n\n\n\n\nTipOptions\n\n\n\n\n\n\n\n\n\n\n\n\nCommand / Option\nExplanation\n\n\n\n\nbcftools mpileup\nGenerates per-position read data for variant detection.\n\n\n-f data/NC_045512.2.fasta\nSpecifies the reference genome in FASTA format.\n\n\n-Q 20\nExcludes bases with a base quality below Q20.\n\n\n-d 1000000\nSets the maximum read depth per position to 1,000,000.\n\n\n-a AD\nAdds allele-depth (AD) information.\n\n\nresults/bam/SRR26396743.sorted.bam\nInput BAM file containing aligned reads.\n\n\nbcftools call\nIdentifies candidate variants from the read data.\n\n\n-m\nUses the multiallelic variant-calling model.\n\n\n-v\nOutputs variant sites only.\n\n\n--ploidy 1\nAssumes a haploid genome.\n\n\n-Oz\nWrites the VCF output in compressed BGZF format.\n\n\n-o results/variants/SRR26396743.vcf.gz\nSpecifies the output VCF file.\n\n\n\nOutput: A compressed VCF file containing candidate variants identified by comparing the sequencing reads with the SARS-CoV-2 reference genome.\n\n\n\nIndex the VCF:\nbcftools index results/variants/SRR26396743.vcf.gz\nDisplay the variant records:\nbcftools view -H results/variants/SRR26396743.vcf.gz \\\n  | cut -f1,2,4,5,6\n\n\n\n\n\n\nTip\n\n\n\nThe columns displayed are:\n\nReference sequence\nPosition\nReference allele\nAlternative allele\nVariant quality (QUAL)\n\n\n\nCount the reported variant records:\nbcftools view -H results/variants/SRR26396743.vcf.gz \\\n  | wc -l",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -61,6 +66,7 @@
     "section": "Step 5 — Change the consensus depth threshold",
     "text": "Step 5 — Change the consensus depth threshold\nA higher minimum depth can make the consensus more conservative, but it can also increase the number of ambiguous bases.\nBuild a second consensus requiring at least 30 reads per position:\nsamtools mpileup \\\n  -aa -A -d 0 -Q 0 \\\n  -f data/NC_045512.2.fasta \\\n  results/bam/SRR26396743.sorted.bam \\\n  | ivar consensus \\\n      -p results/consensus/SRR26396743.m30 \\\n      -q 20 \\\n      -t 0.5 \\\n      -m 30 \\\n      -n N\nCount the ambiguous bases in the second consensus:\ngrep -v '^&gt;' results/consensus/SRR26396743.m30.fa \\\n  | tr -cd 'N' \\\n  | wc -c\nCompare the results with the consensus generated at 10×.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -72,6 +78,7 @@
     "section": "Step 6 — Is this genome good enough?",
     "text": "Step 6 — Is this genome good enough?\nA genome is not simply “good” or “bad”: it is good enough for a specific purpose, based on several quality metrics.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -83,6 +90,7 @@
     "section": "The numbers that matter",
     "text": "The numbers that matter\n\n\n\n\n\n\n\nMetric\nWhy it matters\n\n\n\n\nTotal reads / % mapped\nIndicates the amount of sequencing data and the proportion mapping to the virus. A low mapping rate may indicate contamination or poor enrichment.\n\n\nMean depth\nIndicates the average sequencing coverage at each reference position.\n\n\n% of genome at ≥ 10× depth\nMeasures how much of the genome has sufficient coverage for reliable consensus calling.\n\n\n% N / longest run of Ns\nIndicates missing sequence information. Long runs of Ns may correspond to missing genomic regions.\n\n\nNegative control (NTC)\nChecks whether viral reads are detected in a sample that should contain no viral material.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -94,6 +102,7 @@
     "section": "illustrative thresholds",
     "text": "illustrative thresholds\nThese are illustrative thresholds, not universal standards. Adapt them to the sequencing protocol and intended analysis.\n\n\n\n\n\n\n\n\n\nCriterion\nGood\nTo review\nPoor\n\n\n\n\n% mapped\n≥ 90%\n70–89.9%\n&lt; 70%\n\n\nGenome at ≥ 10×\n≥ 90%\n70–89.9%\n&lt; 70%\n\n\n% N\n≤ 10%\n&gt; 10–20%\n&gt; 20%\n\n\nNegative control\nNo concerning viral signal\nInvestigate low-level signal\nClear evidence of contamination\n\n\n\nNext: Is this genome good enough?",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Coverage and consensus"
     ]
@@ -105,6 +114,7 @@
     "section": "",
     "text": "Goal: Starting from paired-end FASTQ files (R1 + R2), assess sequencing quality, clean the reads, assemble them into contigs, identify which organisms are present (and detect contamination), and evaluate the quality of the assembly.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -116,6 +126,7 @@
     "section": "Workflow overview",
     "text": "Workflow overview\n\n\n\n\n\n\n\n\nStage\nTool\nQuestion answered\n\n\n\n\n1. Quality control\nFastQC + MultiQC\nWhat is the quality of the raw reads?\n\n\n2. Trimming\ntrimmomatic\nCan adapters and low-quality bases be removed?\n\n\n3. Assembly\nSPAdes\nCan the reads be assembled into contigs or scaffolds?\n\n\n4. Identification\nKraken2 and/or BLAST\nWhich organisms are in the reads? Is there contamination?\n\n\n5. Assembly quality\nQUAST\nWhat are the N50, total length and genome fraction?\n\n\n\nOpen a terminal in the course folder and activate the environment:\nconda activate analyse\nCheck that all the tools are available:\nfastqc --version && multiqc --version && trimmomatic --version && seqkit version\nspades.py --version && kraken2 --version && blastn -version && quast.py --version\nIf a tool is missing, ask your instructor or install it in the environment, for example conda install -c bioconda quast.\nEach grey box contains a command. Copy it, paste it into the terminal, press Enter, and examine the output before continuing.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -127,6 +138,7 @@
     "section": "Step 1 — Look at a read",
     "text": "Step 1 — Look at a read\nA FASTQ file stores four lines per read: the read identifier, nucleotide sequence, a + separator, and a quality string. The files are compressed (.gz), so we use zcat.\nzcat data/SRR26396743_1.fastq.gz | head -4\nQuestions\n\nWhich line contains the nucleotide sequence? Which contains the quality scores?\nWhat does each character in the quality string represent?\n\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\n\nLine 1 is the read identifier, line 2 is the nucleotide sequence, line 3 is +, and line 4 contains the quality string.\nEach quality character encodes the estimated confidence in the corresponding base.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -138,6 +150,7 @@
     "section": "Step 2 — Quality control of the raw reads (FastQC + MultiQC)",
     "text": "Step 2 — Quality control of the raw reads (FastQC + MultiQC)\nFastQC analyzes individual FASTQ files and produces HTML reports. MultiQC combines the results into a single report.\nCreate an output directory:\nmkdir -p results/qc_raw\nRun FastQC:\nfastqc -t 2 -o results/qc_raw data/SRR26396743_*.fastq.gz\nCombine the reports:\nmultiqc results/qc_raw -o results/qc_raw\nOpen the report in your browser:\nopen results/qc_raw/multiqc_report.html\nOn Linux, you can use:\nxdg-open results/qc_raw/multiqc_report.html\nExamine three sections:\n\nGeneral Statistics: number of reads, sequence length, and overall quality indicators.\nPer base sequence quality: quality distribution along the reads.\nAdapter Content: evidence of adapter sequences remaining in the reads.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -149,6 +162,7 @@
     "section": "Step 3 — Trim reads with trimmomatic",
     "text": "Step 3 — Trim reads with trimmomatic\ntrimmomatic can detect adapters in paired-end data, trim low-quality tails, filter short reads.\nCreate the output directories:\nmkdir -p results/trimmed results/trimmomatic\nRun trimmomatic:\ntrimmomatic PE \\\n  -threads 2 \\\n  -phred33 \\\n  data/SRR26396743_1.fastq.gz \\\n  data/SRR26396743_2.fastq.gz \\\n  results/trimmed/SRR26396743_1_paired.fastq.gz \\\n  results/trimmed/SRR26396743_1_unpaired.fastq.gz \\\n  results/trimmed/SRR26396743_2_paired.fastq.gz \\\n  results/trimmed/SRR26396743_2_unpaired.fastq.gz \\\n  TRAILING:20 \\\n  SLIDINGWINDOW:4:20 \\\n  MINLEN:50\nWhat do the options mean?\n\nPE: Processes paired-end reads.\n-threads 2: Uses two CPU threads.\n-phred33: Specifies the Phred+33 quality score encoding.\nTRAILING:20: Removes low-quality bases from the ends of reads when their quality score is below 20.\nSLIDINGWINDOW:4:20: Trims a read when the average quality score in a four-base sliding window falls below 20.\nMINLEN:50: Discards reads shorter than 50 bases after trimming.\npaired: Output files containing reads whose mates both pass filtering.\nunpaired: Output files containing reads whose mates do not both pass filtering.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -160,6 +174,7 @@
     "section": "Step 4 — Check the trimmed reads",
     "text": "Step 4 — Check the trimmed reads\nRun FastQC on the cleaned files:\nmkdir -p results/qc_trimmed\nfastqc -t 2 -o results/qc_trimmed results/trimmed/*.fastq.gz\nCombine the reports:\nmultiqc results/qc_trimmed -o results/qc_trimmed\nOpen the report:\nopen results/qc_trimmed/multiqc_report.html\nCompare the raw and trimmed reports.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -171,6 +186,7 @@
     "section": "Step 5 — Assemble the reads with SPAdes",
     "text": "Step 5 — Assemble the reads with SPAdes\nAn assembler joins overlapping reads into longer sequences called contigs. When paired-end information links contigs together, they can be ordered into scaffolds. SPAdes builds a de Bruijn graph from the reads and uses the R1/R2 pairing to resolve ambiguities.\nRun SPAdes on the trimmed reads:\nspades.py \\\n  -1 results/trimmed/SRR26396743_1_paired.fastq.gz \\\n  -2 results/trimmed/SRR26396743_2_paired.fastq.gz \\\n  --meta \\\n  -t 2 \\\n  -o results/spades\n\n\n\nOption\nPurpose\n\n\n\n\n-1, -2\nTrimmed R1 and R2 files (paired reads)\n\n\n--meta\nmetagenomic mode\n\n\n-t 2\nUse two threads\n\n\n-o\nOutput directory\n\n\n\nWhen SPAdes finishes, look at the output folder:\nls results/spades\nThe main files are:\n\ncontigs.fasta: assembled contigs\nscaffolds.fasta: contigs linked into scaffolds using paired-end information\nspades.log: log of the run\n\nList the five longest contigs:\nseqkit sort -l -r results/spades/contigs.fasta | seqkit fx2tab -n -l | head -5\n\n\n\n\n\n\nTipresult\n\n\n\n\n\n\n\n\nMetric\nContigs\nScaffolds\n\n\n\n\nNumber of sequences\n14\n12\n\n\nTotal length (bp)\n30,249\n30,449\n\n\nLongest sequence (bp)\n12,657\n21,827\n\n\nN50 (bp)\n9,070\n21,827\n\n\nN50_num\n2\n1\n\n\nNumber of N bases\n0\n200",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -182,6 +198,7 @@
     "section": "Step 6 — Which organisms are in the reads? (Kraken2 or BLAST)",
     "text": "Step 6 — Which organisms are in the reads? (Kraken2 or BLAST)\nAssembling is not enough: we must verify that the sequences really come from the expected organism, and detect possible contamination (human DNA, bacteria, other viruses). Two complementary approaches are available.\n\nOption A — Kraken2 on the reads\nKraken2 assigns a taxonomic label to each read by comparing its k-mers to a reference database. It is fast and gives an overview of all the organisms in the sample.\nCreate the output directory:\nmkdir -p results/kraken2\nRun Kraken2 on the trimmed read pairs. Replace db/kraken2 with the path of the Kraken2 database provided for the course:\nkraken2 \\\n  --db db/kraken2 \\\n  --paired \\\n  --gzip-compressed \\\n  --threads 2 \\\n  --report results/kraken2/SRR26396743.report \\\n  --output results/kraken2/SRR26396743.kraken \\\n  results/trimmed/SRR26396743_1.fastq.gz \\\n  results/trimmed/SRR26396743_2.fastq.gz\nLook at the taxonomic summary:\nhead -20 results/kraken2/SRR26396743.report\nThe report has six columns: percentage of reads in the clade, number of reads in the clade, number of reads assigned directly to the taxon, rank code (U unclassified, D domain, G genus, S species, …), NCBI taxonomy ID, and scientific name.\nShow only the species-level lines, sorted by percentage:\nawk '$4==\"S\"' results/kraken2/SRR26396743.report | sort -k1,1nr | head -10\nNote: a complete Kraken2 database (e.g. Standard) is very large. For this practical, a small database (such as a viral or MiniKraken index) is sufficient. Indexes are listed at https://benlangmead.github.io/aws-indexes/k2.\n\n\nOption B — BLAST on the contigs\nBLAST aligns a sequence against a reference database and reports the best matches. It is slower but more precise, and works well on a few long contigs.\nExtract the longest contig:\nseqkit sort -l -r results/spades/contigs.fasta | seqkit head -n 1 &gt; results/spades/longest_contig.fasta\nRun blastn against the NCBI nucleotide database (remote search, internet connection required):\nblastn \\\n  -query results/spades/longest_contig.fasta \\\n  -db nt \\\n  -remote \\\n  -max_target_seqs 5 \\\n  -outfmt \"6 qseqid sseqid stitle pident length evalue bitscore\" \\\n  -out results/spades/longest_contig.blast.tsv\ncat results/spades/longest_contig.blast.tsv\nThe columns are: query ID, subject ID, subject title, percent identity, alignment length, E-value, and bit score.\nYou can also paste the sequence into the web interface: https://blast.ncbi.nlm.nih.gov/Blast.cgi (choose Nucleotide BLAST).",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -193,6 +210,7 @@
     "section": "Step 7 — Evaluate the assembly with QUAST",
     "text": "Step 7 — Evaluate the assembly with QUAST\nQUAST computes statistics describing an assembly. When a reference genome is provided, it also measures how much of the reference is covered by the assembly.\nCreate the output directory and run QUAST. Replace the reference path with the SARS-CoV-2 reference genome (NC_045512.2) provided in the course folder:\nmkdir -p results/quast\nquast.py \\\n  results/spades/contigs.fasta \\\n  results/spades/scaffolds.fasta \\\n  -r data/NC_045512.2.fasta \\\n  --min-contig 200 \\\n  -t 2 \\\n  -o results/quast\n\n\n\n\n\n\n\nOption\nPurpose\n\n\n\n\n-r\nReference genome (needed for genome fraction, misassemblies, NGA50)\n\n\n--min-contig 200\nIgnore contigs shorter than 200 bp\n\n\n-t 2\nUse two threads\n\n\n-o\nOutput directory\n\n\n\nDisplay the text report and open the HTML report:\ncat results/quast/report.txt\nopen results/quast/report.html\n\n\n\n\n\n\nTipInterpretation\n\n\n\n\n\nKey Assembly Quality Metrics\n\n1. Assembly statistics (reference-independent)\nThese metrics describe the assembled sequences without requiring a reference genome.\n\n\n\n\n\n\n\nMetric\nMeaning\n\n\n\n\n# contigs\nNumber of assembled contigs meeting the specified minimum length. Fewer contigs can indicate a more continuous assembly.\n\n\nLargest contig\nLength of the longest assembled contig, in base pairs (bp).\n\n\nTotal length\nSum of the lengths of all assembled contigs or scaffolds.\n\n\nTotal length (&gt;= 1,000 bp)\nCombined length of sequences that are at least 1,000 bp long.\n\n\nTotal length (&gt;= 10,000 bp)\nCombined length of sequences that are at least 10,000 bp long.\n\n\nTotal length (&gt;= 50,000 bp)\nCombined length of sequences that are at least 50,000 bp long.\n\n\nN50\nLength of the contig or scaffold at which sequences of that length or longer account for at least 50% of the total assembly length.\n\n\nL50\nMinimum number of the longest contigs or scaffolds needed to account for at least 50% of the total assembly length.\n\n\n# N's\nTotal number of ambiguous nucleotide positions (N) in the assembly, usually representing unresolved sequence gaps.\n\n\n\n\n\n2. Alignment-based statistics (reference-dependent)\nThese metrics evaluate the assembly by comparing it with a reference genome.\n\n\n\n\n\n\n\nMetric\nMeaning\n\n\n\n\nGenome fraction (%)\nPercentage of the reference genome covered by the assembled sequences.\n\n\nDuplication ratio\nRatio of the total aligned length, including overlapping or duplicated alignments, to the reference genome length. A value near 1 generally indicates limited excess aligned sequence.\n\n\nLargest alignment\nLength of the longest alignment between an assembled sequence and the reference genome.\n\n\nTotal aligned length\nSum of the lengths of assembly regions aligned to the reference, according to the tool’s alignment rules.\n\n\nNGA50\nReference-based continuity metric calculated from aligned assembly blocks using the reference genome length as the benchmark.\n\n\nLGA50\nMinimum number of the longest aligned blocks needed to cover at least 50% of the reference genome.\n\n\n# misassemblies\nNumber of structural inconsistencies detected when aligning the assembly to the reference genome.\n\n\nMisassembled contigs length\nTotal length of contigs classified as misassembled by the evaluation tool.\n\n\n# mismatches per 100 kbp\nNumber of aligned nucleotide positions that differ from the reference, normalized to 100,000 aligned bases.\n\n\n# indels per 100 kbp\nNumber of insertion and deletion events detected in the alignments, normalized to 100,000 aligned bases.\n\n\n# N's per 100 kbp\nNumber of ambiguous bases (N) per 100,000 bases of assembly sequence.\n\n\n\n\n\n3. Interpretation guidelines\n\nContinuity: Fewer contigs, a larger longest contig, and higher N50/NGA50 values generally indicate a more continuous assembly.\nCompleteness: A higher genome fraction indicates that more of the reference genome is represented in the assembly.\nStructural consistency: Fewer detected misassemblies indicate better agreement with the reference structure.\nSequence accuracy: Lower mismatch and indel rates indicate fewer differences from the reference, although genuine biological variation can also contribute to these differences.\nAmbiguous bases: A high number of N bases indicates unresolved sequence positions, often associated with gaps in scaffolds.\nTotal length: An assembly length close to the expected genome length can be reassuring, but does not by itself demonstrate completeness or accuracy.\n\nImportant: No single metric is sufficient to assess assembly quality. Interpret continuity, completeness, structural consistency, and sequence accuracy together. Metrics such as N50 and NGA50 are not directly interchangeable because they use different reference-length benchmarks.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
     ]
@@ -204,8 +222,163 @@
     "section": "Step 8 — Summarize your results",
     "text": "Step 8 — Summarize your results\nComplete this table with your own values:\n\n\n\nStage\nMetric\nValue\n\n\n\n\nRaw reads\nRead pairs\n\n\n\nRaw reads\nAdapter content detected?\n\n\n\nTrimming\nRead pairs after trimmomatic\n\n\n\nTrimming\nQ30 rate after filtering\n\n\n\nAssembly\nNumber of contigs\n\n\n\nAssembly\nLongest contig (bp)\n\n\n\nIdentification\nDominant species (Kraken2 / BLAST)\n\n\n\nIdentification\nContamination detected?\n\n\n\nAssembly quality\nN50\n\n\n\nAssembly quality\nGenome fraction (%)\n\n\n\n\nNext: Mapping.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "From FASTQ to assembly: QC, trimming, assembly and identification"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html",
+    "href": "exercises/00_second_command_line.html",
+    "title": "Exos - Command line basics",
+    "section": "",
+    "text": "Practise the basic Linux commands and, above all, paths, on a small project that looks like the one you will use for the pipelines.\nTime: about 45 minutes. Rules: type every command yourself (no copy-paste for parts A to C), and run pwd whenever you are unsure where you are. Solutions are hidden below each part: try first, then check.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#goal",
+    "href": "exercises/00_second_command_line.html#goal",
+    "title": "Exos - Command line basics",
+    "section": "",
+    "text": "Practise the basic Linux commands and, above all, paths, on a small project that looks like the one you will use for the pipelines.\nTime: about 45 minutes. Rules: type every command yourself (no copy-paste for parts A to C), and run pwd whenever you are unsure where you are. Solutions are hidden below each part: try first, then check.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-a-where-am-i",
+    "href": "exercises/00_second_command_line.html#part-a-where-am-i",
+    "title": "Exos - Command line basics",
+    "section": "Part A — Where am I?",
+    "text": "Part A — Where am I?\n\nOpen a terminal. Which command shows your current folder?\nList the content of your home folder with sizes in a readable format, including hidden files.\nGo to the root of the system (/), list it, then come back to the previous folder in one command.\nGo to your home folder in two different ways.\n\n\n\n\n\n\n\nNoteSolution A\n\n\n\n\n\npwd                # 1. e.g. /home/awa\nls -lah            # 2. -l long, -a hidden files, -h readable sizes\ncd /               # 3. go to the root\nls\ncd -               #    back to the previous folder\ncd ~               # 4. way 1\ncd                 #    way 2 (no argument = home)",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-b-build-the-project",
+    "href": "exercises/00_second_command_line.html#part-b-build-the-project",
+    "title": "Exos - Command line basics",
+    "section": "Part B — Build the project",
+    "text": "Part B — Build the project\nWe create the following tree in your home folder:\nbridge/\n├── data/\n├── ref/\n├── results/\n│   └── trimmed/\n└── logs/\n\nCreate it with one mkdir command.\nGo into bridge and check the tree with ls -R.\nCreate an empty file logs/notes.txt without leaving the bridge folder.\n\n\n\n\n\n\n\nNoteSolution B\n\n\n\n\n\nmkdir -p ~/bridge/{data,ref,results/trimmed,logs}   # 1. -p creates parents, {} makes several folders\ncd ~/bridge                                         # 2.\nls -R\ntouch logs/notes.txt                                # 3. relative path from bridge/\nExpected ls -R output (order may vary):\n.:\ndata  logs  ref  results\n\n./data:\n\n./logs:\n\n./ref:\n\n./results:\ntrimmed\n\n./results/trimmed:",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-c-create-small-data-files",
+    "href": "exercises/00_second_command_line.html#part-c-create-small-data-files",
+    "title": "Exos - Command line basics",
+    "section": "Part C — Create small data files",
+    "text": "Part C — Create small data files\nReal FASTQ files are huge, so we create a tiny fake one. The command cat &gt; file &lt;&lt; 'EOF' writes everything you type, up to the line EOF, into the file.\nFrom ~/bridge, run:\ncat &gt; data/sample1_R1.fastq &lt;&lt; 'EOF'\n@read1\nACGTACGTAC\n+\nIIIIHHHHGG\n@read2\nGGGGCCCCAA\n+\nIIIIIIIIII\n@read3\nTTTTAAAACC\n+\nHHHHHHHHHH\nEOF\ncat &gt; ref/reference.fasta &lt;&lt; 'EOF'\n&gt;segment_L\nACGTACGTACGTACGTACGT\n&gt;segment_S\nTTTTGGGGCCCCAAAATTTT\nEOF\nNow answer, using commands (not by eye):\n\nHow many lines does sample1_R1.fastq have? How many reads is that (4 lines per read)?\nDisplay only the first read (first 4 lines).\nHow many sequences are in reference.fasta? Display their names only.\nCreate sample1_R2.fastq as a copy of sample1_R1.fastq, then check with ls -lh data.\n\n\n\n\n\n\n\nNoteSolution C\n\n\n\n\n\nwc -l data/sample1_R1.fastq              # 1. 12 lines -&gt; 12 / 4 = 3 reads\nhead -n 4 data/sample1_R1.fastq          # 2.\ngrep -c \"&gt;\" ref/reference.fasta          # 3. 2 sequences\ngrep \"&gt;\" ref/reference.fasta             #    &gt;segment_L and &gt;segment_S\ncp data/sample1_R1.fastq data/sample1_R2.fastq   # 4.\nls -lh data",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-d-paths-the-most-important-part",
+    "href": "exercises/00_second_command_line.html#part-d-paths-the-most-important-part",
+    "title": "Exos - Command line basics",
+    "section": "Part D — Paths (the most important part)",
+    "text": "Part D — Paths (the most important part)\n\nGo into results/trimmed and run pwd.\nFrom there, copy sample1_R1.fastq from data into the current folder using a relative path (use ..).\nRename the copy to sample1_R1_trimmed.fastq.\nFrom the same folder (results/trimmed), copy sample1_R2.fastq into it using an absolute path (use ~).\nWithout leaving the folder, display the first 4 lines of ../../ref/reference.fasta.\nGo back to ~/bridge in one command, using a relative path, then in one command using an absolute path.\n\n\n\n\n\n\n\nNoteSolution D\n\n\n\n\n\ncd results/trimmed                                    # 1.\npwd                                                   #    /home/awa/bridge/results/trimmed\ncp ../../data/sample1_R1.fastq .                      # 2. ../../ = two levels up, . = here\nmv sample1_R1.fastq sample1_R1_trimmed.fastq          # 3.\ncp ~/bridge/data/sample1_R2.fastq .                   # 4. absolute path works from anywhere\nhead -n 4 ../../ref/reference.fasta                   # 5.\ncd ../..                                              # 6. relative\ncd ~/bridge                                           #    absolute\nWhy ../..? results/trimmed → .. is results → ../.. is bridge.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-e-wildcards",
+    "href": "exercises/00_second_command_line.html#part-e-wildcards",
+    "title": "Exos - Command line basics",
+    "section": "Part E — Wildcards",
+    "text": "Part E — Wildcards\n\nCreate sample2_R1.fastq and sample2_R2.fastq as copies of the sample1 files (in data/).\nList only the R1 files of data/.\nList sample1_R1.fastq and sample1_R2.fastq with one pattern using { }.\nList all the files of data/ whose name starts with sample followed by exactly one character, then _R1.\nBefore deleting anything: list with ls the files you would remove with rm data/sample2*, then delete them. Explain why you ran ls first.\n\n\n\n\n\n\n\nNoteSolution E\n\n\n\n\n\ncp data/sample1_R1.fastq data/sample2_R1.fastq        # 1.\ncp data/sample1_R2.fastq data/sample2_R2.fastq\nls data/*_R1.fastq                                    # 2.\nls data/sample1_R{1,2}.fastq                          # 3.\nls data/sample?_R1.fastq                              # 4.\nls data/sample2*                                      # 5. check what matches...\nrm data/sample2*                                      #    ...then delete\nrm is permanent and the * may match more files than expected, so ls with the same pattern shows exactly what will be deleted.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-f-pipes-and-redirections",
+    "href": "exercises/00_second_command_line.html#part-f-pipes-and-redirections",
+    "title": "Exos - Command line basics",
+    "section": "Part F — Pipes and redirections",
+    "text": "Part F — Pipes and redirections\nFrom ~/bridge:\n\nSave the list of files of data/ in logs/files.txt.\nAdd the line Exercise 0 - part F done at the end of logs/notes.txt (do not erase the file).\nCount the files of data/ with a pipe (no file involved).\nCount how many lines of data/sample1_R1.fastq start with @ using grep, and compare with your answer to C1. Why is the result the same here?\nRun ls data/does_not_exist 2&gt; logs/errors.txt and read logs/errors.txt. What did 2&gt; save?\n\n\n\n\n\n\n\nNoteSolution F\n\n\n\n\n\nls data &gt; logs/files.txt                      # 1. &gt; replaces the file\necho \"Exercise 0 - part F done\" &gt;&gt; logs/notes.txt   # 2. &gt;&gt; appends\nls data | wc -l                               # 3. 3 files (sample1_R1, sample1_R2... plus sample2 if not deleted)\ngrep -c \"^@\" data/sample1_R1.fastq            # 4. 3\ncat logs/errors.txt                           # 5. the error message\n\n^@ means “line starting with @”. It gives 3 here because each read has one header line. Warning: in real files, a quality line can also start with @ (it is a valid quality character), so counting @ is not a reliable way to count reads. Use wc -l divided by 4, or seqkit stats.\n2&gt; saves the error messages (stream 2), not the normal output.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-g-compressed-files",
+    "href": "exercises/00_second_command_line.html#part-g-compressed-files",
+    "title": "Exos - Command line basics",
+    "section": "Part G — Compressed files",
+    "text": "Part G — Compressed files\n\nCompress data/sample1_R1.fastq keeping the original (gzip -k).\nCompare the sizes of the two files with ls -lh. (With 3 reads the gain is tiny, but with real data it is large.)\nDisplay the first 4 lines of the compressed file without decompressing it.\nCompute the number of reads of the .gz file in one command line.\nUse file on both files. What do you see?\n\n\n\n\n\n\n\nNoteSolution G\n\n\n\n\n\ngzip -k data/sample1_R1.fastq                                # 1. creates sample1_R1.fastq.gz\nls -lh data/sample1_R1.fastq*                                # 2.\nzcat data/sample1_R1.fastq.gz | head -n 4                    # 3.\necho $(( $(zcat data/sample1_R1.fastq.gz | wc -l) / 4 ))     # 4. 3\nfile data/sample1_R1.fastq data/sample1_R1.fastq.gz          # 5. \"ASCII text\" vs \"gzip compressed data\"\nIf -k is not accepted (very old gzip), use gzip -c data/sample1_R1.fastq &gt; data/sample1_R1.fastq.gz.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-h-a-loop-and-a-variable",
+    "href": "exercises/00_second_command_line.html#part-h-a-loop-and-a-variable",
+    "title": "Exos - Command line basics",
+    "section": "Part H — A loop and a variable",
+    "text": "Part H — A loop and a variable\n\nWrite a loop that prints, for each *_R1.fastq file of data/, its name and its number of reads, in the form data/sample1_R1.fastq: 3 reads.\nRedo the loop but save the output in logs/read_counts.txt.\nUse a variable SAMPLE=sample1 to display data/sample1_R1.fastq and data/sample1_R2.fastq with echo.\n\n\n\n\n\n\n\nNoteSolution H\n\n\n\n\n\nfor f in data/*_R1.fastq        # 1.\ndo\n  echo \"$f: $(( $(wc -l &lt; $f) / 4 )) reads\"\ndone\n\nfor f in data/*_R1.fastq        # 2. redirect the whole loop\ndo\n  echo \"$f: $(( $(wc -l &lt; $f) / 4 )) reads\"\ndone &gt; logs/read_counts.txt\ncat logs/read_counts.txt\n\nSAMPLE=sample1                  # 3. no spaces around =\necho \"data/${SAMPLE}_R1.fastq\"\necho \"data/${SAMPLE}_R2.fastq\"\nwc -l &lt; $f (with &lt;) prints only the number, without the file name.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-i-find-the-error",
+    "href": "exercises/00_second_command_line.html#part-i-find-the-error",
+    "title": "Exos - Command line basics",
+    "section": "Part I — Find the error",
+    "text": "Part I — Find the error\nEach command fails. Explain why and fix it. Run them from ~/bridge.\ncd Data                         # 1\nls /data                        # 2\ncat data/sample1_r1.fastq       # 3\nmkdir my results                # 4  (check with ls what was created!)\necho \"#!/bin/bash\" &gt; run.sh\necho \"echo Hello\" &gt;&gt; run.sh\n./run.sh                        # 5\n\n\n\n\n\n\nNoteSolution I\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n#\nError\nWhy\nFix\n\n\n\n\n1\nNo such file or directory\nLinux is case-sensitive: the folder is data, not Data\ncd data\n\n\n2\nNo such file or directory\n/data is an absolute path (at the root of the system)\nls data (relative) or ls ~/bridge/data\n\n\n3\nNo such file or directory\nsample1_r1 ≠ sample1_R1 (case)\ncat data/sample1_R1.fastq (use Tab!)\n\n\n4\nNo error, but two folders my and results are created (or results already exists)\nthe space separates two arguments\nmkdir my_results or mkdir \"my results\" (avoid spaces)\n\n\n5\nPermission denied\nthe file is not executable\nchmod +x run.sh then ./run.sh, or bash run.sh\n\n\n\nClean up after question 4: rmdir my (only works if empty; do not remove results!).",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#part-j-final-challenge",
+    "href": "exercises/00_second_command_line.html#part-j-final-challenge",
+    "title": "Exos - Command line basics",
+    "section": "Part J — Final challenge",
+    "text": "Part J — Final challenge\nWithout using cd at all, from any folder (start with cd /tmp):\n\nDisplay the first 4 lines of ~/bridge/data/sample1_R1.fastq.\nCreate the folder ~/bridge/results/qc.\nWrite the number of reads of sample1_R1.fastq in ~/bridge/results/qc/n_reads.txt.\nDisplay the whole project tree with ls -R ~/bridge.\n\n\n\n\n\n\n\nNoteSolution J\n\n\n\n\n\ncd /tmp\nhead -n 4 ~/bridge/data/sample1_R1.fastq                                   # 1.\nmkdir -p ~/bridge/results/qc                                               # 2.\necho $(( $(wc -l &lt; ~/bridge/data/sample1_R1.fastq) / 4 )) &gt; ~/bridge/results/qc/n_reads.txt   # 3.\ncat ~/bridge/results/qc/n_reads.txt                                        #    3\nls -R ~/bridge                                                             # 4.\nAbsolute paths (with ~) work from anywhere, which is why this works from /tmp.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#clean-up-optional",
+    "href": "exercises/00_second_command_line.html#clean-up-optional",
+    "title": "Exos - Command line basics",
+    "section": "Clean up (optional)",
+    "text": "Clean up (optional)\nCheck twice what you delete:\nls ~/bridge        # is it really the practice folder?\nrm -r ~/bridge",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
+    ]
+  },
+  {
+    "objectID": "exercises/00_second_command_line.html#checklist",
+    "href": "exercises/00_second_command_line.html#checklist",
+    "title": "Exos - Command line basics",
+    "section": "Checklist",
+    "text": "Checklist\nYou are ready for the next exercise if you can:\n\nsay where you are (pwd) and what is around you (ls)\nexplain the difference between an absolute and a relative path\nuse ., .., ~ and -\ncreate, copy, move and delete files and folders safely\nread the start of a big or compressed file (head, zcat)\ncount lines and reads, and use grep\nchain commands with | and save results with &gt; and &gt;&gt;\nunderstand No such file or directory and Permission denied\n\nNext: FASTQ and quality control.",
+    "crumbs": [
+      "Basic command line",
+      "Exos - Command line basics"
     ]
   },
   {
@@ -215,6 +388,7 @@
     "section": "",
     "text": "Tips = the genomes you sequenced or downloaded. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
     ]
@@ -226,6 +400,7 @@
     "section": "",
     "text": "Tips = the genomes you sequenced or downloaded. Internal nodes = inferred common ancestors.\nBranch length = amount of change (substitutions per site), not time (unless the tree is time-scaled).\nClade = an ancestor and all its descendants. Rotating the branches around a node does not change the tree.\nRoot = where the tree starts. Without a root you cannot say who is ancestral.\nSupport (bootstrap) = how robust a branch is. With ultrafast bootstrap, a value ≥ 95 is considered strong; be careful with lower values.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
     ]
@@ -237,6 +412,7 @@
     "section": "What a tree can and cannot tell",
     "text": "What a tree can and cannot tell\n\n\n\n\n\n\n\nIt can show\nIt cannot prove\n\n\n\n\nwhich genomes are closely related\nwho infected whom\n\n\nwhether cases form one cluster or several introductions\nthe direction of transmission\n\n\nwhether a lineage spreads across regions\nthat two similar genomes are epidemiologically linked",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
     ]
@@ -248,6 +424,7 @@
     "section": "Exercise — read your tree",
     "text": "Exercise — read your tree\nOpen your tree in iTOL (results/phylo/tree.treefile), rooted on NC_045512.2 and coloured by lineage as in the previous page. The collection dates and countries of the references are in the table of NCBI Virus (you can add these columns with Customize columns).\nQuestions\n\nWhere is your sample, SRR26396743? Who are its closest relatives?\nDo the references of each lineage form a clade? Is there a lineage that does not?\nWhich part of the tree is the oldest? Check it against the collection dates.\nWhich are the longest branches? What do they mean?\nAre the bootstrap values high around your sample? What does it tell you?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own tree.\n\nYour sample sits in the clade of the closest reference found in Lineage assignment. If it is next to a reference of a given lineage, that lineage is a good candidate.\nReferences of the same lineage normally group together. A lineage that is split suggests a labelling issue, or too few genomes to resolve it.\nThe oldest genomes (early 2020) are close to the root; the tree order should match the collection dates.\nLong branches mean many substitutions between a genome and its relatives: either a lineage that evolved fast (for example the first Omicron lineages) or a sequence with errors or missing data.\nA bootstrap of 95 or more means that the grouping is well supported. Low values around the sample mean that its position is uncertain: the genome may be incomplete, or the closest references are too similar to be separated.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
     ]
@@ -259,6 +436,7 @@
     "section": "Final question",
     "text": "Final question\nTwo genomes are identical. List three explanations other than “A infected B”.\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\n\nToo few mutations to tell them apart: viruses change slowly, so unrelated cases can have the same sequence over a short period.\nA common source that infected both without contact between them.\nA common ancestor several steps earlier, with unsampled intermediate cases (you only see part of the chain).\nLaboratory contamination or barcode bleed between the two samples.\nMissing data: identical on the positions that could be compared (N regions hide differences).\n\n\n\n\nNext: Communicating genomic evidence — module 4.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Read a phylogenetic tree"
     ]
@@ -270,6 +448,7 @@
     "section": "",
     "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference. For a tree, we also need reference genomes of several lineages to place our own genome in context.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / lineage\nis it the right virus, the right lineage?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\ncomplete genome, few ambiguous bases (N)\n\n\nWell documented\naccession number, host, country, collection date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
@@ -281,6 +460,7 @@
     "section": "",
     "text": "Reads are mapped to one reference, and the consensus is built from that mapping. A reference that is too divergent makes reads map badly (or not at all), hides real variants and biases the consensus towards the reference. For a tree, we also need reference genomes of several lineages to place our own genome in context.\n\n\n\n\n\n\n\nCriterion\nQuestion\n\n\n\n\nSame species / lineage\nis it the right virus, the right lineage?\n\n\nClose to your samples\nfewer differences = better mapping\n\n\nComplete and good quality\ncomplete genome, few ambiguous bases (N)\n\n\nWell documented\naccession number, host, country, collection date\n\n\nConsistent across the study\nthe same reference for all the samples you compare",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
@@ -292,6 +472,7 @@
     "section": "Our sample",
     "text": "Our sample\nOur sample is the consensus genome built in the previous exercises from the run SRR26396743:\nls results/consensus/\nseqkit stats results/consensus/SRR26396743.fa\nSince the mapping exercise we have used NC_045512.2 (Wuhan-Hu-1), the RefSeq reference of SARS-CoV-2, as the coordinate system for this sample.\nQuestions: what is the length of the consensus? Why was Wuhan-Hu-1 a good reference to map these reads?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe length should be close to 29.9 kb, that of the SARS-CoV-2 genome. Wuhan-Hu-1 is the RefSeq reference of the right virus, a complete and well-documented genome, and the coordinate system used by the whole community (variant calling, lineage tools, primer schemes).",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
@@ -303,6 +484,7 @@
     "section": "Step 1 — Download references of several lineages from NCBI Virus",
     "text": "Step 1 — Download references of several lineages from NCBI Virus\nTo place our genome in a tree (next sessions), we need reference genomes of several lineages from the same database. Open NCBI Virus: https://www.ncbi.nlm.nih.gov/labs/virus and choose SARS-CoV-2 (taxid 2697049).\n\nIn the filters on the left, keep Nucleotide completeness: complete and Host: Homo sapiens.\nFilter by Pango lineage (or add the lineage column to the table with Customize columns) and choose one or two genomes per lineage.\nChoose lineages that span the pandemic: the ancestral lineage B (Wuhan-Hu-1, accession NC_045512.2), Alpha (B.1.1.7), Delta (B.1.617.2), Omicron (BA.1, BA.2, BA.5, XBB.1.5) and the lineages circulating when your sample was collected (look at the collection_date of the run SRR26396743 on its NCBI BioSample page).\nPrefer genomes with a full date and country, and with few ambiguous bases.\nSelect about 10–15 genomes, then Download → Nucleotide → FASTA → Build custom, and put Accession and Pango lineage in the definition line. Save the file as data/ncbi/lineage_refs.fasta.\n\nClean the names (no spaces, no |: the tree software does not like them):\nsed '/^&gt;/ { s/[ |][ |]*/_/g; s/_$// }' data/ncbi/lineage_refs.fasta &gt; data/ncbi/lineage_refs.clean.fasta\ngrep '&gt;' data/ncbi/lineage_refs.clean.fasta\nEach name should now look like ACCESSION_LINEAGE. Check that NC_045512.2 is in the list: it will be our root.\nQuestions: how many genomes did you keep? Which criteria did you use to choose them?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe criteria are the table at the top of the page: same species, complete genome, few N, documented (accession, lineage, date, country), and a good spread of lineages and dates so that the tree has meaningful comparisons. One genome per lineage is enough for this exercise; real studies use many more.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
@@ -314,6 +496,7 @@
     "section": "Final question",
     "text": "Final question\nWhy should all the samples of a study be mapped to the same reference?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nBecause differences are measured against the reference, with its coordinates. If each sample used another reference, positions would not correspond, mutations would not be comparable, and differences between references would be mistaken for differences between samples. One common reference = one common coordinate system = genomes you can align and compare.\n\n\n\nNext: Alignment.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Reference selection"
     ]
@@ -325,6 +508,7 @@
     "section": "",
     "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -336,6 +520,7 @@
     "section": "",
     "text": "A multiple sequence alignment puts homologous positions in the same column, so that each column can be compared between genomes. Phylogenetics and SNP counting both start from it.\n\nConsensus genomes obtained by mapping are already on the reference coordinates, but genomes downloaded from public databases can have different lengths, insertions and deletions.\nMAFFT is a fast, standard aligner for viral genomes.\nAlways look at the alignment (AliView, Jalview): never trust it blindly.\nColumns full of N or gaps carry no information.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -347,6 +532,7 @@
     "section": "Step 1 — Put all the genomes in one file",
     "text": "Step 1 — Put all the genomes in one file\nWe combine the lineage references downloaded from NCBI Virus and your consensus from the previous exercises. seqkit seq rewrites the file cleanly, and sed renames the header of the consensus.\nmkdir -p results/phylo\nseqkit seq data/ncbi/lineage_refs.clean.fasta &gt; results/phylo/all.fasta\nsed 's/^&gt;.*/&gt;SRR26396743/' results/consensus/SRR26396743.fa | seqkit seq &gt;&gt; results/phylo/all.fasta\ngrep -c '&gt;' results/phylo/all.fasta\ngrep '&gt;' results/phylo/all.fasta\nQuestion: how many sequences are there, and which one is your sample?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe number of references you downloaded plus one (your consensus, named SRR26396743).",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -358,6 +544,7 @@
     "section": "Step 2 — Check the quality of each genome before aligning",
     "text": "Step 2 — Check the quality of each genome before aligning\nCount the N in each sequence:\nseqkit fx2tab -n -l -B N results/phylo/all.fasta | awk '{printf \"%s\\t%d bp\\t%d N\\t%.2f%%\\n\", $1, $2, $3, 100*$3/$2}'\nQuestions\n\nWhich genome has the most N?\nIs your sample good enough to be placed on a tree? (remember the exercise Is this genome good enough?)\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own values. A genome with a large percentage of N (the course threshold is 10 %) has a position in the tree that is less reliable, because missing data can make it look closer to some genomes than it really is. If a reference has many N, replace it in NCBI Virus with a better one.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -369,6 +556,7 @@
     "section": "Step 3 — Align with MAFFT",
     "text": "Step 3 — Align with MAFFT\nmafft --auto --preservecase --thread 2 results/phylo/all.fasta &gt; results/phylo/aln.fasta\n(--preservecase keeps our upper-case letters. For a few dozen genomes of 30 kb this takes seconds to minutes.)\nseqkit stats results/phylo/aln.fasta\nQuestion: how many sequences and how many alignment columns? Why is the number of columns slightly larger than the genome length?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe number of sequences is the same as in all.fasta. The number of columns is at least the length of the longest genome: when one genome has an insertion or a different start or end, MAFFT adds gaps (-) in the others so that homologous positions stay in the same column.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -380,6 +568,7 @@
     "section": "Step 4 — Inspect the alignment",
     "text": "Step 4 — Inspect the alignment\nOpen results/phylo/aln.fasta in AliView or Jalview (https://www.jalview.org).\nQuestions\n\nAre the ends of the genomes aligned in the same way for all the sequences?\nDo you see blocks of - or N? In which genomes?\nAre the differences between genomes spread over the genome or concentrated in some regions?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nLook at your own alignment. The ends of public genomes are often ragged (different start and stop, or poly-A tails), blocks of N come from regions that were not covered, and differences between lineages are concentrated in some genes (the spike gene carries many lineage-defining changes). Real surveillance pipelines trim the ragged ends and mask known problematic sites before building trees.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
@@ -391,14 +580,99 @@
     "section": "Step 5 — SNP distances",
     "text": "Step 5 — SNP distances\nHow many differences between your sample and each genome? snp-dists ignores N and gaps in each pair:\nsnp-dists -m results/phylo/aln.fasta | awk '$1==\"SRR26396743\" && $2!=\"SRR26396743\"' | sort -k3,3n | column -t\nQuestions\n\nWhich genomes are the closest to your sample, and how many SNPs apart?\nHow many SNPs separate your sample from Wuhan-Hu-1 (NC_045512.2)?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nRead the values in your own table. The closest genomes have the smallest numbers; the distance to Wuhan-Hu-1 gives the amount of evolution since the beginning of the pandemic. Keep this table, we use it for the lineage assignment.\n\n\n\nNext: Lineage assignment.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Multiple sequence alignment"
     ]
   },
   {
+    "objectID": "course/01-concepts.html",
+    "href": "course/01-concepts.html",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "",
+    "text": "Both start with the same raw material (FASTQ files) and the same first steps (quality control, trimming, contamination check). They differ in how the genome is rebuilt:\n\nDe novo assembly: reads are stitched together without any reference (new or very divergent virus, bacteria).\nMapping (reference-based): reads are aligned to a known genome, then a consensus is called (known virus: SARS-CoV-2, Rift Valley fever, dengue…).\n\n\n\n\n\n\n\n\nflowchart TD\n  A[\"FASTQ (R1 + R2)\"] --&gt; B[\"1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads\"]\n  B --&gt; C[\"2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases\"]\n  C --&gt; D[\"3. Assembly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds\"]\n  D --&gt; E[\"4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?\"]\n  E --&gt; F[\"5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction\"]\n  classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;\n  class B,C,D,E qc;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1\nFastQC\nper-base quality, adapters, GC content, duplication\nhtml\n\n\n2\ntrimmomatic\ntrims adapters and low-quality ends, drops short reads\nfastq.gz\n\n\n3\nFastQC + MultiQC\nsame check after trimming; MultiQC merges all samples in one page\nhtml\n\n\n4\nKraken2 +BLAST\nassigns each read to a taxon (virus, human, bacteria…); needs a database\ntxt\n\n\n5\nSPAdes\nbuilds contigs ( --meta for metagenomes)\nfasta\n\n\n6\nQUAST\nassembly statistics, comparison to a reference if you give one\nhtml\n\n\n\nOptional additions: seqkit stats (quick read counts), Prokka / Bakta (gene annotation for bacteria), KrakenTools (keep only the reads of the target virus before assembling).\n\n\n\n\n\n\n\n\n\nImportantSteps you do NOT repeat\n\n\n\nIf you already ran pipeline 1 on the same samples, steps 1 to 3 are already done (FastQC, trimmomatic, MultiQC, Kraken2). Reuse the trimmed reads in results/trimmed/. Only the steps in white below are new.\n\n\n\n\n\n\n\nflowchart TD\n  A[\"Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, trimmomatic, MultiQC)\"] --&gt; B[\"4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference\"]\n  B --&gt; C[\"5. Sorting&lt;br/&gt;samtools&lt;br/&gt;sorted BAM and mapping statistics\"]\n  C --&gt; D[\"6. Variant calling&lt;br/&gt;freebayes - bcftools &lt;br/&gt;list the variants (VCF)\"]\n  D --&gt; E[\"7. Generate consensus&lt;br/&gt;samtools + ivar &lt;br/&gt;build the genome, mask low depth with N\"]\n  E --&gt; F[\"8. Genome QC&lt;br/&gt;% N, mean depth, negative control\"]\n  F --&gt; G[\"9. Lineage (Pangolin, Nextclade),&lt;br/&gt;MAFFT alignment, IQ-TREE\"]\n  classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;\n  class A done;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1–4\nFastQC, trimmomatic, MultiQC, Kraken2\nalready done (see pipeline 1)\nfastq.gz\n\n\n5\nbwa (or minimap2)\naligns each read to the reference\nSAM\n\n\n6\nsamtools\nsorts, indexes and counts mapped reads\nbam, .bai\n\n\n7\nsamtools flagstat / depth / coverage\nhow many reads cover each position\ntxt\n\n\n8\nivar consensus\nmajority base at each position; N where depth is too low\nFASTA\n\n\n9\nfreebayes / bcftools\ncalls SNPs and small indels\nVCF\n\n\n10\nawk / seqkit / summary table\ndecide if the genome is good enough\ncsv\n\n\n11\nPangolin or Nextclade, MAFFT, IQ-TREE\nlineage and phylogeny (modules 2–3)\ntree",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#two-ways-to-build-a-genome-from-illumina-reads",
+    "href": "course/01-concepts.html#two-ways-to-build-a-genome-from-illumina-reads",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "",
+    "text": "Both start with the same raw material (FASTQ files) and the same first steps (quality control, trimming, contamination check). They differ in how the genome is rebuilt:\n\nDe novo assembly: reads are stitched together without any reference (new or very divergent virus, bacteria).\nMapping (reference-based): reads are aligned to a known genome, then a consensus is called (known virus: SARS-CoV-2, Rift Valley fever, dengue…).\n\n\n\n\n\n\n\n\nflowchart TD\n  A[\"FASTQ (R1 + R2)\"] --&gt; B[\"1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads\"]\n  B --&gt; C[\"2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases\"]\n  C --&gt; D[\"3. Assembly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds\"]\n  D --&gt; E[\"4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?\"]\n  E --&gt; F[\"5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction\"]\n  classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;\n  class B,C,D,E qc;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1\nFastQC\nper-base quality, adapters, GC content, duplication\nhtml\n\n\n2\ntrimmomatic\ntrims adapters and low-quality ends, drops short reads\nfastq.gz\n\n\n3\nFastQC + MultiQC\nsame check after trimming; MultiQC merges all samples in one page\nhtml\n\n\n4\nKraken2 +BLAST\nassigns each read to a taxon (virus, human, bacteria…); needs a database\ntxt\n\n\n5\nSPAdes\nbuilds contigs ( --meta for metagenomes)\nfasta\n\n\n6\nQUAST\nassembly statistics, comparison to a reference if you give one\nhtml\n\n\n\nOptional additions: seqkit stats (quick read counts), Prokka / Bakta (gene annotation for bacteria), KrakenTools (keep only the reads of the target virus before assembling).\n\n\n\n\n\n\n\n\n\nImportantSteps you do NOT repeat\n\n\n\nIf you already ran pipeline 1 on the same samples, steps 1 to 3 are already done (FastQC, trimmomatic, MultiQC, Kraken2). Reuse the trimmed reads in results/trimmed/. Only the steps in white below are new.\n\n\n\n\n\n\n\nflowchart TD\n  A[\"Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, trimmomatic, MultiQC)\"] --&gt; B[\"4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference\"]\n  B --&gt; C[\"5. Sorting&lt;br/&gt;samtools&lt;br/&gt;sorted BAM and mapping statistics\"]\n  C --&gt; D[\"6. Variant calling&lt;br/&gt;freebayes - bcftools &lt;br/&gt;list the variants (VCF)\"]\n  D --&gt; E[\"7. Generate consensus&lt;br/&gt;samtools + ivar &lt;br/&gt;build the genome, mask low depth with N\"]\n  E --&gt; F[\"8. Genome QC&lt;br/&gt;% N, mean depth, negative control\"]\n  F --&gt; G[\"9. Lineage (Pangolin, Nextclade),&lt;br/&gt;MAFFT alignment, IQ-TREE\"]\n  classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;\n  class A done;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1–4\nFastQC, trimmomatic, MultiQC, Kraken2\nalready done (see pipeline 1)\nfastq.gz\n\n\n5\nbwa (or minimap2)\naligns each read to the reference\nSAM\n\n\n6\nsamtools\nsorts, indexes and counts mapped reads\nbam, .bai\n\n\n7\nsamtools flagstat / depth / coverage\nhow many reads cover each position\ntxt\n\n\n8\nivar consensus\nmajority base at each position; N where depth is too low\nFASTA\n\n\n9\nfreebayes / bcftools\ncalls SNPs and small indels\nVCF\n\n\n10\nawk / seqkit / summary table\ndecide if the genome is good enough\ncsv\n\n\n11\nPangolin or Nextclade, MAFFT, IQ-TREE\nlineage and phylogeny (modules 2–3)\ntree",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#sequencing-technologies",
+    "href": "course/01-concepts.html#sequencing-technologies",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "Sequencing technologies",
+    "text": "Sequencing technologies\n\n\n\n\n\n\n\n\n\nIllumina (short reads)\nOxford Nanopore (long reads)\n\n\n\n\nRead length\ntypically 50–300 bp\nfrom hundreds of bp to tens of kb\n\n\nAccuracy\nvery high per base\nlower per read, improving with chemistry and basecalling\n\n\nOutput\npaired-end reads (R1 + R2)\nsingle long reads, available in real time\n\n\nStrengths\naccurate SNPs, high throughput\nstructural variation, repeats, portable devices, fast turnaround\n\n\nTypical weakness\nrepeats and structural variants\nerrors in homopolymers, need for polishing",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#library-preparation-approaches-viruses",
+    "href": "course/01-concepts.html#library-preparation-approaches-viruses",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "Library preparation approaches (viruses)",
+    "text": "Library preparation approaches (viruses)\n\n\n\n\n\n\n\n\n\nWGS / metagenomics\nAmplicon (e.g. ARTIC)\n\n\n\n\nPrinciple\nsequence everything in the sample\namplify the virus in overlapping tiles (multiplex PCR)\n\n\nBest when\nyou do not know what you are looking for\nroutine viral surveillance (the most common approach)\n\n\nWatch out for\nmost reads may not come from the virus\namplicon dropout when primer sites mutate",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#file-formats",
+    "href": "course/01-concepts.html#file-formats",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "File formats",
+    "text": "File formats\n\n\n\n\n\n\n\n\nFormat\nContent\nCompanion\n\n\n\n\nFASTA\nsequences (reference, consensus)\n.fai index\n\n\nFASTQ\nreads + base qualities (4 lines per read)\n–\n\n\nSAM / BAM / CRAM\nalignments (text / binary / compressed)\n.bai index (BAM must be sorted)\n\n\nVCF\nvariants\n.tbi index when bgzipped\n\n\nBED\nintervals (e.g. low-depth regions)\n–\n\n\ndepth table\ndepth per position\n–\n\n\n\n\nA FASTQ record\n@read_name\nACGTACGT...            sequence\n+\nIIIIHHHHGGGG...        quality, one character per base\nPhred score Q = −10·log10(P error): Q20 → 1 error in 100, Q30 → 1 in 1,000. The character encodes Q + 33.",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#mapping-or-de-novo-assembly",
+    "href": "course/01-concepts.html#mapping-or-de-novo-assembly",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "Mapping or de novo assembly?",
+    "text": "Mapping or de novo assembly?\n\n\n\n\n\n\n\n\n\n\nMapping to a reference\nDe novo assembly\nHybrid\n\n\n\n\nPrinciple\nalign reads to a known genome\nrebuild the genome without reference\ncombine short and long reads\n\n\nTools\nbwa, minimap2, iVar, bcftools\nSPAdes, MEGAHIT; Flye, Canu\nUnicycler\n\n\nChoose when\nknown, little-divergent virus; amplicon data\nnew/divergent pathogen, bacteria, rearrangements\nboth read types available\n\n\n\nThree questions to decide: Do I have a good reference? Are my reads long? Is my coverage sufficient?",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
+    "objectID": "course/01-concepts.html#pitfalls-to-remember",
+    "href": "course/01-concepts.html#pitfalls-to-remember",
+    "title": "Sequencing file formats and assembly strategies",
+    "section": "Pitfalls to remember",
+    "text": "Pitfalls to remember\n\nCross-contamination and barcode bleed between samples (always read the negative control).\nWrong reference or unsuitable lineage.\n\nNext: FASTQ and quality control.",
+    "crumbs": [
+      "Viral Genomics",
+      "FASTQ → consensus genome",
+      "Sequencing file formats and assembly strategies"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "From FASTQ to Outbreak Insights",
+    "title": "Bioinformatics Training",
     "section": "",
     "text": "#\nModule\nYou will learn to…\n\n\n\n\n1\nFASTQ → consensus genome\nread FASTQ files, do QC, map reads, inspect coverage, build a consensus and decide if it is usable\n\n\n2\nAlignment, lineage & reference selection\nchoose a reference, align genomes, assign a lineage\n\n\n3\nBuild and read a phylogenetic tree\ninfer a tree, root it, read clades, support and branch lengths\n\n\n\nModule 1 is the 3-hour bridge session (talk + dry lab); modules 2–3 are Day 4 (phylogenetics) and modules 4–5 are Day 5 (capstone).",
     "crumbs": [
@@ -408,7 +682,7 @@
   {
     "objectID": "index.html#the-learning-path",
     "href": "index.html#the-learning-path",
-    "title": "From FASTQ to Outbreak Insights",
+    "title": "Bioinformatics Training",
     "section": "",
     "text": "#\nModule\nYou will learn to…\n\n\n\n\n1\nFASTQ → consensus genome\nread FASTQ files, do QC, map reads, inspect coverage, build a consensus and decide if it is usable\n\n\n2\nAlignment, lineage & reference selection\nchoose a reference, align genomes, assign a lineage\n\n\n3\nBuild and read a phylogenetic tree\ninfer a tree, root it, read clades, support and branch lengths\n\n\n\nModule 1 is the 3-hour bridge session (talk + dry lab); modules 2–3 are Day 4 (phylogenetics) and modules 4–5 are Day 5 (capstone).",
     "crumbs": [
@@ -418,7 +692,7 @@
   {
     "objectID": "index.html#how-to-work",
     "href": "index.html#how-to-work",
-    "title": "From FASTQ to Outbreak Insights",
+    "title": "Bioinformatics Training",
     "section": "How to work",
     "text": "How to work\n\nDo the setup once.\nFollow the pages in the order of the left menu; each exercise ends with a question to discuss.\nFill in your answer sheet and, on Day 5, your one-page brief.",
     "crumbs": [
@@ -426,81 +700,53 @@
     ]
   },
   {
-    "objectID": "course/01-concepts.html",
-    "href": "course/01-concepts.html",
-    "title": "Sequencing, file formats and assembly strategies",
+    "objectID": "course/01-sequencing-data-qc.html",
+    "href": "course/01-sequencing-data-qc.html",
+    "title": "1. Sequencing data and quality control",
     "section": "",
-    "text": "Both start with the same raw material (FASTQ files) and the same first steps (quality control, trimming, contamination check). They differ in how the genome is rebuilt:\n\nDe novo assembly: reads are stitched together without any reference (new or very divergent virus, bacteria).\nMapping (reference-based): reads are aligned to a known genome, then a consensus is called (known virus: SARS-CoV-2, Rift Valley fever, dengue…).\n\n\n\n\n\n\n\n\nflowchart TD\n  A[\"FASTQ (R1 + R2)\"] --&gt; B[\"1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads\"]\n  B --&gt; C[\"2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases\"]\n  C --&gt; D[\"3. Assembly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds\"]\n  D --&gt; E[\"4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?\"]\n  E --&gt; F[\"5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction\"]\n  classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;\n  class B,C,D,E qc;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1\nFastQC\nper-base quality, adapters, GC content, duplication\nhtml\n\n\n2\ntrimmomatic\ntrims adapters and low-quality ends, drops short reads\nfastq.gz\n\n\n3\nFastQC + MultiQC\nsame check after trimming; MultiQC merges all samples in one page\nhtml\n\n\n4\nKraken2 +BLAST\nassigns each read to a taxon (virus, human, bacteria…); needs a database\ntxt\n\n\n5\nSPAdes\nbuilds contigs ( --meta for metagenomes)\nfasta\n\n\n6\nQUAST\nassembly statistics, comparison to a reference if you give one\nhtml\n\n\n\nOptional additions: seqkit stats (quick read counts), Prokka / Bakta (gene annotation for bacteria), KrakenTools (keep only the reads of the target virus before assembling).\n\n\n\n\n\n\n\n\n\nImportantSteps you do NOT repeat\n\n\n\nIf you already ran pipeline 1 on the same samples, steps 1 to 3 are already done (FastQC, trimmomatic, MultiQC, Kraken2). Reuse the trimmed reads in results/trimmed/. Only the steps in white below are new.\n\n\n\n\n\n\n\nflowchart TD\n  A[\"Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, trimmomatic, MultiQC)\"] --&gt; B[\"4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference\"]\n  B --&gt; C[\"5. Sorting&lt;br/&gt;samtools&lt;br/&gt;sorted BAM and mapping statistics\"]\n  C --&gt; D[\"6. Variant calling&lt;br/&gt;freebayes - bcftools &lt;br/&gt;list the variants (VCF)\"]\n  D --&gt; E[\"7. Generate consensus&lt;br/&gt;samtools + ivar &lt;br/&gt;build the genome, mask low depth with N\"]\n  E --&gt; F[\"8. Genome QC&lt;br/&gt;% N, mean depth, negative control\"]\n  F --&gt; G[\"9. Lineage (Pangolin, Nextclade),&lt;br/&gt;MAFFT alignment, IQ-TREE\"]\n  classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;\n  class A done;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1–4\nFastQC, trimmomatic, MultiQC, Kraken2\nalready done (see pipeline 1)\nfastq.gz\n\n\n5\nbwa (or minimap2)\naligns each read to the reference\nSAM\n\n\n6\nsamtools\nsorts, indexes and counts mapped reads\nbam, .bai\n\n\n7\nsamtools flagstat / depth / coverage\nhow many reads cover each position\ntxt\n\n\n8\nivar consensus\nmajority base at each position; N where depth is too low\nFASTA\n\n\n9\nfreebayes / bcftools\ncalls SNPs and small indels\nVCF\n\n\n10\nawk / seqkit / summary table\ndecide if the genome is good enough\ncsv\n\n\n11\nPangolin or Nextclade, MAFFT, IQ-TREE\nlineage and phylogeny (modules 2–3)\ntree",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "text": "Comprendre les données avant l’analyse."
   },
   {
-    "objectID": "course/01-concepts.html#two-ways-to-build-a-genome-from-illumina-reads",
-    "href": "course/01-concepts.html#two-ways-to-build-a-genome-from-illumina-reads",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "",
-    "text": "Both start with the same raw material (FASTQ files) and the same first steps (quality control, trimming, contamination check). They differ in how the genome is rebuilt:\n\nDe novo assembly: reads are stitched together without any reference (new or very divergent virus, bacteria).\nMapping (reference-based): reads are aligned to a known genome, then a consensus is called (known virus: SARS-CoV-2, Rift Valley fever, dengue…).\n\n\n\n\n\n\n\n\nflowchart TD\n  A[\"FASTQ (R1 + R2)\"] --&gt; B[\"1. Quality Control &lt;br/&gt; FastQC &lt;br/&gt;quality of the raw reads\"]\n  B --&gt; C[\"2. Trimming&lt;br/&gt;trimmomatic&lt;br/&gt;remove adapters and low-quality bases\"]\n  C --&gt; D[\"3. Assembly&lt;br/&gt;SPAdes&lt;br/&gt;assemble the reads into contigs or scaffolds\"]\n  D --&gt; E[\"4. Identification&lt;br/&gt;Kraken2 or BLAST &lt;br/&gt;which organisms are in the reads? contamination?\"]\n  E --&gt; F[\"5. Assembly quality&lt;br/&gt;QUAST&lt;br/&gt; N50, length, genome fraction\"]\n  classDef qc fill:#dbeafe,stroke:#2b6cb0,color:#16395f;\n  class B,C,D,E qc;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1\nFastQC\nper-base quality, adapters, GC content, duplication\nhtml\n\n\n2\ntrimmomatic\ntrims adapters and low-quality ends, drops short reads\nfastq.gz\n\n\n3\nFastQC + MultiQC\nsame check after trimming; MultiQC merges all samples in one page\nhtml\n\n\n4\nKraken2 +BLAST\nassigns each read to a taxon (virus, human, bacteria…); needs a database\ntxt\n\n\n5\nSPAdes\nbuilds contigs ( --meta for metagenomes)\nfasta\n\n\n6\nQUAST\nassembly statistics, comparison to a reference if you give one\nhtml\n\n\n\nOptional additions: seqkit stats (quick read counts), Prokka / Bakta (gene annotation for bacteria), KrakenTools (keep only the reads of the target virus before assembling).\n\n\n\n\n\n\n\n\n\nImportantSteps you do NOT repeat\n\n\n\nIf you already ran pipeline 1 on the same samples, steps 1 to 3 are already done (FastQC, trimmomatic, MultiQC, Kraken2). Reuse the trimmed reads in results/trimmed/. Only the steps in white below are new.\n\n\n\n\n\n\n\nflowchart TD\n  A[\"Trimmed reads (already done in pipeline 1:&lt;br/&gt;FastQC, trimmomatic, MultiQC)\"] --&gt; B[\"4. Mapping&lt;br/&gt;bwa&lt;br/&gt;align the reads to the reference\"]\n  B --&gt; C[\"5. Sorting&lt;br/&gt;samtools&lt;br/&gt;sorted BAM and mapping statistics\"]\n  C --&gt; D[\"6. Variant calling&lt;br/&gt;freebayes - bcftools &lt;br/&gt;list the variants (VCF)\"]\n  D --&gt; E[\"7. Generate consensus&lt;br/&gt;samtools + ivar &lt;br/&gt;build the genome, mask low depth with N\"]\n  E --&gt; F[\"8. Genome QC&lt;br/&gt;% N, mean depth, negative control\"]\n  F --&gt; G[\"9. Lineage (Pangolin, Nextclade),&lt;br/&gt;MAFFT alignment, IQ-TREE\"]\n  classDef done fill:#e2e8f0,stroke:#94a3b8,color:#64748b,stroke-dasharray: 4 3;\n  class A done;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStep\nTool\nWhat it does\nMain output\n\n\n\n\n1–4\nFastQC, trimmomatic, MultiQC, Kraken2\nalready done (see pipeline 1)\nfastq.gz\n\n\n5\nbwa (or minimap2)\naligns each read to the reference\nSAM\n\n\n6\nsamtools\nsorts, indexes and counts mapped reads\nbam, .bai\n\n\n7\nsamtools flagstat / depth / coverage\nhow many reads cover each position\ntxt\n\n\n8\nivar consensus\nmajority base at each position; N where depth is too low\nFASTA\n\n\n9\nfreebayes / bcftools\ncalls SNPs and small indels\nVCF\n\n\n10\nawk / seqkit / summary table\ndecide if the genome is good enough\ncsv\n\n\n11\nPangolin or Nextclade, MAFFT, IQ-TREE\nlineage and phylogeny (modules 2–3)\ntree",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#learning-objectives",
+    "href": "course/01-sequencing-data-qc.html#learning-objectives",
+    "title": "1. Sequencing data and quality control",
+    "section": "Learning objectives",
+    "text": "Learning objectives\nBy the end of this page, participants will be able to:\n\nExplain how a sequencer’s raw output becomes per-sample FASTQ files.\nRead a FASTQ record and its quality scores.\nRun and interpret basic sequencing QC.\nRead alignment and coverage metrics and decide whether a sample is fit for variant calling.\nDownload the teaching data from BaseSpace or from public archives.\n\n\n\n\n\n\n\nNoteWhere this page fits\n\n\n\nBCL → FASTQ → QC → alignment → coverage metrics, then variant calling (next page)."
   },
   {
-    "objectID": "course/01-concepts.html#sequencing-technologies",
-    "href": "course/01-concepts.html#sequencing-technologies",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "Sequencing technologies",
-    "text": "Sequencing technologies\n\n\n\n\n\n\n\n\n\nIllumina (short reads)\nOxford Nanopore (long reads)\n\n\n\n\nRead length\ntypically 50–300 bp\nfrom hundreds of bp to tens of kb\n\n\nAccuracy\nvery high per base\nlower per read, improving with chemistry and basecalling\n\n\nOutput\npaired-end reads (R1 + R2)\nsingle long reads, available in real time\n\n\nStrengths\naccurate SNPs, high throughput\nstructural variation, repeats, portable devices, fast turnaround\n\n\nTypical weakness\nrepeats and structural variants\nerrors in homopolymers, need for polishing",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#sec-bcl",
+    "href": "course/01-sequencing-data-qc.html#sec-bcl",
+    "title": "1. Sequencing data and quality control",
+    "section": "BCL to FASTQ and sample sheets",
+    "text": "BCL to FASTQ and sample sheets\nA NovaSeq run does not produce FASTQ files directly. The instrument writes BCL files (base calls with quality scores) plus run metadata. A conversion step then creates FASTQ files:\nNovaSeq run → BCL files + run metadata → BCL Convert → per-sample FASTQ files\nBCL Convert performs the base-call conversion and demultiplexing: it separates reads by sample using the index sequences. The mapping from index to sample comes from the sample sheet.\n\nThe sample sheet\nSampleSheet.csv tells the software which index combination belongs to which sample. A minimal, simplified example:\n[Header]\nFileFormatVersion,2\n\n[BCLConvert_Data]\nLane,Sample_ID,Index,Index2\n1,Sample_A,ATTACTCG,TATAGCCT\n1,Sample_B,TCCGGAGA,ATAGAGGC\nThe exact sections and column names depend on the software version. Check the BCL Convert documentation for the version you use.\n\n\nOutput\nFor paired-end sequencing, each sample usually produces two files: *_R1_001.fastq.gz and *_R2_001.fastq.gz. Reads that cannot be assigned to a sample are written to an Undetermined file.\nIllumina provides a BCL Convert app in BaseSpace as well as command-line software.\n\n\n\n\n\n\nImportantConcept session only\n\n\n\nSpend 10–15 minutes on this section: show what a BCL run folder contains, read a sample sheet, and show how per-sample FASTQ files appear. Do not convert a real NovaSeq run in the training. The data are very large and the settings depend on the instrument and run configuration. Continue with the prepared FASTQ files."
   },
   {
-    "objectID": "course/01-concepts.html#library-preparation-approaches-viruses",
-    "href": "course/01-concepts.html#library-preparation-approaches-viruses",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "Library preparation approaches (viruses)",
-    "text": "Library preparation approaches (viruses)\n\n\n\n\n\n\n\n\n\nWGS / metagenomics\nAmplicon (e.g. ARTIC)\n\n\n\n\nPrinciple\nsequence everything in the sample\namplify the virus in overlapping tiles (multiplex PCR)\n\n\nBest when\nyou do not know what you are looking for\nroutine viral surveillance (the most common approach)\n\n\nWatch out for\nmost reads may not come from the virus\namplicon dropout when primer sites mutate",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#sec-fastq",
+    "href": "course/01-sequencing-data-qc.html#sec-fastq",
+    "title": "1. Sequencing data and quality control",
+    "section": "FASTQ structure and sequencing QC",
+    "text": "FASTQ structure and sequencing QC\n\nAnatomy of a FASTQ record\nEach read uses four lines:\n\n\n\n\n\n\n\nLine\nContent\n\n\n\n\n1\nHeader, starting with @ (instrument, run, flowcell, lane, tile, coordinates, read number, index)\n\n\n2\nThe base sequence\n\n\n3\nA separator, +\n\n\n4\nBase qualities, one character per base (Phred scores)\n\n\n\n#| eval: false\n# First two reads (8 lines) of the R1 file\nzcat sample_R1.fastq.gz | head -n 8\n\n# Number of reads in the file\necho $(( $(zcat sample_R1.fastq.gz | wc -l) / 4 ))\nA Phred score Q expresses the probability of a wrong base call: Q20 is about 1 error in 100 and Q30 about 1 in 1,000. In Illumina FASTQ files each score is stored as a character (ASCII offset 33). R1 and R2 must contain the same number of reads, in the same order.\n\n\nRun FastQC\n#| eval: false\nmkdir -p qc/fastqc\nfastqc sample_R1.fastq.gz sample_R2.fastq.gz -o qc/fastqc -t 4\n\n# Combine the reports of several samples into one page\nmultiqc qc/fastqc -o qc/multiqc\nBaseSpace also offers FastQC and FASTQ Toolkit apps. Illumina run metrics and FastQC outputs measure different things, so do not compare them directly.\n\n\nWhat to look at in FastQC\n\n\n\n\n\n\n\n\nModule\nWhat to check\nConcern\n\n\n\n\nPer-base sequence quality\nQuality along the read\nDrop at the 3’ end is common. A drop across the whole read is not.\n\n\nPer-sequence quality scores\nDistribution of mean read quality\nA large low-quality peak\n\n\nAdapter content\nShare of adapter sequence\nRising adapter content calls for trimming\n\n\nSequence duplication\nDuplicate reads\nHigh levels can reflect low library complexity\n\n\nGC content\nShape of the GC distribution\nA shifted or bimodal curve can indicate contamination\n\n\nOverrepresented sequences\nRepeated sequences\nAdapters or contaminants\n\n\n\nSome FastQC flags (for example per-base content in the first bases) are expected for particular library types. Judge them in context.\nExercise: open the prepared FastQC report for the teaching sample. For each module, decide: normal, expected for this library type, or a real problem."
   },
   {
-    "objectID": "course/01-concepts.html#file-formats",
-    "href": "course/01-concepts.html#file-formats",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "File formats",
-    "text": "File formats\n\n\n\n\n\n\n\n\nFormat\nContent\nCompanion\n\n\n\n\nFASTA\nsequences (reference, consensus)\n.fai index\n\n\nFASTQ\nreads + base qualities (4 lines per read)\n–\n\n\nSAM / BAM / CRAM\nalignments (text / binary / compressed)\n.bai index (BAM must be sorted)\n\n\nVCF\nvariants\n.tbi index when bgzipped\n\n\nBED\nintervals (e.g. low-depth regions)\n–\n\n\ndepth table\ndepth per position\n–\n\n\n\n\nA FASTQ record\n@read_name\nACGTACGT...            sequence\n+\nIIIIHHHHGGGG...        quality, one character per base\nPhred score Q = −10·log10(P error): Q20 → 1 error in 100, Q30 → 1 in 1,000. The character encodes Q + 33.",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#sec-alignment",
+    "href": "course/01-sequencing-data-qc.html#sec-alignment",
+    "title": "1. Sequencing data and quality control",
+    "section": "Alignment and coverage metrics",
+    "text": "Alignment and coverage metrics\nReads are aligned to the GRCh38 reference, producing BAM or CRAM files. In the teaching workflow the aligner is DRAGEN (next page). The aligned file and the metrics report let you judge whether the sample is good enough for variant calling.\n\n\n\n\n\n\n\n\nMetric\nWhat to check\nRough expectation (human WGS, about 30x)\n\n\n\n\nMapping rate\nShare of reads aligned to GRCh38\nAbove 99 %\n\n\nDuplicate rate\nLibrary complexity\nLow (a few %) for PCR-free libraries\n\n\nMean coverage\nAverage depth\nAbout 30x\n\n\nCoverage at 20x or more\nShare of the genome well covered\nAbout 85–90 % or more\n\n\nInsert size\nFragment length distribution\nSingle peak, consistent with the library\n\n\nContamination\nForeign DNA in the sample\nVery low\n\n\nEstimated sex\nConsistency with sample metadata\nMatches\n\n\n\nThese are rough expectations. They vary with the library type, the platform and the sample.\n\nQuick checks on an aligned file\n#| eval: false\n# Alignment summary\nsamtools flagstat sample.cram\n\n# Mean depth and breadth per chromosome (a CRAM needs the reference: -T ref.fa)\nsamtools coverage sample.cram | head\n\n# Detailed depth over the genome\nmosdepth --by 1000000 sample sample.cram\nDecision rule for the practical: if the mapping rate, coverage or contamination are far from the expected values, stop and investigate before calling variants. A wrong sample, a wrong reference build or low coverage will make every later step unreliable.\nExpected output: a short written QC assessment (pass, concerns, or stop)."
   },
   {
-    "objectID": "course/01-concepts.html#mapping-or-de-novo-assembly",
-    "href": "course/01-concepts.html#mapping-or-de-novo-assembly",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "Mapping or de novo assembly?",
-    "text": "Mapping or de novo assembly?\n\n\n\n\n\n\n\n\n\n\nMapping to a reference\nDe novo assembly\nHybrid\n\n\n\n\nPrinciple\nalign reads to a known genome\nrebuild the genome without reference\ncombine short and long reads\n\n\nTools\nbwa, minimap2, iVar, bcftools\nSPAdes, MEGAHIT; Flye, Canu\nUnicycler\n\n\nChoose when\nknown, little-divergent virus; amplicon data\nnew/divergent pathogen, bacteria, rearrangements\nboth read types available\n\n\n\nThree questions to decide: Do I have a good reference? Are my reads long? Is my coverage sufficient?",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#sec-download",
+    "href": "course/01-sequencing-data-qc.html#sec-download",
+    "title": "1. Sequencing data and quality control",
+    "section": "Downloading the data",
+    "text": "Downloading the data\nThree routes are possible. For a training session, prepare the data in advance and share a small subset: a full 30x human genome in FASTQ is tens of GB, and BAM or CRAM files are similar in size.\n\nOption A: BaseSpace\nBaseSpace requires a free account (https://basespace.illumina.com). It also hosts public datasets.\nFrom the web interface\n\nOpen the project containing your data (or the one shared with you).\nSelect the dataset or files to download.\nChoose the file type (for example FASTQ) and download.\n\nWith the BaseSpace command-line tool (bs)\nThe CLI is better for large downloads. Install it from Illumina’s BaseSpace CLI page, then:\n#| eval: false\n# Log in (opens a link to authenticate your account)\nbs auth\n\n# Find the project ID (it also appears in the project's web address)\nbs list projects\n\n# Download only the FASTQ files of a project\nbs download project -i &lt;PROJECT_ID&gt; -o ./data/fastq --extension fastq.gz\nDownloading BCL files is only possible with the CLI. Check bs download --help for the options available in your version.\nShare a project with a participant: the project owner can share it with another BaseSpace account. The participant can then download it with the same commands.\n\n\nOption B: Public archives (ENA and the 1000 Genomes data)\nFor open human data, the European Nucleotide Archive (ENA) lets you list and download the files of any study, sample or run through a file report.\nThe 1000 Genomes Project 30x resequencing from the New York Genome Center (study PRJEB31736, aligned to GRCh38) is a good source, with consented open access. The data portal at https://www.internationalgenome.org/data-portal lists the samples with their population (including the West African populations YRI, ESN, GWD and MSL).\n#| eval: false\n# List the files of one run: accession, FASTQ URLs, sizes and checksums\ncurl -s \"https://www.ebi.ac.uk/ena/portal/api/filereport?accession=ERR3239334&result=read_run&fields=run_accession,sample_accession,fastq_ftp,fastq_bytes,fastq_md5&format=tsv\"\n\n# Download both FASTQ files of that run (resumable)\nwget -c ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR323/004/ERR3239334/ERR3239334_1.fastq.gz\nwget -c ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR323/004/ERR3239334/ERR3239334_2.fastq.gz\n\n# Verify integrity against the MD5 from the file report\nmd5sum ERR3239334_*.fastq.gz\nTo choose another sample, give ENA the study accession (PRJEB31736) in the same file report URL, find the run for your sample, and take the fastq_ftp links. The ERR3239334 run above is NA12878 (a reference sample of European ancestry). Confirm the file links in the file report before downloading, as archive paths can change.\n\n\nOption C: Prepare a small teaching subset\nFor the session, work on a subset so that the commands run in seconds:\n#| eval: false\n# Keep the first 1 million read pairs (4 lines per read)\nzcat sample_R1.fastq.gz | head -n 4000000 | gzip &gt; subset_R1.fastq.gz\nzcat sample_R2.fastq.gz | head -n 4000000 | gzip &gt; subset_R2.fastq.gz\nA subset is fine for the FASTQ and QC exercises. It will not give genome-wide coverage, so run the variant calling steps on the prepared full dataset or on a prepared exome.\n\n\n\n\n\n\nWarningData protection\n\n\n\nUse synthetic or open, appropriately authorised public data. Do not upload identifiable patient genomic data to external services without institutional approval and data-protection safeguards."
   },
   {
-    "objectID": "course/01-concepts.html#pitfalls-to-remember",
-    "href": "course/01-concepts.html#pitfalls-to-remember",
-    "title": "Sequencing, file formats and assembly strategies",
-    "section": "Pitfalls to remember",
-    "text": "Pitfalls to remember\n\nCross-contamination and barcode bleed between samples (always read the negative control).\nWrong reference or unsuitable lineage.\n\nNext: FASTQ and quality control.",
-    "crumbs": [
-      "FASTQ → consensus genome",
-      "Sequencing, file formats and assembly strategies"
-    ]
+    "objectID": "course/01-sequencing-data-qc.html#summary",
+    "href": "course/01-sequencing-data-qc.html#summary",
+    "title": "1. Sequencing data and quality control",
+    "section": "Summary",
+    "text": "Summary\n\n\n\n\n\n\n\n\nStep\nTool\nQuestion answered\n\n\n\n\nBCL → FASTQ\nBCL Convert, sample sheet\nWhich reads belong to which sample?\n\n\nFASTQ QC\nFastQC, MultiQC\nAre the raw reads of good quality?\n\n\nAlignment metrics\nDRAGEN report, samtools\nDid the reads map, and how deep are they?\n\n\nDecision\nWritten QC assessment\nIs the sample fit for variant calling?\n\n\n\nNext page: alignment and variant calling with BaseSpace."
   },
   {
     "objectID": "course/02-lineage.html",
@@ -509,6 +755,7 @@
     "section": "",
     "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group. For SARS-CoV-2 the standard nomenclature is Pango; names are hierarchical (BA.2 descends from the Omicron lineages, B.1.1.7 is Alpha), so lineages give a common language to talk about genomes without exchanging full sequences.\nThe references you downloaded from NCBI Virus already carry their Pango lineage in their name (ACCESSION_LINEAGE): they are our labelled landmarks.\ngrep '&gt;' results/phylo/aln.fasta",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
@@ -520,6 +767,7 @@
     "section": "",
     "text": "A lineage is a named group of genomes sharing a common ancestor, defined by mutations specific to that group. For SARS-CoV-2 the standard nomenclature is Pango; names are hierarchical (BA.2 descends from the Omicron lineages, B.1.1.7 is Alpha), so lineages give a common language to talk about genomes without exchanging full sequences.\nThe references you downloaded from NCBI Virus already carry their Pango lineage in their name (ACCESSION_LINEAGE): they are our labelled landmarks.\ngrep '&gt;' results/phylo/aln.fasta",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
@@ -531,6 +779,7 @@
     "section": "Step 1 — Find the closest labelled reference",
     "text": "Step 1 — Find the closest labelled reference\nThe simplest way to give a lineage to a new genome is to ask which labelled genome it resembles most. We reuse the SNP distances:\nsnp-dists -m results/phylo/aln.fasta | awk '$1==\"SRR26396743\" && $2!=\"SRR26396743\"' | sort -k3,3n | column -t\nQuestions\n\nWhich reference is the closest to your sample, and what is its lineage?\nIs the closest reference much closer than the others, or are several references at a similar distance?\nCan you already give a lineage to your sample?\n\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own table. If one reference is clearly closer than all the others, your sample probably belongs to that lineage or to a sub-lineage of it. If several references from different lineages are at similar distances, the real lineage is probably not in your reference set and you need more references. The answer is a proposal, not a final call: it must be confirmed with the tree (next module).",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
@@ -542,6 +791,7 @@
     "section": "Step 2 — Cross-check with a dedicated tool (optional, in the browser)",
     "text": "Step 2 — Cross-check with a dedicated tool (optional, in the browser)\nPangolin and Nextclade do this with a complete nomenclature of thousands of lineages and give quality flags (missing data, unexpected mutations). Nothing to install: open https://clades.nextstrain.org, drop results/consensus/SRR26396743.fa in the page and read the clade and Pango lineage it proposes.\nQuestion: does it agree with the lineage of the closest reference?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nThe tool may give a more precise lineage (a sub-lineage of the reference that you downloaded), because it knows many more lineages than our 10–15 references. A sub-lineage of the lineage found in Step 1 is a consistent result; a different family means you should re-check the consensus and the references.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
@@ -553,6 +803,7 @@
     "section": "Final question",
     "text": "Final question\nCan two genomes of the same lineage still be unrelated cases? Why?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nYes. A lineage is defined by a few mutations, and many separate chains of transmission can carry the same lineage (for example if it was imported several times, or circulated widely before being sampled). A lineage says “belongs to this family”; to say “linked case” you need finer resolution (extra SNPs, as in the SNP distances) and epidemiological information (dates, places, contacts).\n\n\n\nNext: Build a phylogenetic tree.",
     "crumbs": [
+      "Viral Genomics",
       "Alignment, lineage & reference selection",
       "Lineage assignment"
     ]
@@ -564,6 +815,7 @@
     "section": "",
     "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: a genome that branches off before all the others).\nThe outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use Wuhan-Hu-1 (NC_045512.2), the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
     ]
@@ -575,6 +827,7 @@
     "section": "",
     "text": "Method\nIdea\nUse\n\n\n\n\nDistance (neighbour-joining)\ntree built from pairwise distances\nvery fast first look\n\n\nMaximum likelihood (IQ-TREE, RAxML)\nthe tree that makes the alignment most probable under a substitution model\nstandard choice\n\n\nBayesian / time-scaled (BEAST, TreeTime)\nadds time and uncertainty\ndating, advanced analyses\n\n\n\nThree choices to make: the substitution model (IQ-TREE tests several with -m MFP), the support (ultrafast bootstrap, -B 1000) and the root (an outgroup: a genome that branches off before all the others).\nThe outgroup must be related to your genomes but outside of them. For SARS-CoV-2 genomes we use Wuhan-Hu-1 (NC_045512.2), the oldest lineage: the tree then reads from the beginning of the pandemic to the recent lineages.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
     ]
@@ -586,6 +839,7 @@
     "section": "Step 1 — Build the maximum-likelihood tree",
     "text": "Step 1 — Build the maximum-likelihood tree\nFind the exact name of the root genome in the alignment, then run IQ-TREE:\nOUT=$(grep '&gt;' results/phylo/aln.fasta | grep 'NC_045512.2' | tr -d '&gt;')\necho $OUT\niqtree -s results/phylo/aln.fasta -m MFP -B 1000 -T 2  --prefix results/phylo/tree\nWhat the options mean: -s alignment, -m MFP choose the best model automatically, -B 1000 1,000 ultrafast bootstrap replicates, -T 2 two threads, --seed 1 reproducible result, -o root on the outgroup, --prefix name of the output files.\n(If the model test is too slow on your laptop, use -m GTR+G for a first look.)\n\n\n\n\n\n\n\nFile\nContent\n\n\n\n\ntree.treefile\nthe tree (Newick format, with bootstrap support)\n\n\ntree.iqtree\nthe full report (model chosen, log-likelihood, tree in text)\n\n\ntree.log\nwhat happened during the run\n\n\n\ngrep \"Best-fit model\" results/phylo/tree.iqtree\nQuestions: which model was chosen? Did IQ-TREE warn about identical sequences?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own report. IQ-TREE may warn that some sequences are identical (or nearly so): this is normal, they end up at the same position in the tree. The exact model matters little here; what matters more is the quality of the alignment.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
     ]
@@ -597,8 +851,196 @@
     "section": "Step 2 — Draw and annotate the tree in iTOL",
     "text": "Step 2 — Draw and annotate the tree in iTOL\n\nOpen https://itol.embl.de and click Upload; upload results/phylo/tree.treefile. (Create an account if you want to keep the tree.)\nIn the control panel, choose the Rectangular display.\nRoot: click on the branch of NC_045512.2 and choose Tree structure → Re-root the tree here.\nSupport: display the bootstrap values (Basic tab, or Advanced tab depending on the version).\nColors: click on an internal node and choose Colors/Styles to colour a clade; colour each lineage (the lineage is in the leaf name) and give your sample, SRR26396743, a different colour.\nExport the picture (PNG, SVG or PDF) from the Export tab.\n\nQuestions: do the lineages form clean groups on the tree? Where is your sample?\n\n\n\n\n\n\nTipAnswer\n\n\n\n\n\nUse your own tree. References of the same lineage should form a group (a clade); sister lineages sit next to each other. Your sample should fall next to the lineage found in the Lineage assignment page. If it sits alone on a long branch, check its percentage of N and its reference set.\n\n\n\nNext: Read a phylogenetic tree.",
     "crumbs": [
+      "Viral Genomics",
       "Build and read a phylogenetic tree",
       "Build a phylogenetic tree"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html",
+    "href": "course/04-alignement-variant-calling.html",
+    "title": "Alignment and Variant Calling",
+    "section": "",
+    "text": "By the end of this section, participants should be able to:\n\nExplain why the reference genome (here hg19) must match the capture kit and target BED file.\nIdentify the input data required by DRAGEN Germline.\nExplain the main steps of germline variant analysis (alignment, duplicate marking, variant calling).\nDistinguish essential parameters from optional, advanced settings.\nChoose appropriate settings for a whole-exome (WES) analysis.\nUnderstand the main output files and their purpose.\n\n\n\n\n\n\n\nNoteExample used in this training\n\n\n\nPaired-end whole-exome data of the normal cell line HCC1395BL (run SRR37849526, NimbleGen Exome v3 capture). The goal is to align the reads to a reference genome and call small variants (SNVs and small insertions or deletions, called indels). Exact labels and behaviour of some options depend on the DRAGEN version and the environment.",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#learning-objectives",
+    "href": "course/04-alignement-variant-calling.html#learning-objectives",
+    "title": "Alignment and Variant Calling",
+    "section": "",
+    "text": "By the end of this section, participants should be able to:\n\nExplain why the reference genome (here hg19) must match the capture kit and target BED file.\nIdentify the input data required by DRAGEN Germline.\nExplain the main steps of germline variant analysis (alignment, duplicate marking, variant calling).\nDistinguish essential parameters from optional, advanced settings.\nChoose appropriate settings for a whole-exome (WES) analysis.\nUnderstand the main output files and their purpose.\n\n\n\n\n\n\n\nNoteExample used in this training\n\n\n\nPaired-end whole-exome data of the normal cell line HCC1395BL (run SRR37849526, NimbleGen Exome v3 capture). The goal is to align the reads to a reference genome and call small variants (SNVs and small insertions or deletions, called indels). Exact labels and behaviour of some options depend on the DRAGEN version and the environment.",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#sec-pipeline",
+    "href": "course/04-alignement-variant-calling.html#sec-pipeline",
+    "title": "Alignment and Variant Calling",
+    "section": "1. What DRAGEN Germline does",
+    "text": "1. What DRAGEN Germline does\n\n\n\n\n\n\n\n\nStep\nWhat happens\nMain output\n\n\n\n\nMap / align\nEach read is placed on the reference genome\nAlignment file (BAM or CRAM)\n\n\nDuplicate marking\nReads from the same original DNA fragment are flagged\nFlags inside the alignment file\n\n\nSmall variant calling\nPositions that differ from the reference are detected and genotyped\nVCF (and optionally gVCF)\n\n\nMetrics\nMapping, coverage and quality summaries\nMetrics files and a summary",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#sec-hg19",
+    "href": "course/04-alignement-variant-calling.html#sec-hg19",
+    "title": "Alignment and Variant Calling",
+    "section": "2. Why we choose the hg19 reference",
+    "text": "2. Why we choose the hg19 reference\nA reference genome is the sequence the reads are compared with. It exists in several builds, and coordinates differ between builds: the same base has a different position in hg19 (GRCh37) and in GRCh38 (hg38).\nFor this exercise we align to hg19. The reasons come from the data, not from a preference.\n\n\n\n\n\n\n\nReason\nExplanation\n\n\n\n\nThe capture kit was designed on hg19\nThe exome was captured with NimbleGen SeqCap EZ Exome v3.0, whose target regions are published in hg19 coordinates. The BED file we use, NimbleGen_v3_Exome.hg19.bed, is in hg19.\n\n\nThe BED and the reference must match\nThe Target BED for Small Variant Caller tells DRAGEN where the targets are. With a build mismatch, targets are shifted or missed, and variants can be lost without any error message.\n\n\nConverting to hg38 loses information\nConverting the BED with liftOver can drop regions that do not map, and it adds a step that is hard to check. Using the BED in its own build keeps the analysis simple and traceable.\n\n\nTools and databases support it\nDRAGEN offers hg19 as a built-in reference. Ensembl VEP, ClinVar and population databases also provide GRCh37 resources.\n\n\nThe variant exists in both builds\nThe BRCA1 variant of interest is at chr17:41209095 in hg19 and chr17:43057078 in hg38 (G&gt;A on the forward strand in both).\n\n\n\n\n\n\n\n\n\nWarninghg19 is not “better”\n\n\n\nGRCh38 is the current standard assembly, with corrections and a better representation of difficult regions. For a new project with a modern kit, GRCh38 is the usual choice. For this older exome kit, matching the build of the target file matters more. The lesson: choose the reference according to your data and your tools, record it, and use the same build at every step.\n\n\n\nhg19, GRCh37 and hs37d5\nThese names refer to related versions of the same assembly, with different chromosome naming and extra sequences.\n\n\n\n\n\n\n\n\nName\nChromosome names\nNote\n\n\n\n\nhg19 (UCSC)\nchr1, chr2, … chrX\nMatches a BED whose first column starts with chr\n\n\nGRCh37\n1, 2, … X\nSame coordinates, different names\n\n\nhs37d5\n1, 2, … X\nGRCh37 plus decoy sequences\n\n\n\nCheck the first column of the BED (head NimbleGen_v3_Exome.hg19.bed). If it starts with chr, pick hg19. If it does not, the reference with names without chr (GRCh37 or hs37d5) is the one that matches.\n\n\nConsequences for the rest of the course\n\n\n\nStep\nUse\n\n\n\n\nAlignment and calling (DRAGEN)\nhg19\n\n\nTarget BED\nNimbleGen_v3_Exome.hg19.bed (no conversion)\n\n\nIGV genome\nhg19\n\n\nAnnotation with VEP\nGRCh37, for example https://grch37.ensembl.org/Tools/VEP\n\n\nGene coordinates from Ensembl\nhttps://grch37.rest.ensembl.org\n\n\nVariant of interest\nchr17:41209095 (G&gt;A)\n\n\nPopulation frequencies\nCheck which fields exist in the GRCh37 resources",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#sec-options",
+    "href": "course/04-alignement-variant-calling.html#sec-options",
+    "title": "Alignment and Variant Calling",
+    "section": "3. The DRAGEN Germline form, option by option",
+    "text": "3. The DRAGEN Germline form, option by option\nAsterisks (*) mark required fields. Some are required only when the related option is switched on.\n\n3.1 Input data and configuration\nInput Data. How DRAGEN finds the sequencing files.\n\n\n\n\n\n\n\n\nOption\nWhat it does\nWhen to use it\n\n\n\n\nBiosamples: launch with FASTQs across multiple sequencing runs\nTakes a biosample and combines all its FASTQ datasets, even from several runs\nThe same biological sample was sequenced several times and the data must be analysed together\n\n\nSamples: launch with FASTQs from a single sequencing run\nTakes a sample from one run\nThe FASTQ files come from one run\n\n\n\nFor this case there is one run, so use the option under which HCC1395BL_normal_WES appears when you click Select Samples. A biological sample, a sequencing sample and a sequencing run are different concepts; how the data are organised in BaseSpace decides the choice.\n\n\n\n\n\n\n\n\nField\nMeaning\nValue for the case\n\n\n\n\nAnalysis Name *\nName of the job\nSRR37849526_DRAGEN_Germline_hg19 (include the dataset and the build)\n\n\nSave Results To *\nProject that receives the outputs\nAfrican_STARS_Training (the instructor must have write access)\n\n\nSelect Samples\nThe sample(s) to analyse; one row per sample (#1, #2, …)\nHCC1395BL_normal_WES: check that the FASTQ pair (R1 and R2) is attached\n\n\nSample Sex\nRecorded sex of the sample\nFemale (documented donor sex; use reliable metadata, not a guess)\n\n\n\nInput file types. Each row can take FASTQ, BAM, BAI, CRAM or CRAI files.\n\n\n\n\n\n\n\n\nFile\nContent\nUse\n\n\n\n\nFASTQ\nRaw reads and quality scores\nStart from raw reads (our case): DRAGEN must align them\n\n\nBAM + BAI\nAligned reads and the index that allows fast access to regions\nStart from existing alignments\n\n\nCRAM + CRAI\nA more compact aligned format and its index\nSame, smaller; needs the right reference\n\n\n\n\n\n3.2 Pipeline configuration and reference\nPipeline Configuration * decides which major steps run.\n\n\n\n\n\n\n\n\nOption\nWhat it does\nUse\n\n\n\n\nMap/Align\nAlignment only\nTo study mapping and coverage; no variants\n\n\nMap/Align + Small Variant Caller\nAlignment, then small-variant calling\nOur case: FASTQ to VCF\n\n\nSmall Variant Caller\nCalls variants from already aligned BAM or CRAM\nWhen alignments exist\n\n\n\nReference * (see section 2): hg19.\nCustom DRAGEN Reference File: a reference built with the DRAGEN Reference Builder app, for special organisms or modified sequences. Leave empty: the built-in human reference is simpler and sufficient.\n\n\n3.3 Target BED and coverage metrics\nTarget BED for Small Variant Caller. A BED file lists genomic intervals (chromosome, start, end). For an exome it is the set of captured regions. The small variant caller works only inside these regions.\n\nValue: NimbleGen_v3_Exome.hg19.bed, which matches both the capture kit and the hg19 build.\nCheck before launching that it contains the position of interest: awk '$1==\"chr17\" && $2&lt;=41209095 && $3&gt;=41209095' NimbleGen_v3_Exome.hg19.bed must print a line.\nA BED for another kit or another build would drop relevant regions or include untargeted ones.\n\nQC Coverage Metrics. Coverage tells you whether reads cover the regions of interest. This section computes coverage over regions you choose. Several sets can be defined (#1, #2, …).\n\n\n\n\n\n\n\nParameter\nWhat it controls\n\n\n\n\nRegions / BED File\nThe intervals over which coverage is calculated. Use the same exome BED\n\n\nMAPQ\nMinimum mapping quality of a read to be counted (reads that align ambiguously are ignored)\n\n\nBQ\nMinimum base quality of a base to be counted\n\n\nTag (Output Tag)\nA label added to the output file names, to tell sets apart\n\n\nMetrics Resolution / Full-Res\nLevel of detail: a summary, or a full-resolution (per-position) output, which is much larger\n\n\n\nFor the training, set one region set with the exome BED and keep the default thresholds and summary-level resolution. A high average depth does not guarantee that every exon is well covered: exome capture efficiency varies from exon to exon.\n\n\n3.4 Alignment output and duplicate marking\n\n\n\n\n\n\n\n\nOption\nWhat it does\nValue for the case\n\n\n\n\nMap/Align Output *\nWhich alignment file to keep (BAM, CRAM or none)\nBAM: opens directly in IGV. CRAM saves space but needs the reference to be read\n\n\nEnable Duplicate Marking\nFlags reads that come from the same original DNA fragment (PCR or optical duplicates). Flagging is not deleting: the caller then handles them\nOn (recommended). Duplicates inflate apparent depth\n\n\n\n\n\n3.5 Small variant caller output and options\nSmall Variant Caller Output *\n\n\n\n\n\n\n\n\nOutput\nWhat it contains\nWhy\n\n\n\n\nVCF\nThe called variants: position, alleles, genotype and quality fields\nThe file we inspect, filter and annotate\n\n\ngVCF (“VCF and GVCF”)\nVariants plus reference-confidence blocks for non-variant regions\nNeeded for joint genotyping of several samples\n\n\n… with BP_RESOLUTION\nThe same, with one record per base\nLarger files; rarely needed\n\n\nForceGT VCF\nForces genotyping at a list of given sites\nTo check known positions even if they are not called\n\n\n\nValue for the case: “VCF and GVCF”, so that the VCF is produced (the gVCF is not used on the next pages). ForceGT and BP_RESOLUTION are not needed.\nAdvanced calling options. These go beyond routine calling. Switch them on only to answer a specific scientific question.\n\n\n\n\n\n\n\n\nOption\nPurpose\nNeeded here?\n\n\n\n\nEnable Personalization\nA DRAGEN feature that adapts the analysis to the sample (check the documentation of your version)\nNo\n\n\nCombine Phased Variants (+ Combine Distance)\nMerges nearby variants on the same haplotype into one record; Combine Distance sets how close they must be\nNo\n\n\nEnable High Sensitivity Mosaic Detection\nLooks for variants present in only a fraction of cells\nNo (mosaicism is not our question)\n\n\nEvidence BAM\nAn extra BAM with the reads supporting each call\nOptional, for advanced review\n\n\nEnable ROH Caller\nDetects long runs of homozygosity\nNo\n\n\n\n\n\n3.6 Specialised modules (left off)\nEach module answers a different biological question and may need specific inputs. Leave all of them off for this exercise.\n\n\n\n\n\n\n\n\nModule\nWhat it does\nWhy it is off here\n\n\n\n\nCNV (Enable CNV Caller, Normalization Mode, Low pass filtering, Combined Counts File, Reference Calls, Allele-specific, Cytogenetics, Segmentation BED)\nDetects deletions and duplications of whole exons or regions\nNeeds assay-specific set-up and normal samples. A SNV and indel analysis does not detect them: a limitation to state\n\n\nSV (Enable SV Caller, SV Target BED, Custom SV Target BED)\nDetects larger rearrangements: inversions, translocations, large indels\nDepends on read type and coverage; not an exome question\n\n\nSTR Caller (+ Repeat Specification, REViewer)\nGenotypes short tandem repeats and displays the evidence\nFor repeat-expansion studies\n\n\nProximity Mode for TruPath Genome\nMode for a specific long-range library technology\nNot our assay\n\n\nTargeted Callers, MRJD\nSpecialised calling for hard, homologous regions\nSpecific targeted analyses\n\n\nHLA Typing\nInfers HLA alleles\nImmunogenetics\n\n\nStar Allele Caller\nInfers pharmacogenomic star alleles\nPharmacogenomics\n\n\nEpstein-Barr Virus Detection\nLooks for EBV evidence in the data\nOur cell line is EBV-transformed, but an exome capture is not designed to measure it\n\n\nMethylation (5-base algorithms, Targeted Cytosine Reporting, Methylation at variants)\nReports DNA methylation\nNeeds methylation-aware chemistry, not conventional exome data\n\n\n\n\n\n3.7 Annotation, quality control and checksums\n\n\n\n\n\n\n\n\nOption\nWhat it does\nValue for the case\n\n\n\n\nEnable Variant Annotation, Annotation Catalog, Annotation VCF Output\nDRAGEN adds gene and consequence information to the VCF\nOff: the course teaches annotation with Ensembl VEP. It could be enabled to compare, if a catalog for hg19 is available\n\n\nQC Detect Contamination\nEstimates whether DNA from another sample is mixed in. It is a QC indicator, not proof of a cause\nOn: it is a useful sanity check\n\n\nMD5 Checksums\nComputes a checksum of each output file, to verify later that a download is intact\nOn (optional). It does not prove the sample is the right one\n\n\nDownsampler Fraction\nUses only a fraction of the reads. Useful for benchmarking\nLeave empty: downsampling lowers sensitivity\n\n\n\nAnnotation is not interpretation: a “damaging” prediction does not make a variant pathogenic.\n\n\n3.8 CRAM, compute and advanced fields\n\n\n\n\n\n\n\n\nField\nPurpose\nValue for the case\n\n\n\n\nCRAM Decompression Reference, CRAM Custom Reference\nReference needed to read or write CRAM\nLeave empty (we start from FASTQ and keep a BAM)\n\n\nICA Storage Size , ICA Scratch Size Per Node, F2 Node Type \nStorage and compute allocated to the job\nUse the defaults, unless an error message calls for more. A bigger allocation is not always better, and it affects cost\n\n\nAdditional DRAGEN Commandline Arguments\nFree-text options passed to DRAGEN, with no verification\nLeave empty. A wrong argument can break the run or give results that are hard to reproduce\n\n\nAdditional Resource File\nExtra resource files for custom annotation or assays\nLeave empty\n\n\nEnable Automation and settings\nTriggers analyses automatically\nOff\n\n\nInput FASTQs / BAMs / CRAMs\nThe input files, per row, by type\nCheck that both FASTQ files of the pair are listed",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#sec-summary",
+    "href": "course/04-alignement-variant-calling.html#sec-summary",
+    "title": "Alignment and Variant Calling",
+    "section": "4. Settings for the case study",
+    "text": "4. Settings for the case study\n\n\n\n\n\n\n\n\nSetting\nValue\nReason\n\n\n\n\nInput Data\nSamples or Biosamples, as the data appear\nMatches how the FASTQ is organised\n\n\nAnalysis Name\nSRR37849526_DRAGEN_Germline_hg19\nIdentifies dataset and build\n\n\nSave Results To\nAfrican_STARS_Training\nKeeps outputs together\n\n\nSelect Samples\nHCC1395BL_normal_WES (R1 + R2)\nOur sample\n\n\nSample Sex\nFemale\nDocumented in the donor metadata\n\n\nPipeline Configuration\nMap/Align + Small Variant Caller\nFASTQ to VCF\n\n\nReference\nhg19\nMatches the kit and the BED\n\n\nTarget BED\nNimbleGen_v3_Exome.hg19.bed\nThe captured regions\n\n\nQC Coverage Metrics\nOne region set with the same BED, default filters\nExome coverage check\n\n\nMap/Align Output\nBAM\nEasy to open in IGV\n\n\nDuplicate Marking\nOn\nStandard practice\n\n\nSmall Variant Caller Output\nVCF and GVCF\nProvides the VCF we need\n\n\nQC Detect Contamination\nOn\nSanity check\n\n\nCNV, SV, STR, HLA, Star Allele, EBV, Methylation, Annotation\nOff\nNot needed; keep the run focused\n\n\nCompute / extra arguments / extra resources\nDefaults / empty\nAvoids errors\n\n\n\n\n\n\n\n\n\nWarningBefore launching\n\n\n\n\nThe FASTQ pair is accessible in the selected project.\nThe reference (hg19) and the BED (hg19, chr names) match.\nThe BED contains chr17:41209095.\nThe iCredit estimate has been read.\n\n\n\nCommon mistakes: an hg19 BED with an hg38 reference; names with and without chr mixed; the wrong sample selected; modules enabled “because they are there”.",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#sec-results",
+    "href": "course/04-alignement-variant-calling.html#sec-results",
+    "title": "Alignment and Variant Calling",
+    "section": "5. Read the results",
+    "text": "5. Read the results\nIn the project, open Analyses, then the DRAGEN Germline analysis, then Files and the summary or metrics.\n\n\n\n\n\n\n\nOutput\nWhat it is\n\n\n\n\n*.hard-filtered.vcf.gz (+ .tbi)\nCalls that pass DRAGEN’s filters. The file to use\n\n\n*.vcf.gz (not hard-filtered)\nAll calls, with filters flagged\n\n\n*.gvcf.gz\nAlso describes non-variant positions; not needed here\n\n\n*.bam (+ .bai)\nThe aligned reads\n\n\nMetrics files (mapping, coverage, contamination)\nThe quality numbers below\n\n\n\nExact file names depend on the DRAGEN version.\n\nAlignment and coverage metrics\n\n\n\n\n\n\n\n\nMetric\nWhat it tells you\nRough expectation for an exome\n\n\n\n\nMapped reads (%)\nDid the reads align to the reference?\nAbove 99 %\n\n\nDuplicate reads (%)\nLibrary complexity\nModerate; higher than a PCR-free genome\n\n\nMean coverage on target\nAverage depth over the captured regions\nMany tens of times, often more than 100x\n\n\nTarget bases at 20x or more (%)\nHow much of the target is well covered\nHigh (often above 90 %)\n\n\nContamination\nForeign DNA in the sample\nVery low\n\n\nEstimated sex\nConsistency with the metadata\nFemale\n\n\n\nThese are rough expectations; they depend on the kit and the library.",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-alignement-variant-calling.html#key-takeaways",
+    "href": "course/04-alignement-variant-calling.html#key-takeaways",
+    "title": "Alignment and Variant Calling",
+    "section": "Key takeaways",
+    "text": "Key takeaways\nDRAGEN Germline has many settings because it serves different assays and research questions. For a first exome analysis, the priorities are:\n\nthe input data and the sample information;\nthe reference build, which must match the capture kit and the target BED (hg19 here, and the same build at every later step);\nalignment, duplicate marking and small-variant calling;\ncoverage and quality metrics.\n\nAdvanced options should be introduced only when their biological purpose and input requirements are clear.",
+    "crumbs": [
+      "Human genomic",
+      "Alignment and Variant Calling"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html",
+    "href": "course/04-sequencing-data-QC.html",
+    "title": "Sequencing data and quality control",
+    "section": "",
+    "text": "NoteWhere this page fits\n\n\n\nBCL → FASTQ → QC → alignment → coverage metrics, then variant calling (next page).",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#sec-bcl",
+    "href": "course/04-sequencing-data-QC.html#sec-bcl",
+    "title": "Sequencing data and quality control",
+    "section": "1. BCL to FASTQ and sample sheets",
+    "text": "1. BCL to FASTQ and sample sheets\nA NovaSeq run does not produce FASTQ files directly. The instrument writes BCL files (base calls with quality scores) plus run metadata. A conversion step then creates FASTQ files:\nNovaSeq run → BCL files + run metadata → BCL Convert → per-sample FASTQ files\nBCL Convert performs the base-call conversion and demultiplexing: it separates reads by sample using the index sequences. The mapping from index to sample comes from the sample sheet.\n\nThe sample sheet\nSampleSheet.csv tells the software which index combination belongs to which sample. A minimal, simplified example:\n[Header]\nFileFormatVersion,2\n\n[BCLConvert_Data]\nLane,Sample_ID,Index,Index2\n1,Sample_A,ATTACTCG,TATAGCCT\n1,Sample_B,TCCGGAGA,ATAGAGGC\nThe exact sections and column names depend on the software version. Check the BCL Convert documentation for the version you use.\n\n\nInstalling BCL Convert\nBCL Convert is distributed by Illumina and runs on Linux (64-bit) only. It is not available through apt, conda or pip. Typical steps:\n\nDownload the installer from the Illumina support site here (BCL Convert Software page, a free Illumina account is required). The file is an RPM package, for example bcl-convert-4.x.x-x.el7.x86_64.rpm.\nInstall it (administrator rights needed):\n\nsudo rpm -i bcl-convert-4.x.x-x.el7.x86_64.rpm\n\nCheck that it works:\n\nbcl-convert --version\nbcl-convert --help\nOn Debian/Ubuntu, rpm is not the native package manager. Use alien or ask your system administrator. On a shared HPC cluster, BCL Convert is often already installed as a module (module avail bcl), so check before installing anything.\n\n\n\n\n\n\nNote\n\n\n\nBCL Convert needs a lot of memory and CPU cores for a full NovaSeq run. Check the system requirements for your version in the Illumina documentation before running it.\n\n\n\n\nRunning BCL Convert on the command line\nThe basic command needs three things: the run folder, the sample sheet, and an output folder.\nbcl-convert \\\n  --bcl-input-directory /path/to/run_folder \\\n  --sample-sheet /path/to/SampleSheet.csv \\\n  --output-directory /path/to/fastq_output\nUseful options:\n\n\n\n\n\n\n\nOption\nPurpose\n\n\n\n\n--force\nOverwrite an existing output directory\n\n\n--no-lane-splitting true\nMerge reads from all lanes into one FASTQ per sample\n\n\n--bcl-sampleproject-subdirectories true\nWrite FASTQ files in one subfolder per project\n\n\n--first-tile-only true\nConvert only the first tile, for a quick test\n\n\n--bcl-num-conversion-threads, --bcl-num-compression-threads, --bcl-num-decompression-threads\nControl CPU usage\n\n\n\nA quick test before a full conversion:\nbcl-convert \\\n  --bcl-input-directory /path/to/run_folder \\\n  --sample-sheet SampleSheet.csv \\\n  --output-directory test_output \\\n  --first-tile-only true \\\n  --force\n\n\nChecking the output\nAfter a successful run, the output directory contains:\n\nthe per-sample files Sample_A_S1_R1_001.fastq.gz and Sample_A_S1_R2_001.fastq.gz\nUndetermined_S0_R1_001.fastq.gz and Undetermined_S0_R2_001.fastq.gz for unassigned reads\na Reports/ folder with Demux_Metrics.csv (reads per sample) and Top_Unknown_Barcodes.csv (most frequent unassigned indexes)\na Logs/ folder with the run log\n\nIf the Undetermined file is very large, the usual causes are a wrong index in the sample sheet or a wrong index orientation (for example Index2 given as the reverse complement). Top_Unknown_Barcodes.csv helps to diagnose this.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#the-case",
+    "href": "course/04-sequencing-data-QC.html#the-case",
+    "title": "Sequencing data and quality control",
+    "section": "The case",
+    "text": "The case\n\n\n\n\n\n\nTipCase summary (based on public cell-line documentation)\n\n\n\nA 43-year-old woman was diagnosed with triple-negative ductal breast carcinoma (stage I, grade 3). Her mother also had breast cancer, raising the question of a possible inherited predisposition.\nTwo cell lines were established from this patient: HCC1395, derived from her breast tumour, and HCC1395BL, derived from her blood and established as a normal lymphoblastoid cell line. Both have been widely used in biomedical research, and sequencing data are publicly available.\nIn this case study, we will focus on the matched normal sample, HCC1395BL, to investigate germline variation.\nThe central question: Could this woman carry an inherited pathogenic variant in a breast cancer susceptibility gene, and what evidence would be needed to assess its potential significance for her and her relatives?\nOur goal is to identify and prioritise candidate variants using sequencing quality control, variant calling, annotation and interpretation. This is a research exercise, not a clinical diagnosis or a clinical classification of any variant.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#sec-data",
+    "href": "course/04-sequencing-data-QC.html#sec-data",
+    "title": "Sequencing data and quality control",
+    "section": "The data used in the case study",
+    "text": "The data used in the case study\n\n\n\n\n\n\n\nItem\nValue\n\n\n\n\nSRA run\nSRR37849526 (experiment SRX32714296, study PRJNA1445230)\n\n\nSample\nHCC1395BL_normal_WES: whole exome of the normal (blood-derived) cell line of a breast cancer patient\n\n\nCapture\nNimbleGen Exome v3 (hybrid selection)\n\n\nPlatform\nIllumina HiSeq 2500, paired-end\n\n\nSize\nabout 77.7 million read pairs, 15.5 Gb of bases\n\n\n\nSince the normal sample is used to look for inherited (germline) variants, we start with its reads.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#sec-upload",
+    "href": "course/04-sequencing-data-QC.html#sec-upload",
+    "title": "Sequencing data and quality control",
+    "section": "2.Uploading a dataset to BaseSpace",
+    "text": "2.Uploading a dataset to BaseSpace\nBaseSpace Sequence Hub allows you to upload sequencing data generated outside the platform, such as FASTQ files produced by a local bioinformatics pipeline. You can upload data through the web interface or use the BaseSpace Command-Line Interface (CLI) for larger datasets. Illumina: Uploading FASTQ files.\n\n1. Upload from the web interface\n\nCreate a free account at BaseSpace Sequence Hub and sign in.\nOpen an existing project where you have write access, or create a project.\nOpen the project and select File → Upload → Files.\nSelect the file type, such as FASTQ.\nSelect or create the sample or biosample associated with the data, and provide the required library information.\nSelect Finish Upload and wait for the transfer to complete.\n\nThe web uploader supports files up to 250 GB per file and up to 16 files per upload, according to Illumina’s BaseSpace CLI guidance. For larger transfers, use the CLI. Upload documentation.\n\n\n2. Upload FASTQ files using the CLI\nThe BaseSpace CLI (bs) is useful when uploading many FASTQ files or transferring large datasets.\nStep 1 — Install the CLI\nDownload the version for your operating system from the official BaseSpace CLI documentation.\nStep 2 — Authenticate\nbs auth\nFollow the authentication instructions displayed by the CLI.\nStep 3 — Identify your project\nbs list projects\nAlternatively, obtain the project ID from the project URL in your browser.\nStep 4 — Upload FASTQ files\nSuppose the FASTQ files are stored in ./data/fastq/. Upload them to an existing project:\nbs dataset upload \\\n  -p &lt;PROJECT_ID&gt; \\\n  --recursive ./data/fastq/\nReplace &lt;PROJECT_ID&gt; with the actual project ID.\nThe CLI defaults to FASTQ uploads. The files must satisfy BaseSpace’s FASTQ naming and content requirements. Official upload instructions.\n\n\n3. Upload a complete sequencing run\nIf you want to upload an entire instrument run, including its BCL files and run metadata, use the run-upload command rather than the FASTQ dataset-upload command.\nFor example:\nbs authenticate -c run-upload --scopes \"CREATE RUNS\"\n\nbs -c run-upload upload run \\\n  -n MyNovaSeqRun \\\n  -t NovaSeq6000 \\\n  /path/to/run_folder\nReplace the run name, instrument type and directory with the values for your dataset. The run folder must contain the required Illumina run files, including RunParameters.xml and RunInfo.xml. A compatible SampleSheet.csv is recommended for automatic FASTQ generation where supported. Official run-upload documentation.\n\n\n4. Verify the upload\nAfter the transfer, open the project in BaseSpace and confirm that the uploaded dataset or run is visible. For FASTQ uploads, check that both R1 and R2 files are present for paired-end samples.\nImportant: Uploading FASTQ files adds data to a project; uploading a complete BCL run is a different workflow. Do not upload human genomic data to a public or shared project unless the appropriate permissions and data-governance requirements are satisfied.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#sec-fastq",
+    "href": "course/04-sequencing-data-QC.html#sec-fastq",
+    "title": "Sequencing data and quality control",
+    "section": "3. Understand FASTQ files",
+    "text": "3. Understand FASTQ files\n\nFASTQ structure\nEach read uses four lines:\n\n\n\n\n\n\n\nLine\nContent\n\n\n\n\n1\nHeader, starting with @: the read identifier (instrument, run, flowcell, lane, tile, coordinates, read number)\n\n\n2\nThe nucleotide sequence\n\n\n3\nA separator, +\n\n\n4\nThe Phred quality scores, one character per base\n\n\n\n@INSTRUMENT:RUN:FLOWCELL:LANE:TILE:X:Y 1:N:0:INDEX\nGATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT\n+\nAAAFFJJJJJJFJJJJJJJJFJJJJJJJFJJJJJJJFJJJJJJJFJJJJFJJJJJJJJFJJ\nThis is an illustration of the format, not a read from the data.\n\n\nPhred quality scores\nA Phred score Q gives the probability that a base call is wrong:\n\n\n\nQ\nChance of a wrong base\nAccuracy\n\n\n\n\n10\n1 in 10\n90 %\n\n\n20\n1 in 100\n99 %\n\n\n30\n1 in 1,000\n99.9 %\n\n\n40\n1 in 10,000\n99.99 %\n\n\n\nIn Illumina FASTQ files each score is stored as one character (ASCII code minus 33).\n\n\nR1 and R2 in paired-end sequencing\nThe two ends of each DNA fragment are read separately:\n\nR1: the forward read.\nR2: the reverse read of the same fragment.\nThe two files must hold the same number of reads, in the same order: read n in R1 is the mate of read n in R2. The headers match except for the read number (1: and 2:).\n\n#| eval: false\n# Optional, on a small FASTQ subset shared by the instructor\nzcat sample_R1.fastq.gz | head -n 8\nzcat sample_R2.fastq.gz | head -n 8\necho $(( $(zcat sample_R1.fastq.gz | wc -l) / 4 ))    # reads in R1\necho $(( $(zcat sample_R2.fastq.gz | wc -l) / 4 ))    # reads in R2 (must be equal)",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#sec-metrics",
+    "href": "course/04-sequencing-data-QC.html#sec-metrics",
+    "title": "Sequencing data and quality control",
+    "section": "4. Sequencing quality metrics",
+    "text": "4. Sequencing quality metrics\nFastQC reads the FASTQ files and reports one section per metric.\n\n\n\n\n\n\n\n\n\nMetric\nWhat it shows\nWhat is acceptable\nWhat would worry you\n\n\n\n\nPer-base sequence quality\nQuality of each position along the reads\nMost positions at Q30 or above, with a slight drop at the 3’ end\nA drop across the whole read, or a sudden dip\n\n\nPer-sequence quality scores\nDistribution of the mean quality per read\nA single peak at high quality\nA second peak at low quality\n\n\nAdapter content\nShare of reads containing adapter sequence\nClose to zero\nAdapter content rising towards the 3’ end\n\n\nRead length\nLength of the reads\nOne length, as expected (about 100 bases for this run)\nMany different lengths or an unexpected value\n\n\nGC content\nShape of the GC distribution of reads\nOne smooth peak\nA shifted or double peak, which can indicate contamination\n\n\n\nOther FastQC modules (sequence duplication levels, per-base sequence content, overrepresented sequences) are common to flag for hybrid-capture exomes. A duplicated or unevenly composed library is not necessarily a problem: judge it in context, and remember that FastQC and the instrument’s own run metrics do not measure the same things.\nReading the read length for this run. 15.5 Gb of bases for about 77.7 million read pairs (about 155 million reads) gives about 100 bases per read. FastQC should report a length close to that.\n\n4.1 Run FastQC in BaseSpace\nBaseSpace offers FastQC as an app (and a FASTQ Toolkit app for trimming and filtering).\nSteps:\n\nIn the project, open the Apps tab and search for FastQC.\nOpen the app and select Launch App.\nGive the analysis a name, for example FastQC_HCC1395BL_WES, and choose the project in which to save the results.\nFor the input, select the sample / dataset HCC1395BL_normal_WES (SRR37849526).\nCheck the cost estimate, then launch.\nFollow the status in Analyses. When it shows Complete, open it and look at the report. Each metric is given with a pass, warning or failure marker, per read (R1 and R2).\n\n\n\n4.2 Decision\n\n\n\n\n\n\n\nSituation\nDecision\n\n\n\n\nQuality is high across most of the read, adapters are close to none, R1 and R2 have the same number of reads\nAcceptable: proceed to alignment\n\n\nA slight drop at the 3’ end, a low level of adapter, or warnings that are typical of exomes\nAcceptable with a note: proceed, and write the observation down\n\n\nA strong quality drop, a high adapter content, or very different R1 and R2\nInvestigate: trimming (FASTQ Toolkit) or a different dataset may be needed\n\n\nR1 and R2 have different numbers of reads, unexpected read length, or a corrupted file\nStop: the files may be incomplete; fix the import before going further\n\n\n\nWrite a short conclusion in the form: “The data are acceptable / not acceptable because …”.\nA good FASTQ QC does not guarantee a good analysis. The next page checks the aligned data (mapping rate, coverage, contamination), which is the real test of whether the sample is fit for variant calling.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "course/04-sequencing-data-QC.html#key-takeaways",
+    "href": "course/04-sequencing-data-QC.html#key-takeaways",
+    "title": "Sequencing data and quality control",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\nA FASTQ read has four lines: identifier, sequence, separator and Phred qualities.\nPaired-end data come in two files, R1 and R2, which must hold the same reads in the same order.\nA Phred score of 30 means about one wrong base in 1,000.\nFastQC reports per-base quality, per-sequence quality, adapter content, read length and GC content; MultiQC combines several reports.\nWarnings have to be read in context: some are expected for a hybrid-capture exome.\nThe decision is explicit: acceptable, acceptable with a note, investigate, or stop.\nNext: alignment with DRAGEN and coverage metrics.\n\nNext page: alignment and variant calling with BaseSpace.",
+    "crumbs": [
+      "Human genomic",
+      "Sequencing data and quality control"
+    ]
+  },
+  {
+    "objectID": "exercises/00-first_command_line.html",
+    "href": "exercises/00-first_command_line.html",
+    "title": "Command line basics",
+    "section": "",
+    "text": "All the tools in this course (FastQC, bwa, samtools…) are run from the terminal, not by clicking. This section gives you the minimum you need. Type the examples yourself: you learn by doing.\n\n\n\n\n\n\nNoteWhich terminal?\n\n\n\n\nLinux / macOS: open the Terminal application.\nWindows: use WSL (Windows Subsystem for Linux) or Git Bash. Your Windows disk C: is then at /mnt/c/.\n\n\n\n\nReading a command\nls -l -h /home/awa/data\n\n\n\n\n\n\n\n\nPart\nName\nRole\n\n\n\n\nls\ncommand\nthe program to run\n\n\n-l, -h\noptions (flags)\nchange the behaviour; can be combined: -lh\n\n\n/home/awa/data\nargument\nwhat the command works on (file, folder…)\n\n\n\n\nThe prompt (e.g. awa@pc:~$) means the terminal is waiting for you. Do not type the $.\nLinux is case-sensitive: Sample.fastq and sample.fastq are two different files.\nLines starting with # are comments, ignored by the shell.\nTab auto-completes names (use it all the time, it avoids typos). ↑ brings back the previous command. Ctrl+C stops a running command.\n\n\n\nPaths: where are my files?\nA path is the address of a file or folder. Everything depends on understanding paths.\n/                          ← root of the whole system\n├── home/\n│   └── awa/               ← home directory of user \"awa\" (shortcut: ~)\n│       └── project/\n│           ├── data/\n│           │   ├── sample1_R1.fastq.gz\n│           │   └── sample1_R2.fastq.gz\n│           ├── ref/\n│           │   └── reference.fasta\n│           └── results/\n│               └── trimmed/\n\n\n\n\n\n\n\n\nSymbol\nMeaning\nExample\n\n\n\n\n/\nroot of the system (and the separator between folders)\n/home/awa\n\n\n~\nyour home directory\n~/project = /home/awa/project\n\n\n.\nthe current directory\n./script.sh\n\n\n..\nthe parent directory (one level up)\ncd ..\n\n\n-\nthe previous directory (with cd)\ncd -\n\n\n\nAbsolute path: starts with / (or ~). It works from anywhere.\nls /home/awa/project/data\nRelative path: does not start with /. It starts from where you are now (the current directory).\n# I am in /home/awa/project\nls data                  # = /home/awa/project/data\nls ref/reference.fasta   # = /home/awa/project/ref/reference.fasta\n\n# I am in /home/awa/project/results/trimmed\nls ../..                 # = /home/awa/project   (two levels up)\nls ../../data            # = /home/awa/project/data\n\n\n\n\n\n\nTipRule of thumb\n\n\n\n\n“No such file or directory” is almost always a path problem: run pwd and ls to check where you are.\nInside scripts and pipelines, prefer relative paths from the project root so the project can be moved to another computer.\nAvoid spaces and accents in file names: use sample_1.fastq, not my sample 1.fastq. If a name contains spaces, put it in quotes: ls \"my folder\".\n\n\n\n\n\nMoving around\npwd (print working directory): where am I?\npwd\n# /home/awa\nls: list the content of a folder.\nls                 # current folder\nls data            # a given folder\nls -l              # long format: permissions, owner, size, date\nls -lh             # sizes readable (K, M, G)\nls -a              # also show hidden files (names starting with .)\nls -lht            # sorted by time, newest first\nls data/*.fastq.gz # only the matching files (see wildcards below)\ncd (change directory): go to another folder.\ncd project             # relative: go into \"project\"\ncd /home/awa/project   # absolute: works from anywhere\ncd ..                  # one level up\ncd ../..               # two levels up\ncd ~                   # home (same as just: cd)\ncd -                   # back to the previous folder\n\n\nCreating files and folders\nmkdir: create a folder.\nmkdir project\nmkdir -p project/results/trimmed   # -p creates all missing parent folders\nmkdir -p project/{data,ref,results,logs}   # several folders at once\ntouch: create an empty file (or update its date).\ntouch notes.txt\nnano: a simple text editor in the terminal.\nnano notes.txt      # type your text, Ctrl+O then Enter = save, Ctrl+X = quit\n\n\nCopying, moving, renaming, deleting\ncp (copy):\ncp ref/reference.fasta ref/backup.fasta     # copy a file\ncp data/*.fastq.gz /home/awa/backup/        # copy many files into a folder\ncp -r data data_copy                        # -r = recursive, needed for folders\nmv (move and rename):\nmv notes.txt docs/              # move into the folder docs\nmv notes.txt notes_v2.txt       # rename\nmv sample1.fq data/sample1.fq   # move + keep the name\nrm (remove):\nrm notes.txt          # delete a file\nrm -i notes.txt       # ask for confirmation first (safer)\nrm -r old_folder      # delete a folder and everything inside\nrmdir empty_folder    # delete a folder only if it is empty\n\n\n\n\n\n\nWarningThere is no recycle bin\n\n\n\nrm is permanent. Never run rm -rf on a path you have not checked with ls first. Be especially careful with *: rm *.fastq deletes all your reads, so test with ls *.fastq first.\n\n\n\n\nLooking inside files\ncat notes.txt                  # print the whole file (small files only!)\nhead sample.fastq              # first 10 lines\nhead -n 4 sample.fastq         # first 4 lines = one FASTQ read\ntail -n 20 logfile.txt         # last 20 lines\ntail -f logfile.txt            # follow a file as it grows (Ctrl+C to stop)\nless reference.fasta           # scroll: space = next page, q = quit, /word = search\nwc -l notes.txt                # count lines (-w words, -c bytes)\nfile sample.fastq.gz           # what type of file is it?\n\n\n\n\n\n\nTip\n\n\n\nNever cat a FASTQ or BAM file: it can contain millions of lines. Use head or less.\n\n\n\n\nWildcards: select many files at once\n\n\n\n\n\n\n\n\nPattern\nMatches\nExample\n\n\n\n\n*\nany number of characters\nls *.fastq.gz\n\n\n?\nexactly one character\nls sample?_R1.fastq.gz (sample1, sample2…)\n\n\n[12]\none of the listed characters\nls sample[12]_R1.fastq.gz\n\n\n{a,b}\nlist of alternatives\nls sample1_R{1,2}.fastq.gz\n\n\n\nls data/*_R1.fastq.gz      # all forward reads\nls data/sample1_R{1,2}.fastq.gz\n\n\nSearching and manipulating text\ngrep: find lines containing a pattern.\ngrep \"&gt;\" reference.fasta            # lines with \"&gt;\" = sequence names\ngrep -c \"&gt;\" reference.fasta         # count them\ngrep -i \"error\" logfile.txt         # ignore upper/lower case\ngrep -v \"#\" variants.vcf            # lines that do NOT contain \"#\" (remove VCF header)\ngrep -n \"ERROR\" logfile.txt         # show line numbers\ncut, sort, uniq: work on columns and tables.\ncut -f1 table.tsv                   # first column of a tab-separated file\ncut -d\",\" -f1,3 table.csv           # columns 1 and 3 of a CSV (-d = separator)\nsort names.txt                      # alphabetical order\nsort -n numbers.txt                 # numeric order\nsort names.txt | uniq               # remove duplicates (input must be sorted)\nsort names.txt | uniq -c            # count each distinct value\n\n\nPipes and redirections\nThe pipe | sends the output of one command to the next. &gt; writes the output to a file (replaces it), &gt;&gt; appends to a file.\nls data | wc -l                         # how many files in data?\ngrep -v \"#\" variants.vcf | wc -l        # how many variants?\nls data &gt; file_list.txt                 # save the list in a file\necho \"run 1 done\" &gt;&gt; logfile.txt        # add a line at the end\ncommand 2&gt; errors.txt                   # save error messages only\ncommand &gt; out.txt 2&gt;&1                  # save output + errors together\n\n\nCompressed files\nSequencing files are usually compressed (.gz) to save space.\ngzip notes.txt                  # compress -&gt; notes.txt.gz\ngunzip notes.txt.gz             # decompress\nzcat sample.fastq.gz | head -n 8        # read a .gz without decompressing\nzcat sample_R1.fastq.gz | wc -l         # number of lines...\necho $(( $(zcat sample_R1.fastq.gz | wc -l) / 4 ))   # ...divided by 4 = number of reads\n\ntar -czvf archive.tar.gz folder/   # create an archive (c=create, z=gzip, v=verbose, f=file)\ntar -xzvf archive.tar.gz           # extract it (x=extract)\n\n\nFinding files and checking space\nfind . -name \"*.fastq.gz\"           # search from the current folder\nfind /home/awa/project -name \"*.bam\" -size +1G   # BAM files bigger than 1 GB\ndu -sh data                         # total size of a folder\ndu -sh data/*                       # size of each item inside\ndf -h                               # free space on the disks\n\n\nGetting help\nfastqc --help          # most bioinformatics tools explain themselves\nman ls                 # manual of a Linux command (q to quit)\nwhich samtools         # where is this program installed? (nothing = not installed)\nhistory | tail         # your last commands\n\n\nPermissions and running scripts\nls -l shows permissions such as -rwxr-xr-- (read, write, execute for owner, group, others).\nchmod +x run_pipeline.sh      # make a script executable\n./run_pipeline.sh             # run it (./ = \"in the current folder\")\nbash run_pipeline.sh          # or run it with bash, no chmod needed\n\n\nVariables and loops (to process many samples)\n# Variables: no spaces around =, use $ to read the value\nSAMPLE=sample1\necho $SAMPLE\necho \"data/${SAMPLE}_R1.fastq.gz\"\n\n# Loop: do the same thing for each file\nfor f in data/*_R1.fastq.gz\ndo\n  echo \"Counting reads in $f\"\n  echo $(( $(zcat $f | wc -l) / 4 ))\ndone\n\n\nDownloading\nwget https://example.org/reference.fasta      # download a file\ncurl -O https://example.org/reference.fasta   # same with curl\n\n\nCheat sheet\n\n\n\nI want to…\nCommand\n\n\n\n\nknow where I am\npwd\n\n\nlist files\nls -lh\n\n\ngo to a folder\ncd path\n\n\ngo up one level\ncd ..\n\n\ncreate folders\nmkdir -p a/b/c\n\n\ncopy / move / delete\ncp, mv, rm\n\n\nread the start / end of a file\nhead, tail\n\n\nread a compressed file\nzcat file.gz \\| head\n\n\ncount lines\nwc -l\n\n\nsearch text\ngrep\n\n\nchain commands\n\\|\n\n\nsave output to a file\n&gt; or &gt;&gt;\n\n\nget help\ntool --help, man tool\n\n\n\n\n\nCommon mistakes\n\nNo such file or directory: wrong path or typo. Check with pwd, ls, and Tab completion.\nPermission denied: the file is not executable (chmod +x) or you do not own the folder.\ncommand not found: the program is not installed or not in your PATH (check with which).\nSpaces in names: they split the name into two arguments. Rename the file or use quotes.\nOverwriting by accident: &gt; and mv/cp replace existing files without asking. Use cp -i, mv -i.\nWorking in the wrong folder: start each session with pwd.\n\n\n\nPractice\nDo this in order and check each result with ls:\ncd ~\nmkdir -p course/{data,ref,results/trimmed,logs}\ncd course\ntouch data/sample1_R1.fastq data/sample1_R2.fastq\nls -R                                   # show the whole tree\ncp data/sample1_R1.fastq results/trimmed/\nmv results/trimmed/sample1_R1.fastq results/trimmed/sample1_R1_trimmed.fastq\ncd results/trimmed\npwd                                     # where am I?\ncd ../../data                           # relative path: two up, then data\nls &gt; ../logs/files.txt\ncat ../logs/files.txt\nTo go further, do Exercise 0: command line basics.",
+    "crumbs": [
+      "Basic command line",
+      "Command line basics"
     ]
   },
   {
@@ -608,6 +1050,7 @@
     "section": "",
     "text": "By the end of this page you will have: conda installed, an environment called analyse with all the tools, the course material on your computer, and a viewer (IGV) to look at alignments.",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -619,6 +1062,7 @@
     "section": "1. Install Conda (Miniconda)",
     "text": "1. Install Conda (Miniconda)\nConda is a program that installs bioinformatics tools and keeps them in separate environments, so that one project does not break another. We use Miniconda, a lightweight, free Conda installer. We will add the conda-forge and bioconda channels to install the bioinformatics tools required for this course.\n\nLinux\nDownload and install the latest Miniconda installer for your system:\nmkdir -p ~/miniconda-installer\ncd ~/miniconda-installer\n\ncurl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh\nbash Miniconda3-latest-Linux-$(uname -m).sh\nFollow the instructions. Accept the licence and answer yes when asked whether to initialize Conda. Then close and reopen the terminal.\n\n\nMac (Intel or Apple chip)\nDownload and install Miniconda:\nmkdir -p ~/miniconda-installer\ncd ~/miniconda-installer\n\ncurl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-$(uname -m).sh\nbash Miniconda3-latest-MacOSX-$(uname -m).sh\nFollow the instructions. Accept the licence and initialize Conda when prompted. Then close and reopen the terminal.\n\n\nConfigure Conda channels\nRun these commands once:\nconda config --add channels defaults\nconda config --add channels bioconda\nconda config --add channels conda-forge\nconda config --set channel_priority strict\n\n\nCheck the installation\nconda --version\nconda info\nYou should see the Conda version and installation details. The terminal prompt may start with (base).\nNote: Miniconda does not include mamba by default. You can use conda instead, or install mamba in the base environment:\nconda install -n base -c conda-forge mamba",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -630,6 +1074,7 @@
     "section": "2. Create the Conda environment analyse",
     "text": "2. Create the Conda environment analyse\nIf you installed mamba, run:\nmamba env create -f environment.yml\nOtherwise, use:\nconda env create -f environment.yml\nThe installation may take 10–20 minutes or longer, depending on your internet connection and computer.\nActivate the environment:\nconda activate analyse\nThe prompt should now start with (analyse). Run this activation command in every new terminal before using the course tools.",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -641,6 +1086,7 @@
     "section": "3. Check the tools, one by one",
     "text": "3. Check the tools, one by one\nDo not run a script. Type each command and look at the answer: a version number means the tool is installed. If you see command not found, the environment is not active (conda activate analyse) or the tool failed to install — tell the instructor, and see “Plan B” below.\nfastqc --version\nmultiqc --version\ntrimmomatic -version\nseqkit version\nkraken2 --version | head -1\nspades.py --version\nquast.py --version\nbwa 2&gt;&1 | grep Version\nminimap2 --version\nsamtools --version | head -1\nbcftools --version | head -1\nivar version | head -1\nmafft --version\niqtree2 --version | head -1\nfasterq-dump --version",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -652,6 +1098,7 @@
     "section": "4. Install IGV",
     "text": "4. Install IGV\nIGV (Integrative Genomics Viewer) shows the reads stacked along the genome, like a zoomable photograph of an alignment. Download the desktop version from https://igv.org/doc/desktop/ (choose Linux or Mac), or use the browser version at https://igv.org/app.",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -663,6 +1110,7 @@
     "section": "5. Real data from NCBI (SARS-CoV-2, Rift Valley fever…)",
     "text": "5. Real data from NCBI (SARS-CoV-2, Rift Valley fever…)\nThe practice data of this course are small, so that every step runs in seconds. The commands you learn work exactly the same on real public data. Here is how to get some from NCBI.\n\na) Find a sequencing run\n\nOpen the SRA database: https://www.ncbi.nlm.nih.gov/sra\nSearch your pathogene, for example:\n\nRift Valley fever: \"Rift Valley fever virus\"[Organism] AND \"ILLUMINA\"[Platform] AND \"PAIRED\"[Layout]\n\nPick a result that is Illumina, paired-end, with a small size (a few hundred MB at most). Note its Run accession: it starts with SRR, ERR or DRR (below we write SRRXXXXXXX: replace it with yours). Read the description to know which protocol was used (amplicon, capture, metagenomics).\n\n\n\nb) Download the reads\nmkdir -p data\ncd data\nprefetch SRR26396743\nfasterq-dump --split-3 --threads 2  SRR26396743\ngzip SRR26396743_1.fastq SRR26396743_2.fastq\ncd ..\n--split-3 separates paired-end reads into separate FASTQ files: two files for reads that form a pair (_1.fastq and _2.fastq) and a third file (.fastq) for reads that do not have a matching mate.\nCheck that R1 and R2 have the same number of reads:\nseqkit stats data/*.fastq.gz\n\n\n\n\n\n\nTipResults\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFile\nFormat\nType\nNumber of reads\nTotal bases\nMin. length\nAverage length\nMax. length\n\n\n\n\nSRR26396743_1.fastq.gz\nFASTQ\nDNA\n330,144\n48,517,409\n51\n147.0\n151\n\n\nSRR26396743_2.fastq.gz\nFASTQ\nDNA\n330,185\n48,275,763\n50\n146.2\n151\n\n\n\n\n\n\n\n\nc) Download the reference genome\nSARS-CoV-2 (one sequence, 29.9 kb):\ncurl -fL --retry 5 --retry-delay 2 \\\n  \"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NC_045512.2&rettype=fasta&retmode=text\" \\\n  -o data/SARS-CoV-2_NC_045512.2.fasta\n\n\n\n\n\n\nTip\n\n\n\n\n-f: Fail if the server returns an HTTP error.\n-L: Follow redirects automatically.\n--retry 5: Retry failed requests up to five times.\n--retry-delay 2: Wait two seconds between retries.\n-o: Save the downloaded content to a specified file.\n\n\n\nseqkit stats data/*.fasta\n\n\n\n\n\n\nTipResults\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFile\nFormat\nType\nNumber of reads\nTotal bases\nMin. length\nAverage length\nMax. length\n\n\n\n\ndata/NC_045512.2.fasta\nFASTA\nDNA\n1\n29,903\n29,903\n29,903\n29,903",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -674,6 +1122,7 @@
     "section": "Troubleshooting",
     "text": "Troubleshooting\n\n\n\n\n\n\n\nProblem\nSolution\n\n\n\n\nconda: command not found\nclose and reopen the terminal; otherwise rerun the Miniforge installer and accept “initialize conda”\n\n\nThe prompt has no (analyse)\nconda activate analyse\n\n\nThe environment creation is very slow\nuse mamba (not conda)\n\n\nOne tool is missing\ninstall it alone: mamba install -n analyse -c bioconda &lt;tool&gt;",
     "crumbs": [
+      "Viral Genomics",
       "Preparations",
       "Setup"
     ]
@@ -685,6 +1134,7 @@
     "section": "",
     "text": "Goal: Align trimmed SARS-CoV-2 reads to the reference genome, evaluate mapping statistics, and inspect aligned reads in a genome browser.\nActivate the course environment:\nIn this exercise, we use the paired-end reads from NCBI run SRR26396743, cleaned in the previous session, and the SARS-CoV-2 reference genome NC_045512.2.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]
@@ -696,6 +1146,7 @@
     "section": "Step 1 — Index the reference genome",
     "text": "Step 1 — Index the reference genome\nBWA requires an index to align reads efficiently. Samtools also creates a FASTA index, which is useful for downstream analysis and visualization.\nbwa index data/NC_045512.2.fasta\nsamtools faidx data/NC_045512.2.fasta\nQuestions\n\nWhat files are created by bwa index?\nWhat is the purpose of the .fai file?\nWhy do we index the reference before mapping?\n\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\n\nbwa index creates auxiliary index files that allow BWA to search the reference efficiently.\nsamtools faidx creates a FASTA index (.fai) containing sequence names, lengths, and file offsets.\nIndexing avoids rebuilding the reference search structures every time we map reads.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]
@@ -707,6 +1158,7 @@
     "section": "Step 2 — Map the trimmed reads",
     "text": "Step 2 — Map the trimmed reads\nCreate an output directory:\nmkdir -p results/bam\nAlign the paired-end reads :\nbwa mem \\\n  data/NC_045512.2.fasta \\\n  results/trimmed/SRR26396743_1_paired.fastq.gz \\\n  results/trimmed/SRR26396743_2_paired.fastq.gz \\\n  &gt; results/bam/SRR26396743.sam\nConvert to BAM and sort the alignments\n\nsamtools sort \\\n  -@ 2 \\\n  -o results/bam/SRR26396743.sorted.bam \\\n  results/bam/SRR26396743.sam\nIndex the sorted BAM file:\nsamtools index results/bam/SRR26396743.sorted.bam\nCalculate the mapping statistics and save them:\nsamtools flagstat results/bam/SRR26396743.sorted.bam  &gt; results/bam/SRR26396743.flagstat.txt\nWhat do these commands do?\n\nbwa mem aligns the paired-end reads to the reference genome.\n-t 2 uses two threads for BWA.\n-R adds read-group information, including the run and sample identifiers.\nsamtools sort sorts alignments by genomic coordinate and writes a BAM file.\nsamtools index creates an index for the BAM file.\nsamtools flagstat summarizes alignment and pairing statistics.\n\nQuestions\n\nWhat is the difference between a FASTQ file and a BAM file?\nWhy do we use a reference genome?\nWhy are the reads sorted after alignment?\n\n\n\n\n\n\n\nTipAnswers\n\n\n\n\n\nFASTQ files contain read sequences and their base-quality scores. BAM files contain alignment records, including read positions, mapping information, and flags.\nThe reference genome provides the coordinate system used to locate reads along the viral genome.\nSorting arranges the alignments by genomic position, making downstream analysis and regional access more efficient.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]
@@ -718,6 +1170,7 @@
     "section": "Step 3 — Read the mapping statistics",
     "text": "Step 3 — Read the mapping statistics\nDisplay the report:\ncat results/bam/SRR26396743.flagstat.txt\n\n\n\n\n\n\nTipPay particular attention to these lines:\n\n\n\n\nin total: total number of alignment records examined.\nmapped: number and percentage of mapped alignment records.\nproperly paired: number and percentage of records belonging to pairs aligned in the expected orientation and distance.\nprimary: primary alignment records, excluding secondary and supplementary alignments.\n\n\n\n\n\n\n\n\n\nTipAlignment Quality Assessment\n\n\n\n\n\nAfter mapping the paired-end reads to the SARS-CoV-2 reference genome using BWA-MEM, samtools flagstat was used to summarize the alignment results.\n\n\n\n\n\n\n\n\nMetric\nResult\nMeaning\n\n\n\n\nTotal reads\n662,332\nTotal number of alignment records, including primary, secondary, and supplementary records.\n\n\nPrimary alignments\n659,100\nNumber of primary alignment records, representing the main alignment for each read.\n\n\nSecondary alignments\n0\nNo secondary alignment records were reported.\n\n\nSupplementary alignments\n3,232\nAdditional alignment records for reads whose alignments are split across multiple genomic regions.\n\n\nDuplicates\n0\nNo reads were marked as duplicates in this BAM file. This does not prove that PCR or optical duplicates are absent.\n\n\nMapped reads\n662,193 (99.98%)\nPercentage of alignment records classified as mapped.\n\n\nPrimary mapped reads\n658,961 (99.98%)\nPercentage of primary alignment records classified as mapped.\n\n\nPaired reads\n659,100\nNumber of primary records identified as belonging to paired-end sequencing data.\n\n\nRead 1\n329,550\nNumber of primary records identified as the first mate.\n\n\nRead 2\n329,550\nNumber of primary records identified as the second mate.\n\n\nProperly paired\n640,776 (97.22%)\nNumber of reads whose pairs satisfy BWA-MEM’s expected pairing criteria.\n\n\nBoth mates mapped\n658,958\nNumber of primary reads for which both the read and its mate are mapped.\n\n\nSingletons\n3 (0.00%)\nNumber of primary reads mapped while their mate is unmapped.\n\n\n\n\nInterpretation\nMapping rate: Approximately 99.98% of primary reads mapped to the reference genome. This high mapping rate indicates that the reads are highly compatible with the SARS-CoV-2 reference sequence.\nProperly paired reads: Approximately 97.22% of primary reads were classified as properly paired. This suggests that most read pairs have an expected orientation and insert size.\nSupplementary alignments: The 3,232 supplementary records represent additional alignments, often produced when a read aligns in multiple segments. These are alignment records, not necessarily additional sequencing reads.\nSingletons: Only three primary reads were mapped while their mates were unmapped, representing a very small fraction of the data.\nImportant limitation: A high mapping rate does not, by itself, confirm that the genome assembly is complete or that all mapped bases are accurate. Coverage depth, coverage uniformity, mapping quality, and variant-level evidence should also be examined.\n\n\n\n\nRemember that samtools flagstat reports alignment records, not necessarily read pairs. For paired-end data, one read pair normally produces two alignment records.\nYou can also obtain a compact summary of the BAM file:\nsamtools idxstats results/bam/SRR26396743.sorted.bam\nThe output lists reference sequences, their lengths, the number of mapped records, and the number of unmapped records associated with each reference.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]
@@ -729,6 +1182,7 @@
     "section": "Step 4 — Visualize the alignments in IGV",
     "text": "Step 4 — Visualize the alignments in IGV\nIGV (Integrative Genomics Viewer) allows you to inspect aligned reads and compare their bases with the reference genome.\nFirst, confirm that both the BAM file and its index exist:\nls -lh results/bam/SRR26396743.sorted.bam*\nOpen IGV and load the reference genome:\n\nSelect Genomes → Load Genome from File…\nChoose data/NC_045512.2.fasta.\nSelect File → Load from File…\nLoad results/bam/SRR26396743.sorted.bam.\nNavigate to a genomic region by entering a coordinate, for example NC_045512.2:1000-2000, if that is the chromosome label displayed by IGV.\n\nZoom in to examine individual reads and their mismatches relative to the reference.\nQuestions\n\nDo the reads cover the whole reference genome or only some regions?\nCan you see bases that differ from the reference?\nAre the differences supported by multiple reads?\nDo the supporting reads have good base quality?\nCan you conclude that a mismatch is a true variant simply because it appears in one read?",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]
@@ -740,6 +1194,7 @@
     "section": "Step 5 — Explore read coverage",
     "text": "Step 5 — Explore read coverage\nmkdir -p results/coverage\nUse Samtools to calculate the number of reads covering each reference position:\nsamtools depth -aa results/bam/SRR26396743.sorted.bam \\\n  &gt; results/coverage/SRR26396743.depth.tsv\nObtain a summary with Samtools:\nsamtools coverage results/bam/SRR26396743.sorted.bam\n\n\n\n\n\n\nTipCoverage statistics\n\n\n\n\n\n\n\n\n\n\n\n\n\nMetric\nResult\nMeaning\n\n\n\n\nrname\nNC_045512.2\nName of the reference sequence.\n\n\nstartpos\n1\nFirst reference position included in the analysis.\n\n\nendpos\n29,903\nLast reference position included in the analysis.\n\n\nnumreads\n662,193\nNumber of alignment records overlapping the reference region.\n\n\ncovbases\n29,785\nNumber of reference bases covered by at least one aligned read.\n\n\ncoverage (%)\n99.605%\nPercentage of reference bases covered by at least one aligned read.\n\n\nmeandepth\n99.61×\nAverage sequencing depth across the reference region.\n\n\nmeanbaseq\n38\nMean base quality score, indicating high confidence in the sequenced nucleotides.\n\n\nmeanmapq\n60\nMean mapping quality score, indicating high confidence in read placement.\n\n\n\n\n\n\nCalculate the mean depth across the reference, including positions with zero coverage:\nawk '{sum += $3; n++} END {\n  if (n &gt; 0) printf \"Mean depth: %.2f\\n\", sum/n;\n  else print \"No positions found\"\n}' results/bam/SRR26396743.depth.tsv\nCalculate the proportion of reference positions covered by at least one read:\nawk '{total++; if ($3 &gt; 0) covered++}\nEND {\n  if (total &gt; 0)\n    printf \"Reference covered: %.2f%%\\n\", 100*covered/total;\n  else\n    print \"No positions found\"\n}' results/bam/SRR26396743.depth.tsv\nNext: Coverage and consensus.",
     "crumbs": [
+      "Viral Genomics",
       "FASTQ → consensus genome",
       "Mapping"
     ]

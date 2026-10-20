@@ -2,46 +2,74 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/03_coverage_consensus.html</loc>
-    <lastmod>2026-10-15T11:35:17.809Z</lastmod>
+    <lastmod>2026-10-15T06:02:08.541Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/01_fastq_and_qc.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-15T08:50:06.969Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/00_second_command_line.html</loc>
+    <lastmod>2026-10-19T17:52:22.184Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/04-variant-prioritisation.html</loc>
+    <lastmod>2026-10-19T18:50:28.531Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/04-annotation.html</loc>
+    <lastmod>2026-10-19T18:50:28.531Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/03-read-tree.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-19T16:55:56.363Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/02-reference-selection.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-19T16:55:56.363Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/02-alignment.html</loc>
-    <lastmod>2026-10-15T11:35:17.807Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/index.html</loc>
-    <lastmod>2026-10-15T11:35:17.809Z</lastmod>
+    <lastmod>2026-10-19T16:55:56.362Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/01-concepts.html</loc>
-    <lastmod>2026-10-15T11:35:17.807Z</lastmod>
+    <lastmod>2026-10-19T17:02:23.032Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/index.html</loc>
+    <lastmod>2026-10-19T16:48:00.880Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/01-sequencing-data-qc.html</loc>
+    <lastmod>2026-10-20T15:58:11.886Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/02-lineage.html</loc>
-    <lastmod>2026-10-15T11:35:17.807Z</lastmod>
+    <lastmod>2026-10-19T16:55:56.362Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/03-build-tree.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-19T16:55:56.363Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/04-alignement-variant-calling.html</loc>
+    <lastmod>2026-10-20T23:54:51.338Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/course/04-sequencing-data-QC.html</loc>
+    <lastmod>2026-10-20T23:34:30.954Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/00-first_command_line.html</loc>
+    <lastmod>2026-10-19T17:12:50.735Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/00_setup.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-15T06:10:38.951Z</lastmod>
   </url>
   <url>
     <loc>https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/exercises/02_mapping.html</loc>
-    <lastmod>2026-10-15T11:35:17.808Z</lastmod>
+    <lastmod>2026-10-15T05:33:23.386Z</lastmod>
   </url>
 </urlset>

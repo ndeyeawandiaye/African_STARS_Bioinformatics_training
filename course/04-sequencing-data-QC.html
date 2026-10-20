@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Understand the data before the analysis: BCL to FASTQ, FASTQ structure, sequencing QC,and how to download the teaching data.">
+
+<title>Sequencing data and quality control – African STRAS Fellowship - Bioinformatics Training</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../course/04-alignement-variant-calling.html" rel="next">
+<link href="../course/03-read-tree.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-e44c71e5eeba155e1faf4c72a2815ecb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">African STRAS Fellowship - Bioinformatics Training</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/">
+            Source code
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/issues">
+            Report an issue
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Sequencing data and quality control</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">Basic command line</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00-first_command_line.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command line basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00_second_command_line.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Exos - Command line basics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">Viral Genomics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Preparations</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00_setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">FASTQ → consensus genome</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/01-concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sequencing file formats and assembly strategies</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/01_fastq_and_qc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">From FASTQ to assembly: QC, trimming, assembly and identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/02_mapping.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mapping</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/03_coverage_consensus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Coverage and consensus</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Alignment, lineage &amp; reference selection</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-reference-selection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reference selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multiple sequence alignment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-lineage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lineage assignment</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text">Build and read a phylogenetic tree</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/03-build-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Build a phylogenetic tree</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/03-read-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Read a phylogenetic tree</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Human genomic</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-sequencing-data-QC.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Sequencing data and quality control</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-alignement-variant-calling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Alignment and Variant Calling</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-bcl" id="toc-sec-bcl" class="nav-link active" data-scroll-target="#sec-bcl">1. BCL to FASTQ and sample sheets</a>
+  <ul class="collapse">
+  <li><a href="#the-sample-sheet" id="toc-the-sample-sheet" class="nav-link" data-scroll-target="#the-sample-sheet">The sample sheet</a></li>
+  <li><a href="#installing-bcl-convert" id="toc-installing-bcl-convert" class="nav-link" data-scroll-target="#installing-bcl-convert">Installing BCL Convert</a></li>
+  <li><a href="#running-bcl-convert-on-the-command-line" id="toc-running-bcl-convert-on-the-command-line" class="nav-link" data-scroll-target="#running-bcl-convert-on-the-command-line">Running BCL Convert on the command line</a></li>
+  <li><a href="#checking-the-output" id="toc-checking-the-output" class="nav-link" data-scroll-target="#checking-the-output">Checking the output</a></li>
+  </ul></li>
+  <li><a href="#the-case" id="toc-the-case" class="nav-link" data-scroll-target="#the-case">The case</a></li>
+  <li><a href="#sec-data" id="toc-sec-data" class="nav-link" data-scroll-target="#sec-data">The data used in the case study</a></li>
+  <li><a href="#sec-upload" id="toc-sec-upload" class="nav-link" data-scroll-target="#sec-upload">2.Uploading a dataset to BaseSpace</a>
+  <ul class="collapse">
+  <li><a href="#upload-from-the-web-interface" id="toc-upload-from-the-web-interface" class="nav-link" data-scroll-target="#upload-from-the-web-interface">1. Upload from the web interface</a></li>
+  <li><a href="#upload-fastq-files-using-the-cli" id="toc-upload-fastq-files-using-the-cli" class="nav-link" data-scroll-target="#upload-fastq-files-using-the-cli">2. Upload FASTQ files using the CLI</a></li>
+  <li><a href="#upload-a-complete-sequencing-run" id="toc-upload-a-complete-sequencing-run" class="nav-link" data-scroll-target="#upload-a-complete-sequencing-run">3. Upload a complete sequencing run</a></li>
+  <li><a href="#verify-the-upload" id="toc-verify-the-upload" class="nav-link" data-scroll-target="#verify-the-upload">4. Verify the upload</a></li>
+  </ul></li>
+  <li><a href="#sec-fastq" id="toc-sec-fastq" class="nav-link" data-scroll-target="#sec-fastq">3. Understand FASTQ files</a>
+  <ul class="collapse">
+  <li><a href="#fastq-structure" id="toc-fastq-structure" class="nav-link" data-scroll-target="#fastq-structure">FASTQ structure</a></li>
+  <li><a href="#phred-quality-scores" id="toc-phred-quality-scores" class="nav-link" data-scroll-target="#phred-quality-scores">Phred quality scores</a></li>
+  <li><a href="#r1-and-r2-in-paired-end-sequencing" id="toc-r1-and-r2-in-paired-end-sequencing" class="nav-link" data-scroll-target="#r1-and-r2-in-paired-end-sequencing">R1 and R2 in paired-end sequencing</a></li>
+  </ul></li>
+  <li><a href="#sec-metrics" id="toc-sec-metrics" class="nav-link" data-scroll-target="#sec-metrics">4. Sequencing quality metrics</a>
+  <ul class="collapse">
+  <li><a href="#run-fastqc-in-basespace" id="toc-run-fastqc-in-basespace" class="nav-link" data-scroll-target="#run-fastqc-in-basespace">4.1 Run FastQC in BaseSpace</a></li>
+  <li><a href="#decision" id="toc-decision" class="nav-link" data-scroll-target="#decision">4.2 Decision</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Sequencing data and quality control</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Sequencing data and quality control</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">human-genomics</div>
+    <div class="quarto-category">fastq</div>
+    <div class="quarto-category">quality-control</div>
+    <div class="quarto-category">basespace</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Understand the data before the analysis: BCL to FASTQ, FASTQ structure, sequencing QC,and how to download the teaching data.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Where this page fits
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>BCL → FASTQ → QC → alignment → coverage metrics</strong>, then variant calling (next page).</p>
+</div>
+</div>
+<section id="sec-bcl" class="level2">
+<h2 class="anchored" data-anchor-id="sec-bcl">1. BCL to FASTQ and sample sheets</h2>
+<p>A NovaSeq run does not produce FASTQ files directly. The instrument writes <strong>BCL files</strong> (base calls with quality scores) plus run metadata. A conversion step then creates FASTQ files:</p>
+<pre><code>NovaSeq run → BCL files + run metadata → BCL Convert → per-sample FASTQ files</code></pre>
+<p><strong>BCL Convert</strong> performs the base-call conversion and <strong>demultiplexing</strong>: it separates reads by sample using the index sequences. The mapping from index to sample comes from the <strong>sample sheet</strong>.</p>
+<section id="the-sample-sheet" class="level3">
+<h3 class="anchored" data-anchor-id="the-sample-sheet">The sample sheet</h3>
+<p><code>SampleSheet.csv</code> tells the software which index combination belongs to which sample. A minimal, simplified example:</p>
+<pre class="text"><code>[Header]
+FileFormatVersion,2
+
+[BCLConvert_Data]
+Lane,Sample_ID,Index,Index2
+1,Sample_A,ATTACTCG,TATAGCCT
+1,Sample_B,TCCGGAGA,ATAGAGGC</code></pre>
+<p>The exact sections and column names depend on the software version. Check the BCL Convert documentation for the version you use.</p>
+</section>
+<section id="installing-bcl-convert" class="level3">
+<h3 class="anchored" data-anchor-id="installing-bcl-convert">Installing BCL Convert</h3>
+<p>BCL Convert is distributed by Illumina and runs on <strong>Linux (64-bit)</strong> only. It is not available through apt, conda or pip. Typical steps:</p>
+<ol type="1">
+<li>Download the installer from the Illumina support site <a href="https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html">here</a> (<em>BCL Convert Software</em> page, a free Illumina account is required). The file is an RPM package, for example <code>bcl-convert-4.x.x-x.el7.x86_64.rpm</code>.</li>
+<li>Install it (administrator rights needed):</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rpm <span class="at">-i</span> bcl-convert-4.x.x-x.el7.x86_64.rpm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="3" type="1">
+<li>Check that it works:</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcl-convert</span> <span class="at">--version</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bcl-convert</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Debian/Ubuntu, <code>rpm</code> is not the native package manager. Use <code>alien</code> or ask your system administrator. On a shared HPC cluster, BCL Convert is often already installed as a module (<code>module avail bcl</code>), so check before installing anything.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>BCL Convert needs a lot of memory and CPU cores for a full NovaSeq run. Check the system requirements for your version in the Illumina documentation before running it.</p>
+</div>
+</div>
+</section>
+<section id="running-bcl-convert-on-the-command-line" class="level3">
+<h3 class="anchored" data-anchor-id="running-bcl-convert-on-the-command-line">Running BCL Convert on the command line</h3>
+<p>The basic command needs three things: the run folder, the sample sheet, and an output folder.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcl-convert</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bcl-input-directory</span> /path/to/run_folder <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sample-sheet</span> /path/to/SampleSheet.csv <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-directory</span> /path/to/fastq_output</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Useful options:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--force</code></td>
+<td>Overwrite an existing output directory</td>
+</tr>
+<tr class="even">
+<td><code>--no-lane-splitting true</code></td>
+<td>Merge reads from all lanes into one FASTQ per sample</td>
+</tr>
+<tr class="odd">
+<td><code>--bcl-sampleproject-subdirectories true</code></td>
+<td>Write FASTQ files in one subfolder per project</td>
+</tr>
+<tr class="even">
+<td><code>--first-tile-only true</code></td>
+<td>Convert only the first tile, for a quick test</td>
+</tr>
+<tr class="odd">
+<td><code>--bcl-num-conversion-threads</code>, <code>--bcl-num-compression-threads</code>, <code>--bcl-num-decompression-threads</code></td>
+<td>Control CPU usage</td>
+</tr>
+</tbody>
+</table>
+<p>A quick test before a full conversion:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcl-convert</span> <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bcl-input-directory</span> /path/to/run_folder <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sample-sheet</span> SampleSheet.csv <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-directory</span> test_output <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--first-tile-only</span> true <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--force</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="checking-the-output" class="level3">
+<h3 class="anchored" data-anchor-id="checking-the-output">Checking the output</h3>
+<p>After a successful run, the output directory contains:</p>
+<ul>
+<li>the per-sample files <code>Sample_A_S1_R1_001.fastq.gz</code> and <code>Sample_A_S1_R2_001.fastq.gz</code></li>
+<li><code>Undetermined_S0_R1_001.fastq.gz</code> and <code>Undetermined_S0_R2_001.fastq.gz</code> for unassigned reads</li>
+<li>a <code>Reports/</code> folder with <code>Demux_Metrics.csv</code> (reads per sample) and <code>Top_Unknown_Barcodes.csv</code> (most frequent unassigned indexes)</li>
+<li>a <code>Logs/</code> folder with the run log</li>
+</ul>
+<p>If the <em>Undetermined</em> file is very large, the usual causes are a wrong index in the sample sheet or a wrong index orientation (for example Index2 given as the reverse complement). <code>Top_Unknown_Barcodes.csv</code> helps to diagnose this.</p>
+</section>
+</section>
+<section id="the-case" class="level2">
+<h2 class="anchored" data-anchor-id="the-case">The case</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Case summary (based on public cell-line documentation)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A 43-year-old woman was diagnosed with <strong>triple-negative ductal breast carcinoma (stage I, grade 3)</strong>. Her <strong>mother also had breast cancer</strong>, raising the question of a possible inherited predisposition.</p>
+<p>Two cell lines were established from this patient: <strong>HCC1395</strong>, derived from her breast tumour, and <strong>HCC1395BL</strong>, derived from her blood and established as a normal lymphoblastoid cell line. Both have been widely used in biomedical research, and sequencing data are publicly available.</p>
+<p>In this case study, we will focus on the <strong>matched normal sample, HCC1395BL</strong>, to investigate germline variation.</p>
+<p><strong>The central question:</strong> Could this woman carry an inherited pathogenic variant in a breast cancer susceptibility gene, and what evidence would be needed to assess its potential significance for her and her relatives?</p>
+<p>Our goal is to identify and prioritise candidate variants using sequencing quality control, variant calling, annotation and interpretation. <strong>This is a research exercise, not a clinical diagnosis or a clinical classification of any variant.</strong></p>
+</div>
+</div>
+</section>
+<section id="sec-data" class="level2">
+<h2 class="anchored" data-anchor-id="sec-data">The data used in the case study</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SRA run</td>
+<td><strong>SRR37849526</strong> (experiment SRX32714296, study PRJNA1445230)</td>
+</tr>
+<tr class="even">
+<td>Sample</td>
+<td><code>HCC1395BL_normal_WES</code>: whole exome of the normal (blood-derived) cell line of a breast cancer patient</td>
+</tr>
+<tr class="odd">
+<td>Capture</td>
+<td>NimbleGen Exome v3 (hybrid selection)</td>
+</tr>
+<tr class="even">
+<td>Platform</td>
+<td>Illumina HiSeq 2500, paired-end</td>
+</tr>
+<tr class="odd">
+<td>Size</td>
+<td>about 77.7 million read pairs, 15.5 Gb of bases</td>
+</tr>
+</tbody>
+</table>
+<p>Since the normal sample is used to look for <strong>inherited</strong> (germline) variants, we start with its reads.</p>
+</section>
+<section id="sec-upload" class="level2">
+<h2 class="anchored" data-anchor-id="sec-upload">2.Uploading a dataset to BaseSpace</h2>
+<p>BaseSpace Sequence Hub allows you to upload sequencing data generated outside the platform, such as FASTQ files produced by a local bioinformatics pipeline. You can upload data through the web interface or use the BaseSpace Command-Line Interface (CLI) for larger datasets. <a href="https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138">Illumina: Uploading FASTQ files</a>.</p>
+<section id="upload-from-the-web-interface" class="level3">
+<h3 class="anchored" data-anchor-id="upload-from-the-web-interface">1. Upload from the web interface</h3>
+<ol type="1">
+<li>Create a free account at <a href="https://basespace.illumina.com/">BaseSpace Sequence Hub</a> and sign in.</li>
+<li>Open an existing project where you have write access, or create a project.</li>
+<li>Open the project and select <strong>File → Upload → Files</strong>.</li>
+<li>Select the file type, such as FASTQ.</li>
+<li>Select or create the sample or biosample associated with the data, and provide the required library information.</li>
+<li>Select <strong>Finish Upload</strong> and wait for the transfer to complete.</li>
+</ol>
+<p>The web uploader supports files up to 250 GB per file and up to 16 files per upload, according to Illumina’s BaseSpace CLI guidance. For larger transfers, use the CLI. <a href="https://help.connected.illumina.com/basespace/manage-data/import-data">Upload documentation</a>.</p>
+</section>
+<section id="upload-fastq-files-using-the-cli" class="level3">
+<h3 class="anchored" data-anchor-id="upload-fastq-files-using-the-cli">2. Upload FASTQ files using the CLI</h3>
+<p>The BaseSpace CLI (<code>bs</code>) is useful when uploading many FASTQ files or transferring large datasets.</p>
+<p><strong>Step 1 — Install the CLI</strong></p>
+<p>Download the version for your operating system from the <a href="https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-overview">official BaseSpace CLI documentation</a>.</p>
+<p><strong>Step 2 — Authenticate</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> auth</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Follow the authentication instructions displayed by the CLI.</p>
+<p><strong>Step 3 — Identify your project</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> list projects</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Alternatively, obtain the project ID from the project URL in your browser.</p>
+<p><strong>Step 4 — Upload FASTQ files</strong></p>
+<p>Suppose the FASTQ files are stored in <code>./data/fastq/</code>. Upload them to an existing project:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> dataset upload <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> <span class="op">&lt;</span>PROJECT_ID<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--recursive</span> ./data/fastq/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Replace <code>&lt;PROJECT_ID&gt;</code> with the actual project ID.</p>
+<p>The CLI defaults to FASTQ uploads. The files must satisfy BaseSpace’s FASTQ naming and content requirements. <a href="https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138">Official upload instructions</a>.</p>
+</section>
+<section id="upload-a-complete-sequencing-run" class="level3">
+<h3 class="anchored" data-anchor-id="upload-a-complete-sequencing-run">3. Upload a complete sequencing run</h3>
+<p>If you want to upload an entire instrument run, including its BCL files and run metadata, use the run-upload command rather than the FASTQ dataset-upload command.</p>
+<p>For example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> authenticate <span class="at">-c</span> run-upload <span class="at">--scopes</span> <span class="st">"CREATE RUNS"</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> <span class="at">-c</span> run-upload upload run <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-n</span> MyNovaSeqRun <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-t</span> NovaSeq6000 <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  /path/to/run_folder</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Replace the run name, instrument type and directory with the values for your dataset. The run folder must contain the required Illumina run files, including <code>RunParameters.xml</code> and <code>RunInfo.xml</code>. A compatible <code>SampleSheet.csv</code> is recommended for automatic FASTQ generation where supported. <a href="https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-examples">Official run-upload documentation</a>.</p>
+</section>
+<section id="verify-the-upload" class="level3">
+<h3 class="anchored" data-anchor-id="verify-the-upload">4. Verify the upload</h3>
+<p>After the transfer, open the project in BaseSpace and confirm that the uploaded dataset or run is visible. For FASTQ uploads, check that both R1 and R2 files are present for paired-end samples.</p>
+<p><strong>Important:</strong> Uploading FASTQ files adds data to a project; uploading a complete BCL run is a different workflow. Do not upload human genomic data to a public or shared project unless the appropriate permissions and data-governance requirements are satisfied.</p>
+</section>
+</section>
+<section id="sec-fastq" class="level2">
+<h2 class="anchored" data-anchor-id="sec-fastq">3. Understand FASTQ files</h2>
+<section id="fastq-structure" class="level3">
+<h3 class="anchored" data-anchor-id="fastq-structure">FASTQ structure</h3>
+<p>Each read uses four lines:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Line</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Header, starting with <code>@</code>: the <strong>read identifier</strong> (instrument, run, flowcell, lane, tile, coordinates, read number)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>The <strong>nucleotide sequence</strong></td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>A separator, <code>+</code></td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>The <strong>Phred quality scores</strong>, one character per base</td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>@INSTRUMENT:RUN:FLOWCELL:LANE:TILE:X:Y 1:N:0:INDEX
+GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
++
+AAAFFJJJJJJFJJJJJJJJFJJJJJJJFJJJJJJJFJJJJJJJFJJJJFJJJJJJJJFJJ</code></pre>
+<p>This is an illustration of the format, not a read from the data.</p>
+</section>
+<section id="phred-quality-scores" class="level3">
+<h3 class="anchored" data-anchor-id="phred-quality-scores">Phred quality scores</h3>
+<p>A Phred score Q gives the probability that a base call is wrong:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Q</th>
+<th>Chance of a wrong base</th>
+<th>Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>1 in 10</td>
+<td>90 %</td>
+</tr>
+<tr class="even">
+<td>20</td>
+<td>1 in 100</td>
+<td>99 %</td>
+</tr>
+<tr class="odd">
+<td>30</td>
+<td>1 in 1,000</td>
+<td>99.9 %</td>
+</tr>
+<tr class="even">
+<td>40</td>
+<td>1 in 10,000</td>
+<td>99.99 %</td>
+</tr>
+</tbody>
+</table>
+<p>In Illumina FASTQ files each score is stored as one character (ASCII code minus 33).</p>
+</section>
+<section id="r1-and-r2-in-paired-end-sequencing" class="level3">
+<h3 class="anchored" data-anchor-id="r1-and-r2-in-paired-end-sequencing">R1 and R2 in paired-end sequencing</h3>
+<p>The two ends of each DNA fragment are read separately:</p>
+<ul>
+<li><strong>R1:</strong> the forward read.</li>
+<li><strong>R2:</strong> the reverse read of the same fragment.</li>
+<li>The two files must hold <strong>the same number of reads, in the same order</strong>: read <em>n</em> in R1 is the mate of read <em>n</em> in R2. The headers match except for the read number (<code>1:</code> and <code>2:</code>).</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional, on a small FASTQ subset shared by the instructor</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R1</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R2 (must be equal)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-metrics" class="level2">
+<h2 class="anchored" data-anchor-id="sec-metrics">4. Sequencing quality metrics</h2>
+<p>FastQC reads the FASTQ files and reports one section per metric.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>What it shows</th>
+<th>What is acceptable</th>
+<th>What would worry you</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Per-base sequence quality</strong></td>
+<td>Quality of each position along the reads</td>
+<td>Most positions at Q30 or above, with a slight drop at the 3’ end</td>
+<td>A drop across the whole read, or a sudden dip</td>
+</tr>
+<tr class="even">
+<td><strong>Per-sequence quality scores</strong></td>
+<td>Distribution of the mean quality per read</td>
+<td>A single peak at high quality</td>
+<td>A second peak at low quality</td>
+</tr>
+<tr class="odd">
+<td><strong>Adapter content</strong></td>
+<td>Share of reads containing adapter sequence</td>
+<td>Close to zero</td>
+<td>Adapter content rising towards the 3’ end</td>
+</tr>
+<tr class="even">
+<td><strong>Read length</strong></td>
+<td>Length of the reads</td>
+<td>One length, as expected (about 100 bases for this run)</td>
+<td>Many different lengths or an unexpected value</td>
+</tr>
+<tr class="odd">
+<td><strong>GC content</strong></td>
+<td>Shape of the GC distribution of reads</td>
+<td>One smooth peak</td>
+<td>A shifted or double peak, which can indicate contamination</td>
+</tr>
+</tbody>
+</table>
+<p>Other FastQC modules (sequence duplication levels, per-base sequence content, overrepresented sequences) are common to flag for hybrid-capture exomes. A duplicated or unevenly composed library is not necessarily a problem: judge it in context, and remember that FastQC and the instrument’s own run metrics do not measure the same things.</p>
+<p><strong>Reading the read length for this run.</strong> 15.5 Gb of bases for about 77.7 million read pairs (about 155 million reads) gives about 100 bases per read. FastQC should report a length close to that.</p>
+<section id="run-fastqc-in-basespace" class="level3">
+<h3 class="anchored" data-anchor-id="run-fastqc-in-basespace">4.1 Run FastQC in BaseSpace</h3>
+<p>BaseSpace offers FastQC as an app (and a FASTQ Toolkit app for trimming and filtering).</p>
+<p>Steps:</p>
+<ol type="1">
+<li>In the project, open the <strong>Apps</strong> tab and search for <strong>FastQC</strong>.</li>
+<li>Open the app and select <strong>Launch App</strong>.</li>
+<li>Give the analysis a name, for example <code>FastQC_HCC1395BL_WES</code>, and choose the project in which to save the results.</li>
+<li>For the input, select the sample / dataset <strong><code>HCC1395BL_normal_WES</code></strong> (SRR37849526).</li>
+<li>Check the cost estimate, then launch.</li>
+<li>Follow the status in <strong>Analyses</strong>. When it shows <em>Complete</em>, open it and look at the report. Each metric is given with a pass, warning or failure marker, per read (R1 and R2).</li>
+</ol>
+</section>
+<section id="decision" class="level3">
+<h3 class="anchored" data-anchor-id="decision">4.2 Decision</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Quality is high across most of the read, adapters are close to none, R1 and R2 have the same number of reads</td>
+<td><strong>Acceptable:</strong> proceed to alignment</td>
+</tr>
+<tr class="even">
+<td>A slight drop at the 3’ end, a low level of adapter, or warnings that are typical of exomes</td>
+<td><strong>Acceptable with a note:</strong> proceed, and write the observation down</td>
+</tr>
+<tr class="odd">
+<td>A strong quality drop, a high adapter content, or very different R1 and R2</td>
+<td><strong>Investigate:</strong> trimming (FASTQ Toolkit) or a different dataset may be needed</td>
+</tr>
+<tr class="even">
+<td>R1 and R2 have different numbers of reads, unexpected read length, or a corrupted file</td>
+<td><strong>Stop:</strong> the files may be incomplete; fix the import before going further</td>
+</tr>
+</tbody>
+</table>
+<p>Write a short conclusion in the form: <em>“The data are acceptable / not acceptable because …”</em>.</p>
+<p>A good FASTQ QC does not guarantee a good analysis. The next page checks the aligned data (mapping rate, coverage, contamination), which is the real test of whether the sample is fit for variant calling.</p>
+</section>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Key takeaways</h2>
+<ul>
+<li>A FASTQ read has four lines: identifier, sequence, separator and Phred qualities.</li>
+<li>Paired-end data come in two files, R1 and R2, which must hold the same reads in the same order.</li>
+<li>A Phred score of 30 means about one wrong base in 1,000.</li>
+<li>FastQC reports per-base quality, per-sequence quality, adapter content, read length and GC content; MultiQC combines several reports.</li>
+<li>Warnings have to be read in context: some are expected for a hybrid-capture exome.</li>
+<li>The decision is explicit: <strong>acceptable, acceptable with a note, investigate, or stop</strong>.</li>
+<li>Next: alignment with DRAGEN and coverage metrics.</li>
+</ul>
+<p>Next page: alignment and variant calling with BaseSpace.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ndeyeawandiaye\.github\.io\/African_STARS_Bioinformatics_training\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../course/03-read-tree.html" class="pagination-link" aria-label="Read a phylogenetic tree">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Read a phylogenetic tree</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../course/04-alignement-variant-calling.html" class="pagination-link" aria-label="Alignment and Variant Calling">
+        <span class="nav-page-text">Alignment and Variant Calling</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="From reads to variants: why we align the case-study exome to hg19, what each DRAGEN Germline option does, which settings we use, and how to read the alignment and coverage metrics.">
+
+<title>Alignment and Variant Calling – African STRAS Fellowship - Bioinformatics Training</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../course/04-sequencing-data-QC.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-e44c71e5eeba155e1faf4c72a2815ecb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">African STRAS Fellowship - Bioinformatics Training</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/">
+            Source code
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://ndeyeawandiaye.github.io/African_STARS_Bioinformatics_training/issues">
+            Report an issue
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-alignement-variant-calling.html">Alignment and Variant Calling</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">Basic command line</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00-first_command_line.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command line basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00_second_command_line.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Exos - Command line basics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">Viral Genomics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Preparations</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/00_setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">FASTQ → consensus genome</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/01-concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sequencing file formats and assembly strategies</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/01_fastq_and_qc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">From FASTQ to assembly: QC, trimming, assembly and identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/02_mapping.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mapping</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../exercises/03_coverage_consensus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Coverage and consensus</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Alignment, lineage &amp; reference selection</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-reference-selection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reference selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multiple sequence alignment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/02-lineage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lineage assignment</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text">Build and read a phylogenetic tree</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/03-build-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Build a phylogenetic tree</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/03-read-tree.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Read a phylogenetic tree</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Human genomic</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-sequencing-data-QC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sequencing data and quality control</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-alignement-variant-calling.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Alignment and Variant Calling</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#sec-pipeline" id="toc-sec-pipeline" class="nav-link" data-scroll-target="#sec-pipeline">1. What DRAGEN Germline does</a></li>
+  <li><a href="#sec-hg19" id="toc-sec-hg19" class="nav-link" data-scroll-target="#sec-hg19">2. Why we choose the hg19 reference</a>
+  <ul class="collapse">
+  <li><a href="#hg19-grch37-and-hs37d5" id="toc-hg19-grch37-and-hs37d5" class="nav-link" data-scroll-target="#hg19-grch37-and-hs37d5">hg19, GRCh37 and hs37d5</a></li>
+  <li><a href="#consequences-for-the-rest-of-the-course" id="toc-consequences-for-the-rest-of-the-course" class="nav-link" data-scroll-target="#consequences-for-the-rest-of-the-course">Consequences for the rest of the course</a></li>
+  </ul></li>
+  <li><a href="#sec-options" id="toc-sec-options" class="nav-link" data-scroll-target="#sec-options">3. The DRAGEN Germline form, option by option</a>
+  <ul class="collapse">
+  <li><a href="#sec-input" id="toc-sec-input" class="nav-link" data-scroll-target="#sec-input">3.1 Input data and configuration</a></li>
+  <li><a href="#sec-pipeline-config" id="toc-sec-pipeline-config" class="nav-link" data-scroll-target="#sec-pipeline-config">3.2 Pipeline configuration and reference</a></li>
+  <li><a href="#sec-bed" id="toc-sec-bed" class="nav-link" data-scroll-target="#sec-bed">3.3 Target BED and coverage metrics</a></li>
+  <li><a href="#sec-align-output" id="toc-sec-align-output" class="nav-link" data-scroll-target="#sec-align-output">3.4 Alignment output and duplicate marking</a></li>
+  <li><a href="#sec-vc-output" id="toc-sec-vc-output" class="nav-link" data-scroll-target="#sec-vc-output">3.5 Small variant caller output and options</a></li>
+  <li><a href="#sec-modules" id="toc-sec-modules" class="nav-link" data-scroll-target="#sec-modules">3.6 Specialised modules (left off)</a></li>
+  <li><a href="#sec-annotation" id="toc-sec-annotation" class="nav-link" data-scroll-target="#sec-annotation">3.7 Annotation, quality control and checksums</a></li>
+  <li><a href="#sec-advanced" id="toc-sec-advanced" class="nav-link" data-scroll-target="#sec-advanced">3.8 CRAM, compute and advanced fields</a></li>
+  </ul></li>
+  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary">4. Settings for the case study</a></li>
+  <li><a href="#sec-results" id="toc-sec-results" class="nav-link" data-scroll-target="#sec-results">5. Read the results</a>
+  <ul class="collapse">
+  <li><a href="#alignment-and-coverage-metrics" id="toc-alignment-and-coverage-metrics" class="nav-link" data-scroll-target="#alignment-and-coverage-metrics">Alignment and coverage metrics</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-alignement-variant-calling.html">Alignment and Variant Calling</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Alignment and Variant Calling</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">human-genomics</div>
+    <div class="quarto-category">alignment</div>
+    <div class="quarto-category">variant-calling</div>
+    <div class="quarto-category">dragen</div>
+    <div class="quarto-category">basespace</div>
+    <div class="quarto-category">quality-control</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    From reads to variants: why we align the case-study exome to hg19, what each DRAGEN Germline option does, which settings we use, and how to read the alignment and coverage metrics.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this section, participants should be able to:</p>
+<ul>
+<li>Explain why the reference genome (here <strong>hg19</strong>) must match the capture kit and target BED file.</li>
+<li>Identify the input data required by DRAGEN Germline.</li>
+<li>Explain the main steps of germline variant analysis (alignment, duplicate marking, variant calling).</li>
+<li>Distinguish essential parameters from optional, advanced settings.</li>
+<li>Choose appropriate settings for a whole-exome (WES) analysis.</li>
+<li>Understand the main output files and their purpose.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Example used in this training
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Paired-end whole-exome data of the normal cell line HCC1395BL (run <strong>SRR37849526</strong>, NimbleGen Exome v3 capture). The goal is to align the reads to a reference genome and call small variants (SNVs and small insertions or deletions, called <em>indels</em>). Exact labels and behaviour of some options depend on the DRAGEN version and the environment.</p>
+</div>
+</div>
+</section>
+<section id="sec-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="sec-pipeline">1. What DRAGEN Germline does</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>What happens</th>
+<th>Main output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Map / align</strong></td>
+<td>Each read is placed on the reference genome</td>
+<td>Alignment file (BAM or CRAM)</td>
+</tr>
+<tr class="even">
+<td><strong>Duplicate marking</strong></td>
+<td>Reads from the same original DNA fragment are flagged</td>
+<td>Flags inside the alignment file</td>
+</tr>
+<tr class="odd">
+<td><strong>Small variant calling</strong></td>
+<td>Positions that differ from the reference are detected and genotyped</td>
+<td>VCF (and optionally gVCF)</td>
+</tr>
+<tr class="even">
+<td><strong>Metrics</strong></td>
+<td>Mapping, coverage and quality summaries</td>
+<td>Metrics files and a summary</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-hg19" class="level2">
+<h2 class="anchored" data-anchor-id="sec-hg19">2. Why we choose the hg19 reference</h2>
+<p>A reference genome is the sequence the reads are compared with. It exists in several <strong>builds</strong>, and coordinates differ between builds: the same base has a different position in hg19 (GRCh37) and in GRCh38 (hg38).</p>
+<p><strong>For this exercise we align to hg19. The reasons come from the data, not from a preference.</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Reason</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>The capture kit was designed on hg19</strong></td>
+<td>The exome was captured with NimbleGen SeqCap EZ Exome v3.0, whose target regions are published in hg19 coordinates. The BED file we use, <code>NimbleGen_v3_Exome.hg19.bed</code>, is in hg19.</td>
+</tr>
+<tr class="even">
+<td><strong>The BED and the reference must match</strong></td>
+<td>The <em>Target BED for Small Variant Caller</em> tells DRAGEN where the targets are. With a build mismatch, targets are shifted or missed, and variants can be lost without any error message.</td>
+</tr>
+<tr class="odd">
+<td><strong>Converting to hg38 loses information</strong></td>
+<td>Converting the BED with <code>liftOver</code> can drop regions that do not map, and it adds a step that is hard to check. Using the BED in its own build keeps the analysis simple and traceable.</td>
+</tr>
+<tr class="even">
+<td><strong>Tools and databases support it</strong></td>
+<td>DRAGEN offers hg19 as a built-in reference. Ensembl VEP, ClinVar and population databases also provide GRCh37 resources.</td>
+</tr>
+<tr class="odd">
+<td><strong>The variant exists in both builds</strong></td>
+<td>The <em>BRCA1</em> variant of interest is at <strong>chr17:41209095</strong> in hg19 and <strong>chr17:43057078</strong> in hg38 (G&gt;A on the forward strand in both).</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>hg19 is not “better”
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>GRCh38 is the current standard assembly, with corrections and a better representation of difficult regions. For a <strong>new</strong> project with a <strong>modern</strong> kit, GRCh38 is the usual choice. For this older exome kit, matching the build of the target file matters more. <strong>The lesson: choose the reference according to your data and your tools, record it, and use the same build at every step.</strong></p>
+</div>
+</div>
+<section id="hg19-grch37-and-hs37d5" class="level3">
+<h3 class="anchored" data-anchor-id="hg19-grch37-and-hs37d5">hg19, GRCh37 and hs37d5</h3>
+<p>These names refer to related versions of the same assembly, with different chromosome naming and extra sequences.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Chromosome names</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>hg19</strong> (UCSC)</td>
+<td><code>chr1</code>, <code>chr2</code>, … <code>chrX</code></td>
+<td>Matches a BED whose first column starts with <code>chr</code></td>
+</tr>
+<tr class="even">
+<td>GRCh37</td>
+<td><code>1</code>, <code>2</code>, … <code>X</code></td>
+<td>Same coordinates, different names</td>
+</tr>
+<tr class="odd">
+<td>hs37d5</td>
+<td><code>1</code>, <code>2</code>, … <code>X</code></td>
+<td>GRCh37 plus decoy sequences</td>
+</tr>
+</tbody>
+</table>
+<p>Check the first column of the BED (<code>head NimbleGen_v3_Exome.hg19.bed</code>). If it starts with <code>chr</code>, pick <strong>hg19</strong>. If it does not, the reference with names without <code>chr</code> (GRCh37 or hs37d5) is the one that matches.</p>
+</section>
+<section id="consequences-for-the-rest-of-the-course" class="level3">
+<h3 class="anchored" data-anchor-id="consequences-for-the-rest-of-the-course">Consequences for the rest of the course</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alignment and calling (DRAGEN)</td>
+<td>hg19</td>
+</tr>
+<tr class="even">
+<td>Target BED</td>
+<td><code>NimbleGen_v3_Exome.hg19.bed</code> (no conversion)</td>
+</tr>
+<tr class="odd">
+<td>IGV genome</td>
+<td>hg19</td>
+</tr>
+<tr class="even">
+<td>Annotation with VEP</td>
+<td><strong>GRCh37</strong>, for example <a href="https://grch37.ensembl.org/Tools/VEP" class="uri">https://grch37.ensembl.org/Tools/VEP</a></td>
+</tr>
+<tr class="odd">
+<td>Gene coordinates from Ensembl</td>
+<td><a href="https://grch37.rest.ensembl.org" class="uri">https://grch37.rest.ensembl.org</a></td>
+</tr>
+<tr class="even">
+<td>Variant of interest</td>
+<td><code>chr17:41209095</code> (G&gt;A)</td>
+</tr>
+<tr class="odd">
+<td>Population frequencies</td>
+<td>Check which fields exist in the GRCh37 resources</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="sec-options" class="level2">
+<h2 class="anchored" data-anchor-id="sec-options">3. The DRAGEN Germline form, option by option</h2>
+<p>Asterisks (<code>*</code>) mark required fields. Some are required only when the related option is switched on.</p>
+<section id="sec-input" class="level3">
+<h3 class="anchored" data-anchor-id="sec-input">3.1 Input data and configuration</h3>
+<p><strong>Input Data.</strong> How DRAGEN finds the sequencing files.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>What it does</th>
+<th>When to use it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Biosamples</strong>: launch with FASTQs across multiple sequencing runs</td>
+<td>Takes a biosample and combines all its FASTQ datasets, even from several runs</td>
+<td>The same biological sample was sequenced several times and the data must be analysed together</td>
+</tr>
+<tr class="even">
+<td><strong>Samples</strong>: launch with FASTQs from a single sequencing run</td>
+<td>Takes a sample from one run</td>
+<td>The FASTQ files come from one run</td>
+</tr>
+</tbody>
+</table>
+<p>For this case there is one run, so use the option under which <code>HCC1395BL_normal_WES</code> appears when you click <strong>Select Samples</strong>. A biological sample, a sequencing sample and a sequencing run are different concepts; how the data are organised in BaseSpace decides the choice.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Meaning</th>
+<th>Value for the case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Analysis Name</strong> *</td>
+<td>Name of the job</td>
+<td><code>SRR37849526_DRAGEN_Germline_hg19</code> (include the dataset and the build)</td>
+</tr>
+<tr class="even">
+<td><strong>Save Results To</strong> *</td>
+<td>Project that receives the outputs</td>
+<td><code>African_STARS_Training</code> (the instructor must have write access)</td>
+</tr>
+<tr class="odd">
+<td><strong>Select Samples</strong></td>
+<td>The sample(s) to analyse; one row per sample (#1, #2, …)</td>
+<td><code>HCC1395BL_normal_WES</code>: check that the FASTQ pair (R1 and R2) is attached</td>
+</tr>
+<tr class="even">
+<td><strong>Sample Sex</strong></td>
+<td>Recorded sex of the sample</td>
+<td><strong>Female</strong> (documented donor sex; use reliable metadata, not a guess)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Input file types.</strong> Each row can take FASTQ, BAM, BAI, CRAM or CRAI files.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Content</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>FASTQ</strong></td>
+<td>Raw reads and quality scores</td>
+<td>Start from raw reads (our case): DRAGEN must align them</td>
+</tr>
+<tr class="even">
+<td><strong>BAM</strong> + <strong>BAI</strong></td>
+<td>Aligned reads and the index that allows fast access to regions</td>
+<td>Start from existing alignments</td>
+</tr>
+<tr class="odd">
+<td><strong>CRAM</strong> + <strong>CRAI</strong></td>
+<td>A more compact aligned format and its index</td>
+<td>Same, smaller; needs the right reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-pipeline-config" class="level3">
+<h3 class="anchored" data-anchor-id="sec-pipeline-config">3.2 Pipeline configuration and reference</h3>
+<p><strong>Pipeline Configuration</strong> * decides which major steps run.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>What it does</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Map/Align</strong></td>
+<td>Alignment only</td>
+<td>To study mapping and coverage; no variants</td>
+</tr>
+<tr class="even">
+<td><strong>Map/Align + Small Variant Caller</strong></td>
+<td>Alignment, then small-variant calling</td>
+<td><strong>Our case</strong>: FASTQ to VCF</td>
+</tr>
+<tr class="odd">
+<td><strong>Small Variant Caller</strong></td>
+<td>Calls variants from already aligned BAM or CRAM</td>
+<td>When alignments exist</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reference</strong> * (see section 2): <strong>hg19</strong>.</p>
+<p><strong>Custom DRAGEN Reference File:</strong> a reference built with the DRAGEN Reference Builder app, for special organisms or modified sequences. <strong>Leave empty</strong>: the built-in human reference is simpler and sufficient.</p>
+</section>
+<section id="sec-bed" class="level3">
+<h3 class="anchored" data-anchor-id="sec-bed">3.3 Target BED and coverage metrics</h3>
+<p><strong>Target BED for Small Variant Caller.</strong> A BED file lists genomic intervals (chromosome, start, end). For an exome it is the set of captured regions. The small variant caller works <strong>only inside these regions</strong>.</p>
+<ul>
+<li>Value: <code>NimbleGen_v3_Exome.hg19.bed</code>, which matches both the capture kit and the hg19 build.</li>
+<li><strong>Check before launching</strong> that it contains the position of interest: <code>awk '$1=="chr17" &amp;&amp; $2&lt;=41209095 &amp;&amp; $3&gt;=41209095' NimbleGen_v3_Exome.hg19.bed</code> must print a line.</li>
+<li>A BED for another kit or another build would drop relevant regions or include untargeted ones.</li>
+</ul>
+<p><strong>QC Coverage Metrics.</strong> Coverage tells you whether reads cover the regions of interest. This section computes coverage over regions you choose. Several sets can be defined (#1, #2, …).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Regions / BED File</strong></td>
+<td>The intervals over which coverage is calculated. Use the same exome BED</td>
+</tr>
+<tr class="even">
+<td><strong>MAPQ</strong></td>
+<td>Minimum mapping quality of a read to be counted (reads that align ambiguously are ignored)</td>
+</tr>
+<tr class="odd">
+<td><strong>BQ</strong></td>
+<td>Minimum base quality of a base to be counted</td>
+</tr>
+<tr class="even">
+<td><strong>Tag</strong> (Output Tag)</td>
+<td>A label added to the output file names, to tell sets apart</td>
+</tr>
+<tr class="odd">
+<td><strong>Metrics Resolution / Full-Res</strong></td>
+<td>Level of detail: a summary, or a full-resolution (per-position) output, which is much larger</td>
+</tr>
+</tbody>
+</table>
+<p>For the training, set one region set with the exome BED and keep the default thresholds and summary-level resolution. A high average depth does not guarantee that every exon is well covered: exome capture efficiency varies from exon to exon.</p>
+</section>
+<section id="sec-align-output" class="level3">
+<h3 class="anchored" data-anchor-id="sec-align-output">3.4 Alignment output and duplicate marking</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>What it does</th>
+<th>Value for the case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Map/Align Output</strong> *</td>
+<td>Which alignment file to keep (BAM, CRAM or none)</td>
+<td><strong>BAM</strong>: opens directly in IGV. CRAM saves space but needs the reference to be read</td>
+</tr>
+<tr class="even">
+<td><strong>Enable Duplicate Marking</strong></td>
+<td>Flags reads that come from the same original DNA fragment (PCR or optical duplicates). Flagging is not deleting: the caller then handles them</td>
+<td><strong>On</strong> (recommended). Duplicates inflate apparent depth</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-vc-output" class="level3">
+<h3 class="anchored" data-anchor-id="sec-vc-output">3.5 Small variant caller output and options</h3>
+<p><strong>Small Variant Caller Output</strong> *</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>What it contains</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>VCF</strong></td>
+<td>The called variants: position, alleles, genotype and quality fields</td>
+<td>The file we inspect, filter and annotate</td>
+</tr>
+<tr class="even">
+<td><strong>gVCF</strong> (“VCF and GVCF”)</td>
+<td>Variants plus reference-confidence blocks for non-variant regions</td>
+<td>Needed for joint genotyping of several samples</td>
+</tr>
+<tr class="odd">
+<td><strong>… with BP_RESOLUTION</strong></td>
+<td>The same, with one record per base</td>
+<td>Larger files; rarely needed</td>
+</tr>
+<tr class="even">
+<td><strong>ForceGT VCF</strong></td>
+<td>Forces genotyping at a list of given sites</td>
+<td>To check known positions even if they are not called</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Value for the case: “VCF and GVCF”</strong>, so that the VCF is produced (the gVCF is not used on the next pages). <strong>ForceGT</strong> and <strong>BP_RESOLUTION</strong> are not needed.</p>
+<p><strong>Advanced calling options.</strong> These go beyond routine calling. Switch them on only to answer a specific scientific question.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Purpose</th>
+<th>Needed here?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Enable Personalization</strong></td>
+<td>A DRAGEN feature that adapts the analysis to the sample (check the documentation of your version)</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td><strong>Combine Phased Variants</strong> (+ <strong>Combine Distance</strong>)</td>
+<td>Merges nearby variants on the same haplotype into one record; <em>Combine Distance</em> sets how close they must be</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td><strong>Enable High Sensitivity Mosaic Detection</strong></td>
+<td>Looks for variants present in only a fraction of cells</td>
+<td>No (mosaicism is not our question)</td>
+</tr>
+<tr class="even">
+<td><strong>Evidence BAM</strong></td>
+<td>An extra BAM with the reads supporting each call</td>
+<td>Optional, for advanced review</td>
+</tr>
+<tr class="odd">
+<td><strong>Enable ROH Caller</strong></td>
+<td>Detects long runs of homozygosity</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-modules" class="level3">
+<h3 class="anchored" data-anchor-id="sec-modules">3.6 Specialised modules (left off)</h3>
+<p>Each module answers a different biological question and may need specific inputs. <strong>Leave all of them off for this exercise.</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th>What it does</th>
+<th>Why it is off here</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>CNV</strong> (Enable CNV Caller, Normalization Mode, Low pass filtering, Combined Counts File, Reference Calls, Allele-specific, Cytogenetics, Segmentation BED)</td>
+<td>Detects deletions and duplications of whole exons or regions</td>
+<td>Needs assay-specific set-up and normal samples. <strong>A SNV and indel analysis does not detect them</strong>: a limitation to state</td>
+</tr>
+<tr class="even">
+<td><strong>SV</strong> (Enable SV Caller, SV Target BED, Custom SV Target BED)</td>
+<td>Detects larger rearrangements: inversions, translocations, large indels</td>
+<td>Depends on read type and coverage; not an exome question</td>
+</tr>
+<tr class="odd">
+<td><strong>STR Caller</strong> (+ Repeat Specification, <strong>REViewer</strong>)</td>
+<td>Genotypes short tandem repeats and displays the evidence</td>
+<td>For repeat-expansion studies</td>
+</tr>
+<tr class="even">
+<td><strong>Proximity Mode for TruPath Genome</strong></td>
+<td>Mode for a specific long-range library technology</td>
+<td>Not our assay</td>
+</tr>
+<tr class="odd">
+<td><strong>Targeted Callers</strong>, <strong>MRJD</strong></td>
+<td>Specialised calling for hard, homologous regions</td>
+<td>Specific targeted analyses</td>
+</tr>
+<tr class="even">
+<td><strong>HLA Typing</strong></td>
+<td>Infers HLA alleles</td>
+<td>Immunogenetics</td>
+</tr>
+<tr class="odd">
+<td><strong>Star Allele Caller</strong></td>
+<td>Infers pharmacogenomic star alleles</td>
+<td>Pharmacogenomics</td>
+</tr>
+<tr class="even">
+<td><strong>Epstein-Barr Virus Detection</strong></td>
+<td>Looks for EBV evidence in the data</td>
+<td>Our cell line is EBV-transformed, but an exome capture is not designed to measure it</td>
+</tr>
+<tr class="odd">
+<td><strong>Methylation</strong> (5-base algorithms, Targeted Cytosine Reporting, Methylation at variants)</td>
+<td>Reports DNA methylation</td>
+<td>Needs methylation-aware chemistry, not conventional exome data</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sec-annotation" class="level3">
+<h3 class="anchored" data-anchor-id="sec-annotation">3.7 Annotation, quality control and checksums</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>What it does</th>
+<th>Value for the case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Enable Variant Annotation</strong>, <strong>Annotation Catalog</strong>, <strong>Annotation VCF Output</strong></td>
+<td>DRAGEN adds gene and consequence information to the VCF</td>
+<td><strong>Off</strong>: the course teaches annotation with Ensembl VEP. It could be enabled to compare, if a catalog for hg19 is available</td>
+</tr>
+<tr class="even">
+<td><strong>QC Detect Contamination</strong></td>
+<td>Estimates whether DNA from another sample is mixed in. It is a QC indicator, not proof of a cause</td>
+<td><strong>On</strong>: it is a useful sanity check</td>
+</tr>
+<tr class="odd">
+<td><strong>MD5 Checksums</strong></td>
+<td>Computes a checksum of each output file, to verify later that a download is intact</td>
+<td>On (optional). It does not prove the sample is the right one</td>
+</tr>
+<tr class="even">
+<td><strong>Downsampler Fraction</strong></td>
+<td>Uses only a fraction of the reads. Useful for benchmarking</td>
+<td><strong>Leave empty</strong>: downsampling lowers sensitivity</td>
+</tr>
+</tbody>
+</table>
+<p>Annotation is not interpretation: a “damaging” prediction does not make a variant pathogenic.</p>
+</section>
+<section id="sec-advanced" class="level3">
+<h3 class="anchored" data-anchor-id="sec-advanced">3.8 CRAM, compute and advanced fields</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Purpose</th>
+<th>Value for the case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>CRAM Decompression Reference</strong>, <strong>CRAM Custom Reference</strong></td>
+<td>Reference needed to read or write CRAM</td>
+<td>Leave empty (we start from FASTQ and keep a BAM)</td>
+</tr>
+<tr class="even">
+<td><strong>ICA Storage Size</strong> <em>, <strong>ICA Scratch Size Per Node</strong>, <strong>F2 Node Type</strong> </em></td>
+<td>Storage and compute allocated to the job</td>
+<td>Use the defaults, unless an error message calls for more. A bigger allocation is not always better, and it affects cost</td>
+</tr>
+<tr class="odd">
+<td><strong>Additional DRAGEN Commandline Arguments</strong></td>
+<td>Free-text options passed to DRAGEN, <strong>with no verification</strong></td>
+<td><strong>Leave empty</strong>. A wrong argument can break the run or give results that are hard to reproduce</td>
+</tr>
+<tr class="even">
+<td><strong>Additional Resource File</strong></td>
+<td>Extra resource files for custom annotation or assays</td>
+<td>Leave empty</td>
+</tr>
+<tr class="odd">
+<td><strong>Enable Automation</strong> and settings</td>
+<td>Triggers analyses automatically</td>
+<td>Off</td>
+</tr>
+<tr class="even">
+<td><strong>Input FASTQs / BAMs / CRAMs</strong></td>
+<td>The input files, per row, by type</td>
+<td>Check that both FASTQ files of the pair are listed</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="sec-summary" class="level2">
+<h2 class="anchored" data-anchor-id="sec-summary">4. Settings for the case study</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Input Data</td>
+<td>Samples or Biosamples, as the data appear</td>
+<td>Matches how the FASTQ is organised</td>
+</tr>
+<tr class="even">
+<td>Analysis Name</td>
+<td><code>SRR37849526_DRAGEN_Germline_hg19</code></td>
+<td>Identifies dataset and build</td>
+</tr>
+<tr class="odd">
+<td>Save Results To</td>
+<td><code>African_STARS_Training</code></td>
+<td>Keeps outputs together</td>
+</tr>
+<tr class="even">
+<td>Select Samples</td>
+<td><code>HCC1395BL_normal_WES</code> (R1 + R2)</td>
+<td>Our sample</td>
+</tr>
+<tr class="odd">
+<td>Sample Sex</td>
+<td>Female</td>
+<td>Documented in the donor metadata</td>
+</tr>
+<tr class="even">
+<td>Pipeline Configuration</td>
+<td>Map/Align + Small Variant Caller</td>
+<td>FASTQ to VCF</td>
+</tr>
+<tr class="odd">
+<td>Reference</td>
+<td><strong>hg19</strong></td>
+<td>Matches the kit and the BED</td>
+</tr>
+<tr class="even">
+<td>Target BED</td>
+<td><code>NimbleGen_v3_Exome.hg19.bed</code></td>
+<td>The captured regions</td>
+</tr>
+<tr class="odd">
+<td>QC Coverage Metrics</td>
+<td>One region set with the same BED, default filters</td>
+<td>Exome coverage check</td>
+</tr>
+<tr class="even">
+<td>Map/Align Output</td>
+<td>BAM</td>
+<td>Easy to open in IGV</td>
+</tr>
+<tr class="odd">
+<td>Duplicate Marking</td>
+<td>On</td>
+<td>Standard practice</td>
+</tr>
+<tr class="even">
+<td>Small Variant Caller Output</td>
+<td>VCF and GVCF</td>
+<td>Provides the VCF we need</td>
+</tr>
+<tr class="odd">
+<td>QC Detect Contamination</td>
+<td>On</td>
+<td>Sanity check</td>
+</tr>
+<tr class="even">
+<td>CNV, SV, STR, HLA, Star Allele, EBV, Methylation, Annotation</td>
+<td>Off</td>
+<td>Not needed; keep the run focused</td>
+</tr>
+<tr class="odd">
+<td>Compute / extra arguments / extra resources</td>
+<td>Defaults / empty</td>
+<td>Avoids errors</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Before launching
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>The FASTQ pair is accessible in the selected project.</li>
+<li>The reference (hg19) and the BED (hg19, <code>chr</code> names) match.</li>
+<li>The BED contains <code>chr17:41209095</code>.</li>
+<li>The iCredit estimate has been read.</li>
+</ul>
+</div>
+</div>
+<p><strong>Common mistakes:</strong> an hg19 BED with an hg38 reference; names with and without <code>chr</code> mixed; the wrong sample selected; modules enabled “because they are there”.</p>
+</section>
+<section id="sec-results" class="level2">
+<h2 class="anchored" data-anchor-id="sec-results">5. Read the results</h2>
+<p>In the project, open <strong>Analyses</strong>, then the DRAGEN Germline analysis, then <strong>Files</strong> and the summary or metrics.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>*.hard-filtered.vcf.gz</code> (+ <code>.tbi</code>)</td>
+<td>Calls that pass DRAGEN’s filters. <strong>The file to use</strong></td>
+</tr>
+<tr class="even">
+<td><code>*.vcf.gz</code> (not hard-filtered)</td>
+<td>All calls, with filters flagged</td>
+</tr>
+<tr class="odd">
+<td><code>*.gvcf.gz</code></td>
+<td>Also describes non-variant positions; not needed here</td>
+</tr>
+<tr class="even">
+<td><code>*.bam</code> (+ <code>.bai</code>)</td>
+<td>The aligned reads</td>
+</tr>
+<tr class="odd">
+<td>Metrics files (mapping, coverage, contamination)</td>
+<td>The quality numbers below</td>
+</tr>
+</tbody>
+</table>
+<p>Exact file names depend on the DRAGEN version.</p>
+<section id="alignment-and-coverage-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="alignment-and-coverage-metrics">Alignment and coverage metrics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>What it tells you</th>
+<th>Rough expectation for an exome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mapped reads (%)</td>
+<td>Did the reads align to the reference?</td>
+<td>Above 99 %</td>
+</tr>
+<tr class="even">
+<td>Duplicate reads (%)</td>
+<td>Library complexity</td>
+<td>Moderate; higher than a PCR-free genome</td>
+</tr>
+<tr class="odd">
+<td>Mean coverage on target</td>
+<td>Average depth over the captured regions</td>
+<td>Many tens of times, often more than 100x</td>
+</tr>
+<tr class="even">
+<td>Target bases at 20x or more (%)</td>
+<td>How much of the target is well covered</td>
+<td>High (often above 90 %)</td>
+</tr>
+<tr class="odd">
+<td>Contamination</td>
+<td>Foreign DNA in the sample</td>
+<td>Very low</td>
+</tr>
+<tr class="even">
+<td>Estimated sex</td>
+<td>Consistency with the metadata</td>
+<td>Female</td>
+</tr>
+</tbody>
+</table>
+<p>These are rough expectations; they depend on the kit and the library.</p>
+</section>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Key takeaways</h2>
+<p>DRAGEN Germline has many settings because it serves different assays and research questions. For a first exome analysis, the priorities are:</p>
+<ul>
+<li>the <strong>input data</strong> and the sample information;</li>
+<li>the <strong>reference build</strong>, which must match the capture kit and the target BED (hg19 here, and the same build at every later step);</li>
+<li><strong>alignment</strong>, duplicate marking and <strong>small-variant calling</strong>;</li>
+<li><strong>coverage and quality metrics</strong>.</li>
+</ul>
+<p>Advanced options should be introduced only when their biological purpose and input requirements are clear.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ndeyeawandiaye\.github\.io\/African_STARS_Bioinformatics_training\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../course/04-sequencing-data-QC.html" class="pagination-link" aria-label="Sequencing data and quality control">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Sequencing data and quality control</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>African STARS Fellowship · CARE · Institut Pasteur — synthetic training data only</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
