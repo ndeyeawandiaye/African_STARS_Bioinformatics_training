@@ -104,7 +104,7 @@ After a successful run, the output directory contains:
 
 If the *Undetermined* file is very large, the usual causes are a wrong index in the sample sheet or a wrong index orientation (for example Index2 given as the reverse complement). `Top_Unknown_Barcodes.csv` helps to diagnose this.
 
-## The case
+## 2. The case
 
 :::{.callout-tip }
 
@@ -133,11 +133,258 @@ Our goal is to identify and prioritise candidate variants using sequencing quali
 
 Since the normal sample is used to look for **inherited** (germline) variants, we start with its reads.
 
-## 2.Uploading a dataset to BaseSpace {#sec-upload}
+
+## 3. Download sequencing data from NCBI SRA
+
+## Méthode A — Download sequencing data using the NCBI SRA Toolkit
+
+The Sequence Read Archive (SRA) hosted by NCBI stores raw sequencing data. We can download a sequencing run using `prefetch` from the SRA Toolkit and convert it into FASTQ files using `fasterq-dump`.
+
+In this example, we use run **SRR37849526**.
+
+### a. Create a directory for the data
+
+Create a directory named `SRA` inside your Documents folder:
+
+```bash
+mkdir -p ~/SRA
+```
+
+- `mkdir` creates a directory.
+- `-p` creates any missing parent directories and avoids an error if the directory already exists.
+- `~` represents the user's home directory.
+
+### b. Download the SRA run
+
+```bash
+prefetch SRR37849526 --output-directory ~/SRA
+```
+
+- `prefetch` downloads sequencing data from NCBI.
+- `SRR37849526` is the SRA run accession.
+- `--output-directory` specifies where the downloaded data will be stored.
+
+The expected file location is:
+
+```text
+~/SRA/SRR37849526/SRR37849526.sra
+```
+
+### c. Convert SRA to FASTQ
+
+Once the download is complete, convert the SRA file into FASTQ format:
+
+```bash
+fasterq-dump ~/SRA/SRR37849526/SRR37849526.sra \
+  --split-files \
+  --outdir ~/SRA
+```
+
+- `fasterq-dump` converts SRA data into FASTQ format.
+- `--split-files` writes paired-end reads into separate files, usually `_1.fastq` and `_2.fastq`. Single-end runs generally produce one FASTQ file.
+- `--outdir` specifies the output directory.
+
+### d. Check the output files
+
+```bash
+ls -lh ~/SRA/
+```
+
+For a paired-end run, the output may contain:
+
+```text
+SRR37849526_1.fastq
+SRR37849526_2.fastq
+```
+
+These FASTQ files can then be used for quality control, read alignment, and downstream genomic analyses.
+
+
+**Important:** `fasterq-dump` may require substantial temporary disk space. Ensure sufficient free space before conversion. The commands above assume that the SRA Toolkit is installed and available in your terminal.
+
+### e. Compress the FASTQ files
+
+FASTQ files can be large. Compressing them with `gzip` reduces disk space and makes them easier to store and transfer.
+
+```bash
+gzip ~/SRA/SRR37849526_1.fastq
+gzip ~/SRA/SRR37849526_2.fastq
+```
+
+After compression, the files will be named:
+
+```text
+SRR37849526_1.fastq.gz
+SRR37849526_2.fastq.gz
+```
+
+**Important:** `gzip` replaces each original `.fastq` file with a `.fastq.gz` file by default. If you want to preserve the original files, use `gzip -k` instead.
+
+To compress all FASTQ files in the directory:
+
+```bash
+gzip ~/SRA/*.fastq
+```
+
+To check the resulting files:
+
+```bash
+ls -lh ~/SRA/*.fastq.gz
+
+```
+
+### f. Rename FASTQ files
+
+Some sequencing workflows expect FASTQ files to follow a specific naming convention. For example:
+
+```text
+SampleName_S1_L001_R1_001.fastq.gz
+SampleName_S1_L001_R2_001.fastq.gz
+```
+
+The filename components mean:
+
+- `SampleName`: sample identifier.
+- `S1`: sample number in the sample sheet.
+- `L001`: sequencing lane 1.
+- `R1`: Read 1; `R2`: Read 2.
+- `001`: file/chunk number.
+
+For our downloaded SRA run, we can rename the compressed paired-end FASTQ files as follows:
+
+```bash
+cd ~/SRA
+
+mv SRR37849526_1.fastq.gz SRR37849526_S1_L001_R1_001.fastq.gz
+mv SRR37849526_2.fastq.gz SRR37849526_S1_L001_R2_001.fastq.gz
+```
+
+
+Check the resulting filenames:
+
+```bash
+ls -lh *.fastq.gz
+```
+
+Expected output:
+
+```text
+SRR37849526_S1_L001_R1_001.fastq.gz
+SRR37849526_S1_L001_R2_001.fastq.gz
+```
+
+**Important:** This is a naming example, not proof that the run came from NA12878. Use the actual sample identity and metadata associated with the SRA accession. The lane and chunk labels are also conventions; do not assume that an SRA run necessarily corresponds to a single Illumina lane or chunk.
+
+Renaming files does not convert single-end reads into paired-end reads or change the read data. Confirm the run layout before using the `_R1_` and `_R2_` naming convention.
+
+## Method B — Import sequencing data using BaseSpace SRA Import
+
+BaseSpace SRA Import is a BaseSpace Labs application that allows users to import sequencing data using an NCBI Sequence Read Archive (SRA) accession. This approach can simplify data preparation by avoiding the need to download an SRA file manually and convert it into FASTQ using the SRA Toolkit.
+
+In this example, we use the SRA run accession **SRR37849526**.
+
+**Important:** BaseSpace SRA Import is a BaseSpace Labs application. Its availability, behavior, output format, and support may differ from those of standard Illumina applications. Verify the generated outputs before using them in downstream analyses.
+
+### a. Open the SRA Import application
+
+1. Sign in to your BaseSpace account.
+2. Open the SRA Import application from BaseSpace Labs.
+3. Review the application description and disclaimer before proceeding.
+
+BaseSpace Labs applications are provided *as is*. The application disclaimer states that Illumina does not undertake to provide technical support for this app and disclaims liability for its use.
+
+### b. Select the input data method
+
+The application offers two input options:
+
+- **Biosamples — Launch with FASTQs across multiple sequencing runs:** use this option when the input consists of FASTQ data associated with biosamples across multiple sequencing runs.
+- **Samples — Launch with FASTQs from a single sequencing run:** use this option when working with FASTQ data from a single sequencing run.
+
+For this example, start with **Samples**, since the input is one SRA run accession. If the application requires a different selection for importing the accession, follow the option descriptions and instructions displayed in the current interface.
+
+### c. Configure the analysis
+
+Complete the required fields in the application.
+
+| Field | Example value | Purpose |
+|---|---|---|
+| Analysis Name | `SRR37849526_SRA_Import` | Identifies the import analysis. |
+| SRA Accession | `SRR37849526` | Specifies the NCBI SRA run to import. |
+| Save Results To | `African_STARS_Training` | Specifies the BaseSpace project where results will be saved. |
+
+Enter the accession without a URL or filename extension.
+
+Before launching the analysis, confirm that the accession is correct and that the selected destination project is appropriate.
+
+### d. Review the BaseSpace Labs disclaimer
+
+Before launching the application, read the disclaimer and acknowledge it only if you agree to its terms.
+
+The disclaimer explains that:
+
+- SRA Import is a BaseSpace Labs application.
+- The application is provided without a warranty.
+- Illumina is not obligated to provide technical support for the app.
+- The user accepts the stated limitations and risks associated with its use.
+
+### e. Launch the import
+
+After completing the required fields and accepting the disclaimer, launch the analysis.
+
+Monitor the analysis status until it finishes. If the application reports an error, inspect its status and available logs before attempting another import.
+
+The application is expected to retrieve data associated with the specified SRA accession. The exact outputs and their organization depend on the application's implementation and version.
+
+
+
+### Download the exome BED file
+
+A BED file defines genomic intervals, such as the regions targeted by an exome capture kit. These intervals can be used to calculate coverage over the targeted regions.
+
+Create a directory for reference files:
+
+```bash
+mkdir -p ~/SRA/reference
+```
+
+Download the BED file:
+
+```bash
+wget -P ~/SRA/reference \
+  https://aml31.genome.wustl.edu/NimbleGen_v3_Exome.hg19.bed
+```
+
+The expected file path is:
+
+```text
+~/SRA/reference/NimbleGen_v3_Exome.hg19.bed
+```
+
+Here:
+- `wget` downloads a file from a URL.
+- `-P` specifies the destination directory.
+- `NimbleGen_v3_Exome.hg19.bed` describes exome target intervals associated with the hg19 reference assembly.
+
+Check that the file was downloaded:
+
+```bash
+ls -lh ~/SRA/reference/NimbleGen_v3_Exome.hg19.bed
+head ~/SRA/reference/NimbleGen_v3_Exome.hg19.bed
+```
+
+### Use the BED file for coverage analysis
+
+In BaseSpace QC Coverage Metrics, select the downloaded BED file as the target regions file, provided that it matches the capture kit and reference assembly used for the sample.
+
+**Important compatibility check:** the filename indicates that the BED uses hg19 coordinates. Use it only if the alignment BAM is compatible with hg19/GRCh37 and the target intervals match the exome assay. Do not use it directly with an hg38/GRCh38 alignment.
+
+The BED file defines *where* coverage is measured; the BAM file contains the aligned sequencing reads used to calculate that coverage.
+
+## 4.Uploading a dataset to BaseSpace {#sec-upload}
 
 BaseSpace Sequence Hub allows you to upload sequencing data generated outside the platform, such as FASTQ files produced by a local bioinformatics pipeline. You can upload data through the web interface or use the BaseSpace Command-Line Interface (CLI) for larger datasets. [Illumina: Uploading FASTQ files](https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138).
 
-### 1. Upload from the web interface
+### a. Upload from the web interface
 
 1. Create a free account at [BaseSpace Sequence Hub](https://basespace.illumina.com/) and sign in.
 2. Open an existing project where you have write access, or create a project.
@@ -148,7 +395,7 @@ BaseSpace Sequence Hub allows you to upload sequencing data generated outside th
 
 The web uploader supports files up to 250 GB per file and up to 16 files per upload, according to Illumina's BaseSpace CLI guidance. For larger transfers, use the CLI. [Upload documentation](https://help.connected.illumina.com/basespace/manage-data/import-data).
 
-### 2. Upload FASTQ files using the CLI
+### b. Upload FASTQ files using the CLI
 
 The BaseSpace CLI (`bs`) is useful when uploading many FASTQ files or transferring large datasets.
 
@@ -186,7 +433,7 @@ Replace `<PROJECT_ID>` with the actual project ID.
 
 The CLI defaults to FASTQ uploads. The files must satisfy BaseSpace's FASTQ naming and content requirements. [Official upload instructions](https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138).
 
-### 3. Upload a complete sequencing run
+### c. Upload a complete sequencing run
 
 If you want to upload an entire instrument run, including its BCL files and run metadata, use the run-upload command rather than the FASTQ dataset-upload command.
 
@@ -203,7 +450,7 @@ bs -c run-upload upload run \
 
 Replace the run name, instrument type and directory with the values for your dataset. The run folder must contain the required Illumina run files, including `RunParameters.xml` and `RunInfo.xml`. A compatible `SampleSheet.csv` is recommended for automatic FASTQ generation where supported. [Official run-upload documentation](https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-examples).
 
-### 4. Verify the upload
+### d. Verify the upload
 
 After the transfer, open the project in BaseSpace and confirm that the uploaded dataset or run is visible. For FASTQ uploads, check that both R1 and R2 files are present for paired-end samples.
 
@@ -211,7 +458,7 @@ After the transfer, open the project in BaseSpace and confirm that the uploaded 
 
 
 
-## 3. Understand FASTQ files {#sec-fastq}
+## 5. Understand FASTQ files {#sec-fastq}
 
 ### FASTQ structure
 
@@ -263,7 +510,7 @@ echo $(( $(zcat sample_R1.fastq.gz | wc -l) / 4 ))    # reads in R1
 echo $(( $(zcat sample_R2.fastq.gz | wc -l) / 4 ))    # reads in R2 (must be equal)
 ```
 
-## 4. Sequencing quality metrics {#sec-metrics}
+## 6. Sequencing quality metrics {#sec-metrics}
 
 FastQC reads the FASTQ files and reports one section per metric.
 
@@ -280,7 +527,7 @@ Other FastQC modules (sequence duplication levels, per-base sequence content, ov
 **Reading the read length for this run.** 15.5 Gb of bases for about 77.7 million read pairs (about 155 million reads) gives about 100 bases per read. FastQC should report a length close to that.
 
 
-### 4.1 Run FastQC in BaseSpace
+### a. Run FastQC in BaseSpace
 
 BaseSpace offers FastQC as an app (and a FASTQ Toolkit app for trimming and filtering). 
 
@@ -294,7 +541,7 @@ Steps:
 6. Follow the status in **Analyses**. When it shows *Complete*, open it and look at the report. Each metric is given with a pass, warning or failure marker, per read (R1 and R2).
 
 
-### 4.2 Decision
+### b. Decision
 
 | Situation | Decision |
 |---|---|
