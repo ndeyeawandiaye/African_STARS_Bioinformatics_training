@@ -355,25 +355,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#running-bcl-convert-on-the-command-line" id="toc-running-bcl-convert-on-the-command-line" class="nav-link" data-scroll-target="#running-bcl-convert-on-the-command-line">Running BCL Convert on the command line</a></li>
   <li><a href="#checking-the-output" id="toc-checking-the-output" class="nav-link" data-scroll-target="#checking-the-output">Checking the output</a></li>
   </ul></li>
-  <li><a href="#the-case" id="toc-the-case" class="nav-link" data-scroll-target="#the-case">The case</a></li>
+  <li><a href="#the-case" id="toc-the-case" class="nav-link" data-scroll-target="#the-case">2. The case</a></li>
   <li><a href="#sec-data" id="toc-sec-data" class="nav-link" data-scroll-target="#sec-data">The data used in the case study</a></li>
-  <li><a href="#sec-upload" id="toc-sec-upload" class="nav-link" data-scroll-target="#sec-upload">2.Uploading a dataset to BaseSpace</a>
+  <li><a href="#download-sequencing-data-from-ncbi-sra" id="toc-download-sequencing-data-from-ncbi-sra" class="nav-link" data-scroll-target="#download-sequencing-data-from-ncbi-sra">3. Download sequencing data from NCBI SRA</a></li>
+  <li><a href="#méthode-a-download-sequencing-data-using-the-ncbi-sra-toolkit" id="toc-méthode-a-download-sequencing-data-using-the-ncbi-sra-toolkit" class="nav-link" data-scroll-target="#méthode-a-download-sequencing-data-using-the-ncbi-sra-toolkit">Méthode A — Download sequencing data using the NCBI SRA Toolkit</a>
   <ul class="collapse">
-  <li><a href="#upload-from-the-web-interface" id="toc-upload-from-the-web-interface" class="nav-link" data-scroll-target="#upload-from-the-web-interface">1. Upload from the web interface</a></li>
-  <li><a href="#upload-fastq-files-using-the-cli" id="toc-upload-fastq-files-using-the-cli" class="nav-link" data-scroll-target="#upload-fastq-files-using-the-cli">2. Upload FASTQ files using the CLI</a></li>
-  <li><a href="#upload-a-complete-sequencing-run" id="toc-upload-a-complete-sequencing-run" class="nav-link" data-scroll-target="#upload-a-complete-sequencing-run">3. Upload a complete sequencing run</a></li>
-  <li><a href="#verify-the-upload" id="toc-verify-the-upload" class="nav-link" data-scroll-target="#verify-the-upload">4. Verify the upload</a></li>
+  <li><a href="#a.-create-a-directory-for-the-data" id="toc-a.-create-a-directory-for-the-data" class="nav-link" data-scroll-target="#a.-create-a-directory-for-the-data">a. Create a directory for the data</a></li>
+  <li><a href="#b.-download-the-sra-run" id="toc-b.-download-the-sra-run" class="nav-link" data-scroll-target="#b.-download-the-sra-run">b. Download the SRA run</a></li>
+  <li><a href="#c.-convert-sra-to-fastq" id="toc-c.-convert-sra-to-fastq" class="nav-link" data-scroll-target="#c.-convert-sra-to-fastq">c.&nbsp;Convert SRA to FASTQ</a></li>
+  <li><a href="#d.-check-the-output-files" id="toc-d.-check-the-output-files" class="nav-link" data-scroll-target="#d.-check-the-output-files">d.&nbsp;Check the output files</a></li>
+  <li><a href="#e.-compress-the-fastq-files" id="toc-e.-compress-the-fastq-files" class="nav-link" data-scroll-target="#e.-compress-the-fastq-files">e. Compress the FASTQ files</a></li>
+  <li><a href="#f.-rename-fastq-files" id="toc-f.-rename-fastq-files" class="nav-link" data-scroll-target="#f.-rename-fastq-files">f.&nbsp;Rename FASTQ files</a></li>
   </ul></li>
-  <li><a href="#sec-fastq" id="toc-sec-fastq" class="nav-link" data-scroll-target="#sec-fastq">3. Understand FASTQ files</a>
+  <li><a href="#method-b-import-sequencing-data-using-basespace-sra-import" id="toc-method-b-import-sequencing-data-using-basespace-sra-import" class="nav-link" data-scroll-target="#method-b-import-sequencing-data-using-basespace-sra-import">Method B — Import sequencing data using BaseSpace SRA Import</a>
+  <ul class="collapse">
+  <li><a href="#a.-open-the-sra-import-application" id="toc-a.-open-the-sra-import-application" class="nav-link" data-scroll-target="#a.-open-the-sra-import-application">a. Open the SRA Import application</a></li>
+  <li><a href="#b.-select-the-input-data-method" id="toc-b.-select-the-input-data-method" class="nav-link" data-scroll-target="#b.-select-the-input-data-method">b. Select the input data method</a></li>
+  <li><a href="#c.-configure-the-analysis" id="toc-c.-configure-the-analysis" class="nav-link" data-scroll-target="#c.-configure-the-analysis">c.&nbsp;Configure the analysis</a></li>
+  <li><a href="#d.-review-the-basespace-labs-disclaimer" id="toc-d.-review-the-basespace-labs-disclaimer" class="nav-link" data-scroll-target="#d.-review-the-basespace-labs-disclaimer">d.&nbsp;Review the BaseSpace Labs disclaimer</a></li>
+  <li><a href="#e.-launch-the-import" id="toc-e.-launch-the-import" class="nav-link" data-scroll-target="#e.-launch-the-import">e. Launch the import</a></li>
+  <li><a href="#download-the-exome-bed-file" id="toc-download-the-exome-bed-file" class="nav-link" data-scroll-target="#download-the-exome-bed-file">Download the exome BED file</a></li>
+  <li><a href="#use-the-bed-file-for-coverage-analysis" id="toc-use-the-bed-file-for-coverage-analysis" class="nav-link" data-scroll-target="#use-the-bed-file-for-coverage-analysis">Use the BED file for coverage analysis</a></li>
+  </ul></li>
+  <li><a href="#sec-upload" id="toc-sec-upload" class="nav-link" data-scroll-target="#sec-upload">4.Uploading a dataset to BaseSpace</a>
+  <ul class="collapse">
+  <li><a href="#a.-upload-from-the-web-interface" id="toc-a.-upload-from-the-web-interface" class="nav-link" data-scroll-target="#a.-upload-from-the-web-interface">a. Upload from the web interface</a></li>
+  <li><a href="#b.-upload-fastq-files-using-the-cli" id="toc-b.-upload-fastq-files-using-the-cli" class="nav-link" data-scroll-target="#b.-upload-fastq-files-using-the-cli">b. Upload FASTQ files using the CLI</a></li>
+  <li><a href="#c.-upload-a-complete-sequencing-run" id="toc-c.-upload-a-complete-sequencing-run" class="nav-link" data-scroll-target="#c.-upload-a-complete-sequencing-run">c.&nbsp;Upload a complete sequencing run</a></li>
+  <li><a href="#d.-verify-the-upload" id="toc-d.-verify-the-upload" class="nav-link" data-scroll-target="#d.-verify-the-upload">d.&nbsp;Verify the upload</a></li>
+  </ul></li>
+  <li><a href="#sec-fastq" id="toc-sec-fastq" class="nav-link" data-scroll-target="#sec-fastq">5. Understand FASTQ files</a>
   <ul class="collapse">
   <li><a href="#fastq-structure" id="toc-fastq-structure" class="nav-link" data-scroll-target="#fastq-structure">FASTQ structure</a></li>
   <li><a href="#phred-quality-scores" id="toc-phred-quality-scores" class="nav-link" data-scroll-target="#phred-quality-scores">Phred quality scores</a></li>
   <li><a href="#r1-and-r2-in-paired-end-sequencing" id="toc-r1-and-r2-in-paired-end-sequencing" class="nav-link" data-scroll-target="#r1-and-r2-in-paired-end-sequencing">R1 and R2 in paired-end sequencing</a></li>
   </ul></li>
-  <li><a href="#sec-metrics" id="toc-sec-metrics" class="nav-link" data-scroll-target="#sec-metrics">4. Sequencing quality metrics</a>
+  <li><a href="#sec-metrics" id="toc-sec-metrics" class="nav-link" data-scroll-target="#sec-metrics">6. Sequencing quality metrics</a>
   <ul class="collapse">
-  <li><a href="#run-fastqc-in-basespace" id="toc-run-fastqc-in-basespace" class="nav-link" data-scroll-target="#run-fastqc-in-basespace">4.1 Run FastQC in BaseSpace</a></li>
-  <li><a href="#decision" id="toc-decision" class="nav-link" data-scroll-target="#decision">4.2 Decision</a></li>
+  <li><a href="#a.-run-fastqc-in-basespace" id="toc-a.-run-fastqc-in-basespace" class="nav-link" data-scroll-target="#a.-run-fastqc-in-basespace">a. Run FastQC in BaseSpace</a></li>
+  <li><a href="#b.-decision" id="toc-b.-decision" class="nav-link" data-scroll-target="#b.-decision">b. Decision</a></li>
   </ul></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key takeaways</a></li>
   </ul>
@@ -533,7 +553,7 @@ Note
 </section>
 </section>
 <section id="the-case" class="level2">
-<h2 class="anchored" data-anchor-id="the-case">The case</h2>
+<h2 class="anchored" data-anchor-id="the-case">2. The case</h2>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -590,11 +610,200 @@ Note
 </table>
 <p>Since the normal sample is used to look for <strong>inherited</strong> (germline) variants, we start with its reads.</p>
 </section>
+<section id="download-sequencing-data-from-ncbi-sra" class="level2">
+<h2 class="anchored" data-anchor-id="download-sequencing-data-from-ncbi-sra">3. Download sequencing data from NCBI SRA</h2>
+</section>
+<section id="méthode-a-download-sequencing-data-using-the-ncbi-sra-toolkit" class="level2">
+<h2 class="anchored" data-anchor-id="méthode-a-download-sequencing-data-using-the-ncbi-sra-toolkit">Méthode A — Download sequencing data using the NCBI SRA Toolkit</h2>
+<p>The Sequence Read Archive (SRA) hosted by NCBI stores raw sequencing data. We can download a sequencing run using <code>prefetch</code> from the SRA Toolkit and convert it into FASTQ files using <code>fasterq-dump</code>.</p>
+<p>In this example, we use run <strong>SRR37849526</strong>.</p>
+<section id="a.-create-a-directory-for-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="a.-create-a-directory-for-the-data">a. Create a directory for the data</h3>
+<p>Create a directory named <code>SRA</code> inside your Documents folder:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/SRA</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>mkdir</code> creates a directory.</li>
+<li><code>-p</code> creates any missing parent directories and avoids an error if the directory already exists.</li>
+<li><code>~</code> represents the user’s home directory.</li>
+</ul>
+</section>
+<section id="b.-download-the-sra-run" class="level3">
+<h3 class="anchored" data-anchor-id="b.-download-the-sra-run">b. Download the SRA run</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">prefetch</span> SRR37849526 <span class="at">--output-directory</span> ~/SRA</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>prefetch</code> downloads sequencing data from NCBI.</li>
+<li><code>SRR37849526</code> is the SRA run accession.</li>
+<li><code>--output-directory</code> specifies where the downloaded data will be stored.</li>
+</ul>
+<p>The expected file location is:</p>
+<pre class="text"><code>~/SRA/SRR37849526/SRR37849526.sra</code></pre>
+</section>
+<section id="c.-convert-sra-to-fastq" class="level3">
+<h3 class="anchored" data-anchor-id="c.-convert-sra-to-fastq">c.&nbsp;Convert SRA to FASTQ</h3>
+<p>Once the download is complete, convert the SRA file into FASTQ format:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fasterq-dump</span> ~/SRA/SRR37849526/SRR37849526.sra <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--split-files</span> <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outdir</span> ~/SRA</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>fasterq-dump</code> converts SRA data into FASTQ format.</li>
+<li><code>--split-files</code> writes paired-end reads into separate files, usually <code>_1.fastq</code> and <code>_2.fastq</code>. Single-end runs generally produce one FASTQ file.</li>
+<li><code>--outdir</code> specifies the output directory.</li>
+</ul>
+</section>
+<section id="d.-check-the-output-files" class="level3">
+<h3 class="anchored" data-anchor-id="d.-check-the-output-files">d.&nbsp;Check the output files</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> ~/SRA/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For a paired-end run, the output may contain:</p>
+<pre class="text"><code>SRR37849526_1.fastq
+SRR37849526_2.fastq</code></pre>
+<p>These FASTQ files can then be used for quality control, read alignment, and downstream genomic analyses.</p>
+<p><strong>Important:</strong> <code>fasterq-dump</code> may require substantial temporary disk space. Ensure sufficient free space before conversion. The commands above assume that the SRA Toolkit is installed and available in your terminal.</p>
+</section>
+<section id="e.-compress-the-fastq-files" class="level3">
+<h3 class="anchored" data-anchor-id="e.-compress-the-fastq-files">e. Compress the FASTQ files</h3>
+<p>FASTQ files can be large. Compressing them with <code>gzip</code> reduces disk space and makes them easier to store and transfer.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gzip</span> ~/SRA/SRR37849526_1.fastq</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gzip</span> ~/SRA/SRR37849526_2.fastq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>After compression, the files will be named:</p>
+<pre class="text"><code>SRR37849526_1.fastq.gz
+SRR37849526_2.fastq.gz</code></pre>
+<p><strong>Important:</strong> <code>gzip</code> replaces each original <code>.fastq</code> file with a <code>.fastq.gz</code> file by default. If you want to preserve the original files, use <code>gzip -k</code> instead.</p>
+<p>To compress all FASTQ files in the directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gzip</span> ~/SRA/<span class="pp">*</span>.fastq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>To check the resulting files:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> ~/SRA/<span class="pp">*</span>.fastq.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="f.-rename-fastq-files" class="level3">
+<h3 class="anchored" data-anchor-id="f.-rename-fastq-files">f.&nbsp;Rename FASTQ files</h3>
+<p>Some sequencing workflows expect FASTQ files to follow a specific naming convention. For example:</p>
+<pre class="text"><code>SampleName_S1_L001_R1_001.fastq.gz
+SampleName_S1_L001_R2_001.fastq.gz</code></pre>
+<p>The filename components mean:</p>
+<ul>
+<li><code>SampleName</code>: sample identifier.</li>
+<li><code>S1</code>: sample number in the sample sheet.</li>
+<li><code>L001</code>: sequencing lane 1.</li>
+<li><code>R1</code>: Read 1; <code>R2</code>: Read 2.</li>
+<li><code>001</code>: file/chunk number.</li>
+</ul>
+<p>For our downloaded SRA run, we can rename the compressed paired-end FASTQ files as follows:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/SRA</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> SRR37849526_1.fastq.gz SRR37849526_S1_L001_R1_001.fastq.gz</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> SRR37849526_2.fastq.gz SRR37849526_S1_L001_R2_001.fastq.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check the resulting filenames:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> <span class="pp">*</span>.fastq.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Expected output:</p>
+<pre class="text"><code>SRR37849526_S1_L001_R1_001.fastq.gz
+SRR37849526_S1_L001_R2_001.fastq.gz</code></pre>
+<p><strong>Important:</strong> This is a naming example, not proof that the run came from NA12878. Use the actual sample identity and metadata associated with the SRA accession. The lane and chunk labels are also conventions; do not assume that an SRA run necessarily corresponds to a single Illumina lane or chunk.</p>
+<p>Renaming files does not convert single-end reads into paired-end reads or change the read data. Confirm the run layout before using the <code>_R1_</code> and <code>_R2_</code> naming convention.</p>
+</section>
+</section>
+<section id="method-b-import-sequencing-data-using-basespace-sra-import" class="level2">
+<h2 class="anchored" data-anchor-id="method-b-import-sequencing-data-using-basespace-sra-import">Method B — Import sequencing data using BaseSpace SRA Import</h2>
+<p>BaseSpace SRA Import is a BaseSpace Labs application that allows users to import sequencing data using an NCBI Sequence Read Archive (SRA) accession. This approach can simplify data preparation by avoiding the need to download an SRA file manually and convert it into FASTQ using the SRA Toolkit.</p>
+<p>In this example, we use the SRA run accession <strong>SRR37849526</strong>.</p>
+<p><strong>Important:</strong> BaseSpace SRA Import is a BaseSpace Labs application. Its availability, behavior, output format, and support may differ from those of standard Illumina applications. Verify the generated outputs before using them in downstream analyses.</p>
+<section id="a.-open-the-sra-import-application" class="level3">
+<h3 class="anchored" data-anchor-id="a.-open-the-sra-import-application">a. Open the SRA Import application</h3>
+<ol type="1">
+<li>Sign in to your BaseSpace account.</li>
+<li>Open the SRA Import application from BaseSpace Labs.</li>
+<li>Review the application description and disclaimer before proceeding.</li>
+</ol>
+<p>BaseSpace Labs applications are provided <em>as is</em>. The application disclaimer states that Illumina does not undertake to provide technical support for this app and disclaims liability for its use.</p>
+</section>
+<section id="b.-select-the-input-data-method" class="level3">
+<h3 class="anchored" data-anchor-id="b.-select-the-input-data-method">b. Select the input data method</h3>
+<p>The application offers two input options:</p>
+<ul>
+<li><strong>Biosamples — Launch with FASTQs across multiple sequencing runs:</strong> use this option when the input consists of FASTQ data associated with biosamples across multiple sequencing runs.</li>
+<li><strong>Samples — Launch with FASTQs from a single sequencing run:</strong> use this option when working with FASTQ data from a single sequencing run.</li>
+</ul>
+<p>For this example, start with <strong>Samples</strong>, since the input is one SRA run accession. If the application requires a different selection for importing the accession, follow the option descriptions and instructions displayed in the current interface.</p>
+</section>
+<section id="c.-configure-the-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="c.-configure-the-analysis">c.&nbsp;Configure the analysis</h3>
+<p>Complete the required fields in the application.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Example value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Analysis Name</td>
+<td><code>SRR37849526_SRA_Import</code></td>
+<td>Identifies the import analysis.</td>
+</tr>
+<tr class="even">
+<td>SRA Accession</td>
+<td><code>SRR37849526</code></td>
+<td>Specifies the NCBI SRA run to import.</td>
+</tr>
+<tr class="odd">
+<td>Save Results To</td>
+<td><code>African_STARS_Training</code></td>
+<td>Specifies the BaseSpace project where results will be saved.</td>
+</tr>
+</tbody>
+</table>
+<p>Enter the accession without a URL or filename extension.</p>
+<p>Before launching the analysis, confirm that the accession is correct and that the selected destination project is appropriate.</p>
+</section>
+<section id="d.-review-the-basespace-labs-disclaimer" class="level3">
+<h3 class="anchored" data-anchor-id="d.-review-the-basespace-labs-disclaimer">d.&nbsp;Review the BaseSpace Labs disclaimer</h3>
+<p>Before launching the application, read the disclaimer and acknowledge it only if you agree to its terms.</p>
+<p>The disclaimer explains that:</p>
+<ul>
+<li>SRA Import is a BaseSpace Labs application.</li>
+<li>The application is provided without a warranty.</li>
+<li>Illumina is not obligated to provide technical support for the app.</li>
+<li>The user accepts the stated limitations and risks associated with its use.</li>
+</ul>
+</section>
+<section id="e.-launch-the-import" class="level3">
+<h3 class="anchored" data-anchor-id="e.-launch-the-import">e. Launch the import</h3>
+<p>After completing the required fields and accepting the disclaimer, launch the analysis.</p>
+<p>Monitor the analysis status until it finishes. If the application reports an error, inspect its status and available logs before attempting another import.</p>
+<p>The application is expected to retrieve data associated with the specified SRA accession. The exact outputs and their organization depend on the application’s implementation and version.</p>
+</section>
+<section id="download-the-exome-bed-file" class="level3">
+<h3 class="anchored" data-anchor-id="download-the-exome-bed-file">Download the exome BED file</h3>
+<p>A BED file defines genomic intervals, such as the regions targeted by an exome capture kit. These intervals can be used to calculate coverage over the targeted regions.</p>
+<p>Create a directory for reference files:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/SRA/reference</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Download the BED file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-P</span> ~/SRA/reference <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  https://aml31.genome.wustl.edu/NimbleGen_v3_Exome.hg19.bed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The expected file path is:</p>
+<pre class="text"><code>~/SRA/reference/NimbleGen_v3_Exome.hg19.bed</code></pre>
+<p>Here: - <code>wget</code> downloads a file from a URL. - <code>-P</code> specifies the destination directory. - <code>NimbleGen_v3_Exome.hg19.bed</code> describes exome target intervals associated with the hg19 reference assembly.</p>
+<p>Check that the file was downloaded:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> ~/SRA/reference/NimbleGen_v3_Exome.hg19.bed</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> ~/SRA/reference/NimbleGen_v3_Exome.hg19.bed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="use-the-bed-file-for-coverage-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="use-the-bed-file-for-coverage-analysis">Use the BED file for coverage analysis</h3>
+<p>In BaseSpace QC Coverage Metrics, select the downloaded BED file as the target regions file, provided that it matches the capture kit and reference assembly used for the sample.</p>
+<p><strong>Important compatibility check:</strong> the filename indicates that the BED uses hg19 coordinates. Use it only if the alignment BAM is compatible with hg19/GRCh37 and the target intervals match the exome assay. Do not use it directly with an hg38/GRCh38 alignment.</p>
+<p>The BED file defines <em>where</em> coverage is measured; the BAM file contains the aligned sequencing reads used to calculate that coverage.</p>
+</section>
+</section>
 <section id="sec-upload" class="level2">
-<h2 class="anchored" data-anchor-id="sec-upload">2.Uploading a dataset to BaseSpace</h2>
+<h2 class="anchored" data-anchor-id="sec-upload">4.Uploading a dataset to BaseSpace</h2>
 <p>BaseSpace Sequence Hub allows you to upload sequencing data generated outside the platform, such as FASTQ files produced by a local bioinformatics pipeline. You can upload data through the web interface or use the BaseSpace Command-Line Interface (CLI) for larger datasets. <a href="https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138">Illumina: Uploading FASTQ files</a>.</p>
-<section id="upload-from-the-web-interface" class="level3">
-<h3 class="anchored" data-anchor-id="upload-from-the-web-interface">1. Upload from the web interface</h3>
+<section id="a.-upload-from-the-web-interface" class="level3">
+<h3 class="anchored" data-anchor-id="a.-upload-from-the-web-interface">a. Upload from the web interface</h3>
 <ol type="1">
 <li>Create a free account at <a href="https://basespace.illumina.com/">BaseSpace Sequence Hub</a> and sign in.</li>
 <li>Open an existing project where you have write access, or create a project.</li>
@@ -605,45 +814,45 @@ Note
 </ol>
 <p>The web uploader supports files up to 250 GB per file and up to 16 files per upload, according to Illumina’s BaseSpace CLI guidance. For larger transfers, use the CLI. <a href="https://help.connected.illumina.com/basespace/manage-data/import-data">Upload documentation</a>.</p>
 </section>
-<section id="upload-fastq-files-using-the-cli" class="level3">
-<h3 class="anchored" data-anchor-id="upload-fastq-files-using-the-cli">2. Upload FASTQ files using the CLI</h3>
+<section id="b.-upload-fastq-files-using-the-cli" class="level3">
+<h3 class="anchored" data-anchor-id="b.-upload-fastq-files-using-the-cli">b. Upload FASTQ files using the CLI</h3>
 <p>The BaseSpace CLI (<code>bs</code>) is useful when uploading many FASTQ files or transferring large datasets.</p>
 <p><strong>Step 1 — Install the CLI</strong></p>
 <p>Download the version for your operating system from the <a href="https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-overview">official BaseSpace CLI documentation</a>.</p>
 <p><strong>Step 2 — Authenticate</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> auth</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> auth</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Follow the authentication instructions displayed by the CLI.</p>
 <p><strong>Step 3 — Identify your project</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> list projects</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> list projects</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Alternatively, obtain the project ID from the project URL in your browser.</p>
 <p><strong>Step 4 — Upload FASTQ files</strong></p>
 <p>Suppose the FASTQ files are stored in <code>./data/fastq/</code>. Upload them to an existing project:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> dataset upload <span class="dt">\</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> <span class="op">&lt;</span>PROJECT_ID<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--recursive</span> ./data/fastq/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> dataset upload <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> <span class="op">&lt;</span>PROJECT_ID<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--recursive</span> ./data/fastq/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Replace <code>&lt;PROJECT_ID&gt;</code> with the actual project ID.</p>
 <p>The CLI defaults to FASTQ uploads. The files must satisfy BaseSpace’s FASTQ naming and content requirements. <a href="https://knowledge.illumina.com/software/basespace-cli/software-basespace-cli-reference_material-list/000001138">Official upload instructions</a>.</p>
 </section>
-<section id="upload-a-complete-sequencing-run" class="level3">
-<h3 class="anchored" data-anchor-id="upload-a-complete-sequencing-run">3. Upload a complete sequencing run</h3>
+<section id="c.-upload-a-complete-sequencing-run" class="level3">
+<h3 class="anchored" data-anchor-id="c.-upload-a-complete-sequencing-run">c.&nbsp;Upload a complete sequencing run</h3>
 <p>If you want to upload an entire instrument run, including its BCL files and run metadata, use the run-upload command rather than the FASTQ dataset-upload command.</p>
 <p>For example:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> authenticate <span class="at">-c</span> run-upload <span class="at">--scopes</span> <span class="st">"CREATE RUNS"</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> <span class="at">-c</span> run-upload upload run <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-n</span> MyNovaSeqRun <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-t</span> NovaSeq6000 <span class="dt">\</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  /path/to/run_folder</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> authenticate <span class="at">-c</span> run-upload <span class="at">--scopes</span> <span class="st">"CREATE RUNS"</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="ex">bs</span> <span class="at">-c</span> run-upload upload run <span class="dt">\</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-n</span> MyNovaSeqRun <span class="dt">\</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-t</span> NovaSeq6000 <span class="dt">\</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  /path/to/run_folder</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Replace the run name, instrument type and directory with the values for your dataset. The run folder must contain the required Illumina run files, including <code>RunParameters.xml</code> and <code>RunInfo.xml</code>. A compatible <code>SampleSheet.csv</code> is recommended for automatic FASTQ generation where supported. <a href="https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-examples">Official run-upload documentation</a>.</p>
 </section>
-<section id="verify-the-upload" class="level3">
-<h3 class="anchored" data-anchor-id="verify-the-upload">4. Verify the upload</h3>
+<section id="d.-verify-the-upload" class="level3">
+<h3 class="anchored" data-anchor-id="d.-verify-the-upload">d.&nbsp;Verify the upload</h3>
 <p>After the transfer, open the project in BaseSpace and confirm that the uploaded dataset or run is visible. For FASTQ uploads, check that both R1 and R2 files are present for paired-end samples.</p>
 <p><strong>Important:</strong> Uploading FASTQ files adds data to a project; uploading a complete BCL run is a different workflow. Do not upload human genomic data to a public or shared project unless the appropriate permissions and data-governance requirements are satisfied.</p>
 </section>
 </section>
 <section id="sec-fastq" class="level2">
-<h2 class="anchored" data-anchor-id="sec-fastq">3. Understand FASTQ files</h2>
+<h2 class="anchored" data-anchor-id="sec-fastq">5. Understand FASTQ files</h2>
 <section id="fastq-structure" class="level3">
 <h3 class="anchored" data-anchor-id="fastq-structure">FASTQ structure</h3>
 <p>Each read uses four lines:</p>
@@ -727,16 +936,16 @@ AAAFFJJJJJJFJJJJJJJJFJJJJJJJFJJJJJJJFJJJJJJJFJJJJFJJJJJJJJFJJ</code></pre>
 <li><strong>R2:</strong> the reverse read of the same fragment.</li>
 <li>The two files must hold <strong>the same number of reads, in the same order</strong>: read <em>n</em> in R1 is the mate of read <em>n</em> in R2. The headers match except for the read number (<code>1:</code> and <code>2:</code>).</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional, on a small FASTQ subset shared by the instructor</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R1</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R2 (must be equal)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional, on a small FASTQ subset shared by the instructor</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R1</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$((</span> <span class="va">$(</span><span class="fu">zcat</span> sample_R2.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span><span class="va">)</span> <span class="op">/</span> <span class="dv">4</span> <span class="va">))</span>    <span class="co"># reads in R2 (must be equal)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="sec-metrics" class="level2">
-<h2 class="anchored" data-anchor-id="sec-metrics">4. Sequencing quality metrics</h2>
+<h2 class="anchored" data-anchor-id="sec-metrics">6. Sequencing quality metrics</h2>
 <p>FastQC reads the FASTQ files and reports one section per metric.</p>
 <table class="caption-top table">
 <colgroup>
@@ -788,8 +997,8 @@ AAAFFJJJJJJFJJJJJJJJFJJJJJJJFJJJJJJJFJJJJJJJFJJJJFJJJJJJJJFJJ</code></pre>
 </table>
 <p>Other FastQC modules (sequence duplication levels, per-base sequence content, overrepresented sequences) are common to flag for hybrid-capture exomes. A duplicated or unevenly composed library is not necessarily a problem: judge it in context, and remember that FastQC and the instrument’s own run metrics do not measure the same things.</p>
 <p><strong>Reading the read length for this run.</strong> 15.5 Gb of bases for about 77.7 million read pairs (about 155 million reads) gives about 100 bases per read. FastQC should report a length close to that.</p>
-<section id="run-fastqc-in-basespace" class="level3">
-<h3 class="anchored" data-anchor-id="run-fastqc-in-basespace">4.1 Run FastQC in BaseSpace</h3>
+<section id="a.-run-fastqc-in-basespace" class="level3">
+<h3 class="anchored" data-anchor-id="a.-run-fastqc-in-basespace">a. Run FastQC in BaseSpace</h3>
 <p>BaseSpace offers FastQC as an app (and a FASTQ Toolkit app for trimming and filtering).</p>
 <p>Steps:</p>
 <ol type="1">
@@ -801,8 +1010,8 @@ AAAFFJJJJJJFJJJJJJJJFJJJJJJJFJJJJJJJFJJJJJJJFJJJJFJJJJJJJJFJJ</code></pre>
 <li>Follow the status in <strong>Analyses</strong>. When it shows <em>Complete</em>, open it and look at the report. Each metric is given with a pass, warning or failure marker, per read (R1 and R2).</li>
 </ol>
 </section>
-<section id="decision" class="level3">
-<h3 class="anchored" data-anchor-id="decision">4.2 Decision</h3>
+<section id="b.-decision" class="level3">
+<h3 class="anchored" data-anchor-id="b.-decision">b. Decision</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
