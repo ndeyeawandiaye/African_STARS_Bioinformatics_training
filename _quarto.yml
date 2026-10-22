@@ -57,6 +57,7 @@ website:
         contents:
           - course/04-sequencing-data-QC.qmd
           - course/04-alignement-variant-calling.qmd
+          - course/04-annotation.qmd
 
 
   page-footer:

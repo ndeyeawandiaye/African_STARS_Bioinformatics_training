@@ -236,6 +236,261 @@ Annotation is not interpretation: a "damaging" prediction does not make a varian
 
 **Common mistakes:** an hg19 BED with an hg38 reference; names with and without `chr` mixed; the wrong sample selected; modules enabled "because they are there".
 
+
+## 5. Understanding the DRAGEN Metrics
+
+The DRAGEN metrics report summarizes the quality of sequencing reads, their
+alignment to the reference genome, coverage, and the variants detected.
+These metrics help assess the reliability of the analysis and identify
+regions or results that require further investigation.
+
+**Important:** A metric should not be interpreted in isolation. Its
+expected value depends on the sequencing technology, library preparation,
+sequencing depth, reference genome, and analysis settings.
+
+### a. Sample and Ploidy Estimation Metrics
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Sample` | Identifier of the sequencing sample. | Used to associate metrics and results with the correct sample. |
+| `Sex` | Sex or ploidy-related estimate inferred from genomic data. | Compare with the expected sample information. `X0` may indicate one X chromosome and no Y chromosome, but verify the caller's convention and sample metadata. |
+| `chrX`, `chrY` | Chromosome-specific metrics, in this report represented by chromosome-level values. | Can help investigate sex-chromosome coverage and possible sample discrepancies. |
+
+### b. Read Trimming Metrics
+
+These metrics describe read preprocessing, including trimming and filtering
+when these operations are performed by the workflow.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Input Reads` | Number of reads entering the relevant processing stage. | Indicates the amount of sequencing data available. |
+| `Masked` | Reads or bases masked according to the tool's definition. | Masking may affect downstream analysis; consult the DRAGEN report definition to determine the exact unit. |
+| `Trimmed` | Reads or bases affected by trimming, depending on the metric definition. | Helps assess how much data was modified to remove unwanted sequence. |
+| `Filtered` | Reads removed by filtering. | A high value may indicate quality issues or restrictive filtering settings. |
+| `Fixed-Length` | Reads processed to a fixed length. | Depends on the selected preprocessing options. |
+| `Poly-G` | Poly-G sequence trimming or filtering. | Particularly relevant to certain Illumina two-color sequencing systems. |
+| `Quality` | Quality-based trimming or filtering. | Helps identify processing caused by low-quality bases. |
+| `Adapter` | Adapter-related trimming or filtering. | High adapter content can indicate short inserts or incomplete adapter removal. |
+| `Bisulfite` | Bisulfite-related processing, if applicable. | Usually relevant to bisulfite sequencing workflows. |
+| `N-base` | Processing associated with ambiguous `N` bases. | Many ambiguous bases may reduce mapping or variant-calling reliability. |
+| `Minimum-Length` | Reads affected by a minimum-length rule. | Very short reads can map ambiguously. |
+| `Cut-End` | Processing associated with read ends. | Interpret according to the configured trimming options. |
+
+**Note:** DRAGEN metric names do not always specify whether the reported
+quantity represents reads, bases, or events. Check the documentation for
+the exact DRAGEN version and report that generated these values.
+
+### c. FastQC Metrics
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Max Read Length` | Maximum read length observed. | Describes the longest reads in the dataset. |
+| `Read Length` | Read length reported for the sample. | Compare with the expected sequencing configuration, such as 2 × 100 bp. |
+| `QC-failed` | Reads or records failing the relevant quality criteria. | Check the metric definition and FastQC report before interpreting the count. |
+| `% QC-failed` | Percentage associated with QC failures. | A high percentage may warrant investigation of read quality. |
+
+FastQC quality-control results should be reviewed together with per-base
+quality, adapter content, sequence duplication, GC distribution, and
+overrepresented sequences when those plots are available.
+
+### e. Mapping Metrics
+
+Mapping metrics measure how successfully the reads align to the reference
+genome.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Unique Reads` | Reads classified as uniquely mapped by the reporting tool. | A high proportion generally indicates that reads can be assigned to a single genomic location. |
+| `% Unique` | Percentage of reads classified as unique. | Low values may reflect repetitive regions, read length, or reference-related issues. |
+| `Duplicate Aligned Reads` | Aligned reads identified as duplicates under the tool's definition. | High duplication can reflect PCR duplicates or biological/library characteristics. |
+| `% Duplicate Aligned Reads` | Percentage of aligned reads classified as duplicates. | Interpret in relation to library preparation and sequencing depth. |
+| `Mapped Reads` | Number of reads aligned to the reference. | Indicates alignment yield, not necessarily the proportion of the genome adequately covered. |
+| `% Mapped` | Percentage of reads that mapped. | A low value can indicate contamination, poor read quality, or a reference mismatch. |
+| `Abundant Reads` | Reads assigned to an abundant-read category defined by the pipeline. | Consult the corresponding DRAGEN report documentation before assigning a biological meaning. |
+| `% Abundant` | Percentage associated with abundant reads. | Interpret according to the pipeline's definition. |
+| `% Prop Pair` | Pair-related alignment metric. | Review the report definition to establish whether it represents properly paired reads or another paired-read statistic. |
+| `% Contam` | Estimated contamination percentage. | An elevated estimate may require sample identity and contamination checks. |
+| `% Chimeric` | Percentage of reads or alignments classified as chimeric. | Elevated values may reflect library artifacts or genuine structural variation, depending on context. |
+| `% Soft-Clipped` | Percentage of aligned sequence that is soft-clipped. | Elevated values can indicate local mismatches, structural variation, or alignment artifacts. |
+| `Mean IS` | Mean insert size for paired-end fragments. | Compare with the expected library insert-size distribution. |
+| `Median IS` | Median insert size. | Less sensitive than the mean to extreme insert-size values. |
+| `Standard Deviation` | Dispersion of insert-size measurements. | A high value indicates greater variability in fragment lengths. |
+
+### f. Sequencing Yield and Base Quality
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Input Bases` | Total number of bases entering the relevant analysis stage. | Represents the amount of sequence data, not the number of bases covering the target regions. |
+| `% Mapped Bases` | Percentage of bases associated with mapped reads, according to the report definition. | Complements read-level mapping statistics. |
+| `% Q30` | Percentage of bases with Phred quality score ≥ 30. | Q30 corresponds to an estimated base-call error probability of 0.1%. Higher percentages generally indicate better base-call quality. |
+| `Mapped R1`, `Mapped R2` | Mapping-related counts for read 1 and read 2. | Compare the two mates for unexpected differences. |
+| `% Mapped R1`, `% Mapped R2` | Mapping percentages for each mate. | Low or imbalanced values may warrant investigation. |
+| `% Q30 R1`, `% Q30 R2` | Percentage of Q30 bases in each mate. | Read 2 may have different quality characteristics from read 1. |
+
+### g. Coverage Metrics
+
+Coverage measures how many sequencing reads support each genomic position.
+It is essential for evaluating whether a region has enough evidence for
+reliable variant detection.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Average Coverage` | Mean sequencing depth across the genomic territory included in the calculation. | Higher average depth can improve sensitivity, but does not guarantee uniform coverage. |
+| `Median Coverage` | Median depth across the assessed territory. | Less influenced by extremely high-depth regions than the mean. |
+| `Mean / Median Ratio` | Ratio of mean coverage to median coverage. | A large ratio may indicate a skewed depth distribution. |
+| `Uniformity of Coverage` | Coverage-uniformity statistic defined by the reporting tool. | Check the DRAGEN definition and threshold before comparing samples. |
+| `% >=1x` | Percentage of assessed bases covered by at least one read. | Measures basic coverage breadth. |
+| `% >=10x` | Percentage of bases with depth of at least 10 reads. | Indicates how much of the territory has moderate coverage. |
+| `% >=20x` | Percentage of bases with depth of at least 20 reads. | A useful depth benchmark for many germline analyses, but not a universal guarantee of variant-calling sensitivity. |
+| `% >=50x` | Percentage of bases with depth of at least 50 reads. | Indicates the proportion of the territory with higher coverage. |
+| `% >=100x` | Percentage of bases with depth of at least 100 reads. | Can help assess high-depth sequencing targets. |
+| `% >=500x`, `% >=1000x`, `% >=1500x` | Percentages of bases exceeding very high depth thresholds. | More relevant to particular high-depth or targeted applications than to routine WES. |
+
+**Important distinction:** Average depth and coverage breadth are different.
+A few highly covered regions can increase the average even when many bases
+have insufficient coverage.
+
+For whole-exome sequencing (WES), coverage should be assessed over the
+appropriate capture targets, with attention to clinically or scientifically
+relevant exons and their flanking regions.
+
+### h. Small Variant Calling (VC Metrics)
+
+These metrics describe single-nucleotide variants (SNVs) and small insertions
+or deletions (indels) reported by the variant caller.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Variants` | Total number of variants reported under the metric's definition. | Confirm whether filtered and multiallelic records are included. |
+| `Multiallelic Variants` | Variant records with more than one alternate allele. | May require normalization or decomposition for downstream analyses. |
+| `SNP` | Number of single-nucleotide polymorphism/variant records. | The report may use `SNP` as a general label for single-base substitutions. |
+| `Mosaic SNPs` | Single-nucleotide variants classified as mosaic by the caller. | Requires careful review of allele fractions, depth, and caller-specific criteria. |
+| `Ti/Tv` | Transition-to-transversion ratio for single-nucleotide substitutions. | A broad QC statistic; expected values depend on assay, genomic territory, and variant filtering. |
+| `Ins` | Number of insertion records. | Review representation, quality, and genomic context. |
+| `Del` | Number of deletion records. | Review representation, quality, and genomic context. |
+| `Mosaic Indels` | Indels classified as mosaic by the caller. | Interpret with the caller's detection limits and supporting evidence. |
+| `Het/Hom ratio` | Ratio of heterozygous to homozygous variant calls. | Can help investigate sample characteristics or QC anomalies; ancestry, ploidy, and territory affect expectations. |
+| `Callability` | Measure of the fraction or amount of genomic territory considered callable by the pipeline. | Consult the precise definition and units in the report. |
+
+Variant counts alone do not establish that a sample is good quality or that
+a variant is disease-causing. For cancer-gene analysis, inspect read depth,
+allele fraction, genotype quality, filters, annotation, and supporting reads.
+
+### i. Structural Variants (SV Metrics)
+
+Structural variants are larger genomic changes, including deletions,
+insertions, duplications, and rearrangements.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Total SVs` | Total number of structural-variant calls. | Depends on the caller, detection limits, and filtering. |
+| `Deletions` | Number of deletion calls. | Indicates candidate regions where sequence may be absent. |
+| `Insertions` | Number of insertion calls. | Indicates candidate inserted sequence. |
+| `Duplications` | Number of duplication calls. | May indicate additional copies of a genomic segment. |
+| `Breakend Pairs` | Pairs of breakend records associated with rearrangements. | Require interpretation of the linked breakpoints and event representation. |
+
+### j. Copy Number Variation (CNV Metrics)
+
+Copy-number analysis estimates gains or losses of genomic material.
+
+| Metric | Explanation | Interpretation |
+|---|---|---|
+| `Amplifications` | Candidate copy-number gains. | Can indicate additional copies of a genomic region. |
+| `Passing Amplifications` | Amplifications passing the caller's filters. | Review supporting evidence and filtering criteria. |
+| `Deletions` | Candidate copy-number losses. | May indicate loss of genomic material. |
+| `Passing Deletions` | Deletions passing the caller's filters. | Passing status does not replace biological validation. |
+| `cnLOHs` | Candidate copy-neutral loss-of-heterozygosity events. | Heterozygosity may be lost without a net change in copy number. |
+| `Passing cnLOHs` | cnLOH events passing the caller's filters. | Interpret in the context of the sample and analysis method. |
+| `Coverage Uniformity` | Uniformity statistic used by the CNV workflow. | Uneven depth can complicate copy-number estimation. |
+| `Homozygosity` | A metric related to homozygous genomic regions or the caller's homozygosity analysis. | Confirm the precise report definition. |
+| `PMAD` | Median-based measure of absolute deviation in normalized coverage. | Lower values generally indicate less dispersion in normalized depth. |
+| `Coverage MAD` | Median absolute deviation of coverage, according to the tool's definition. | Helps characterize depth variability. |
+| `Median Bin Count` | Median count or coverage-related value across analysis bins, as defined by the report. | Check the exact units and binning strategy before interpretation. |
+
+### k. Zygosity and Chromosome-Level Metrics
+
+The chromosome columns (`chr1`–`chr22`, `chrX`, and `chrY`) contain
+chromosome-level values. They should not automatically be interpreted as
+raw read counts or percentages.
+
+Zygosity describes whether a variant is present in one or both homologous
+copies of a genomic region. A heterozygous call typically has one reference
+and one alternate allele; a homozygous alternate call has alternate alleles
+on both copies, subject to ploidy and caller conventions.
+
+Review the relevant DRAGEN report definition before assigning a biological
+meaning to the chromosome-level values or the `Homozygosity` metric.
+
+### l. HLA Typing
+
+The HLA columns report inferred HLA types for loci such as `HLA-A`, `HLA-B`,
+`HLA-C`, `HLA-DQA1`, and `HLA-DRB1`.
+
+HLA typing estimates alleles in the highly polymorphic human leukocyte
+antigen region. Interpretation depends on the typing resolution, reference
+database, and confidence of the call. `N/A` indicates that a value is not
+available in this report; it does not establish that the gene is absent.
+
+### m. Repeat-Expansion Metrics
+
+The repeat-related columns report results for loci associated with short
+tandem repeats or repeat expansions, including `FMR1`, `HTT`, `DMPK`,
+`C9ORF72`, and `RFC1`.
+
+Interpret these results using the locus-specific repeat motif, estimated
+repeat length, caller limitations, and relevant quality metrics. Repeat
+expansion detection is method-dependent, and a missing result is not
+equivalent to a negative result.
+
+### n. Targeted Caller Results
+
+The report includes specialized results for loci such as `CYP21A2`,
+`CYP2B6`, `CYP2D6`, `GBA`, `HBA`, `LPA`, `RH`, and `SMN`.
+
+These callers address genes or regions that can require specialized methods
+because of pseudogenes, highly homologous sequences, complex copy-number
+variation, or repetitive structure.
+
+| Metric | Explanation |
+|---|---|
+| `Copy Number`, `Total CN` | Estimated number of copies of a gene or genomic region. |
+| `Genotype` | Genotype or diplotype inferred by the targeted caller. |
+| `Haplotypes` | Inferred combinations of alleles on the two chromosome copies, where supported. |
+| `Deletion Breakpoint` | Estimated breakpoint associated with a deletion. |
+| `Variants` | Variants detected by the targeted caller. |
+| `Filter` | Caller-specific filtering status. |
+| `Quality` | Caller-specific quality measure. |
+| `Metabolism Status` | Predicted metabolic phenotype for relevant pharmacogenes, based on the caller's rules. |
+| `KIV-2 Variants` | Variants reported in the KIV-2 repeat region of `LPA`. |
+| `KIV-2 Total CN` | Estimated total copy number of the KIV-2 region. |
+| `KIV-2 Reference CN`, `KIV-2 Alternate CN` | Copy-number estimates associated with reference and alternate configurations, according to the caller. |
+| `RHD CN`, `RHCE CN` | Estimated copy numbers for the RHD and RHCE genes. |
+| `SMN1 Allele Count`, `SMN2 Allele Count` | Estimated allele counts for SMN1 and SMN2. |
+| `SMN2delta7-8 Allele Count` | Estimated count for the reported SMN2 deletion-related configuration. |
+
+For specialized callers, always consult the locus-specific documentation.
+The same metric name can have different technical implications across
+different genes and algorithms.
+
+### o. How to Interpret the Report as a Whole
+
+Use the following order when reviewing a sample:
+
+1. **Read quality:** verify read length, Q30, adapter content, and trimming.
+2. **Alignment:** review mapping rate, unique mapping, contamination, and insert size.
+3. **Coverage:** examine mean and median depth, breadth, and coverage over the regions of interest.
+4. **Variant calling:** review counts, filters, genotype quality, allele fraction, and callability.
+5. **Specialized analyses:** assess CNVs, structural variants, repeats, HLA, and targeted gene results only where relevant.
+6. **Validation:** confirm important findings using appropriate evidence and, where necessary, an independent method.
+
+A high mapping rate does not guarantee adequate coverage. Likewise,
+a high average depth does not guarantee that every exon is adequately covered.
+
+**For cancer-gene analysis:** prioritize the quality and coverage of the
+specific regions of interest, and review each candidate variant's evidence
+before interpreting its biological significance.
+
+
 ## 5. Read the results {#sec-results}
 
 In the project, open **Analyses**, then the DRAGEN Germline analysis, then **Files** and the summary or metrics.
@@ -249,6 +504,8 @@ In the project, open **Analyses**, then the DRAGEN Germline analysis, then **Fil
 | Metrics files (mapping, coverage, contamination) | The quality numbers below |
 
 Exact file names depend on the DRAGEN version.
+
+
 
 ### Alignment and coverage metrics
 

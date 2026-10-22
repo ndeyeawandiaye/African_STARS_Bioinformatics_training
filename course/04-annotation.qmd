@@ -1,0 +1,717 @@
+---
+title: "Variant Annotation with VEP, Prioritization, and Interpretation"
+description: "From a DRAGEN germline VCF to a justified shortlist of candidate variants: annotate with Ensembl VEP, prioritize with quality, frequency, consequence and gene evidence, and understand the technical, biological, ancestry and data-protection limits of the interpretation."
+categories: [human-genomics, annotation, vep, variant-prioritization, interpretation, clinvar, acmg]
+toc: true
+toc-depth: 3
+number-sections: false
+code-copy: true
+---
+
+Pipeline overview: **FASTQ → DRAGEN (BaseSpace) → Germline VCF → Variant annotation → Prioritization and interpretation**.
+
+This page covers steps 4–6 using the case-study file `SRR37849526.hard-filtered.vcf.gz`.
+
+Assumptions:
+
+- Human whole-exome sequencing (WES).
+- Germline variant calls produced by DRAGEN.
+- The reference assembly is assumed to be hg19/GRCh37 and must be confirmed from the analysis metadata (see section 4.1).
+- The commands are educational examples. Adjust paths, reference files, and parameters to your environment.
+
+
+## Variant annotation with Ensembl VEP
+
+**Objective:** Enrich variant calls with biological information, including genes, transcripts, predicted molecular consequences, protein changes, population allele frequencies, and available clinical significance annotations.
+
+### 1. Inspect the input VCF
+
+The input file for this exercise is:
+
+```text
+SRR37849526.hard-filtered.vcf.gz
+```
+
+The suffix `hard-filtered` does not guarantee that every variant is reliable or clinically relevant. Variants should also be assessed using read depth, genotype quality, alignment quality, and coverage information.
+
+Inspect the reference and contig lines of the header (the reference line can be far down in a DRAGEN header, so a `head` on the header may not reach it), then look at a few records:
+
+```bash
+# Reference assembly and chromosome names declared in the header
+bcftools view -h SRR37849526.hard-filtered.vcf.gz | grep -E '^##(reference|contig)' | head
+
+# A few variant records
+bcftools view -H SRR37849526.hard-filtered.vcf.gz | head
+```
+
+Check:
+
+- The reference assembly used by DRAGEN.
+- Chromosome naming conventions, such as `chr1` versus `1`.
+- Available filter and quality fields.
+- Genotype and allele information.
+
+The reference assembly, FASTA, and VEP cache must be compatible.
+
+Use the same naming convention in the FASTA, the BED file, and the VCF. The mitochondrial contig differs between UCSC (`chrM`) and Ensembl (`MT`) references; it is not relevant for this exome exercise.
+:::
+
+### 2. Prepare the VCF
+
+If the file has not already been inspected and prepared, create a working directory:
+
+```bash
+mkdir -p VEP_training
+cd VEP_training
+```
+
+Place the input VCF and its index in this directory, or adjust the paths below.
+
+**Keep variants with `PASS`**
+
+```bash
+bcftools view \
+  -f PASS \
+  SRR37849526.hard-filtered.vcf.gz \
+  -Oz \
+  -o SRR37849526.pass.vcf.gz
+
+tabix -p vcf SRR37849526.pass.vcf.gz
+```
+
+This keeps records whose `FILTER` field is `PASS`. It does not guarantee that each retained variant is reliable or relevant to a disease.
+
+
+### 3. Install VEP and prepare the cache
+
+Ensembl Variant Effect Predictor (VEP) can run offline using a local cache. The cache includes transcript models and other annotation data required for variant interpretation.
+
+
+Example installation in a compatible Linux environment:
+
+```bash
+conda create -n vep -c conda-forge -c bioconda ensembl-vep
+conda activate vep
+
+vep --version
+vep_install --help
+```
+
+Consult the installer help for the options supported by the installed VEP version, then install the human GRCh37 cache.
+
+Example command to verify against your installation:
+
+```bash
+vep_install -a cf -s homo_sapiens -y GRCh37
+```
+
+
+The cache must match the VEP version and reference assembly. A FASTA file may also be required for HGVS annotation and reference-allele checking.
+
+Documentation:
+
+- <https://grch37.ensembl.org/info/docs/tools/vep/>
+- <https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html>
+
+### 4. Run VEP
+
+For this example, use the normalized file created above. The command below is the complete command used in this exercise. It also requests known-variant and clinical-significance annotations (section 4.5) and writes the HTML summary report.
+
+```bash
+vep \
+  --input_file SRR37849526.norm.vcf.gz \
+  --output_file SRR37849526.vep.vcf \
+  --stats_file SRR37849526.vep_summary.html \
+  --format vcf \
+  --vcf \
+  --force_overwrite \
+  --offline \
+  --cache \
+  --assembly GRCh37 \
+  --fasta hg19.fa \
+  --symbol \
+  --hgvs \
+  --canonical \
+  --biotype \
+  --numbers \
+  --domains \
+  --sift b \
+  --polyphen b \
+  --af \
+  --af_1kg \
+  --af_gnomade \
+  --af_gnomadg \
+  --max_af \
+  --pick_allele \
+  --check_ref \
+  --check_existing \
+  --clin_sig_allele 1 \
+  --fork 4
+```
+
+If you have not created a normalized file, replace `SRR37849526.norm.vcf.gz` with `SRR37849526.hard-filtered.vcf.gz` after checking that the input is appropriate for annotation.
+
+Check whether all frequency options are supported by your installed VEP version and cache. The available population-frequency fields depend on the installed data.
+
+#### What do the main options do?
+
+| Option | Purpose |
+|---|---|
+| `--offline --cache` | Uses local annotation data without connecting to Ensembl during annotation |
+| `--assembly GRCh37` | Specifies the reference assembly |
+| `--fasta hg19.fa` | Provides the reference sequence |
+| `--stats_file` | Names the HTML summary report (otherwise VEP names it after the output file, for example `SRR37849526.vep.vcf_summary.html`) |
+| `--symbol` | Adds the gene symbol |
+| `--hgvs` | Requests available HGVS coding and protein notations |
+| `--canonical` | Marks canonical transcripts |
+| `--biotype` | Adds the transcript biotype |
+| `--numbers` | Adds exon and intron numbers when available |
+| `--domains` | Adds available protein-domain annotations |
+| `--sift b --polyphen b` | Requests SIFT and PolyPhen-2 predictions when available |
+| `--af --af_1kg` | Requests available allele-frequency annotations, including 1000 Genomes frequencies |
+| `--af_gnomade --af_gnomadg` | Requests gnomAD exome and genome frequencies, including per-population fields, if supported by the installed version and cache |
+| `--max_af` | Reports the maximum available allele frequency from supported sources |
+| `--pick_allele` | Selects one transcript annotation per allele according to VEP's selection rules (see the note below) |
+| `--check_ref` | Checks whether the reference allele matches the supplied FASTA |
+| `--check_existing`, `--clin_sig_allele 1` | Report known variants and allele-specific clinical significance (section 4.5) |
+| `--fork 4` | Uses four worker processes, where supported by the environment |
+
+::: {.callout-note title="What --pick_allele hides"}
+With `--pick_allele`, VEP keeps a single transcript annotation per allele. This keeps the output simple for teaching, but it hides the consequences on the other transcripts, and the chosen transcript is not always the one you would cite. Always record which transcript an interpretation refers to. For a full analysis, remove `--pick_allele` (all transcripts are then reported) or use `--pick` or `--per_gene` with a documented ordering.
+:::
+
+For a tabular output rather than a VCF, VEP also supports `--tab`. In this exercise, we retain VCF output to preserve the original variant records and add annotations to the file.
+
+### 5. Known variants and clinical significance without a separate ClinVar download
+
+For this training, the two options added to the command above, `--check_existing` and `--clin_sig_allele 1`, report known variants and available clinical-significance annotations from the local cache:
+
+- `--check_existing`: checks whether variants are already known in the variation data available to VEP.
+- `--clin_sig_allele 1`: requests allele-specific clinical significance annotations.
+
+**This avoids downloading a separate ClinVar VCF and its index.** However, it still requires the appropriate VEP cache. The clinical annotations available depend on the cache release and its contents; they may not include the latest ClinVar submissions. Some frequency options (`--af`, `--af_1kg`, `--max_af`) may already enable `--check_existing`, in which case adding it explicitly is redundant but harmless.
+
+::: {.callout-important title="Field names"}
+VEP commonly reports clinical significance in a field named `CLIN_SIG`, while `CLNSIG` is the field name commonly used in the original ClinVar VCF. Do not assume that VEP will output a field literally named `CLNSIG`.
+:::
+
+The output may also include known variant identifiers, phenotype information, or somatic annotations, depending on the available data and options.
+
+#### Check the output
+
+Inspect the VCF header:
+
+```bash
+bcftools view -h SRR37849526.vep.vcf \
+  | grep -E 'CSQ|CLIN_SIG|Existing_variation'
+```
+
+Then inspect a few records:
+
+```bash
+bcftools view -H SRR37849526.vep.vcf | head
+```
+
+Clinical significance is reported inside the `CSQ` field. Use `bcftools +split-vep` to read it, after checking in the `CSQ` header that the field exists:
+
+```bash
+bcftools +split-vep \
+  -f '%CHROM\t%POS\t%REF\t%ALT\t%SYMBOL\t%CLIN_SIG\n' \
+  SRR37849526.vep.vcf | head
+```
+
+If the field is not present, check the VEP run log, installed version, cache, and supported options. A missing clinical annotation does not mean that the variant is benign or absent from ClinVar.
+
+::: {.callout-warning title="Limitations"}
+This approach is useful for an offline teaching exercise, but it is not a guarantee that every ClinVar variant will be found or that the newest classification will be reported. For an analysis requiring the latest ClinVar release or specific fields such as `CLNREVSTAT` and `CLNDN`, use a versioned ClinVar VCF as a custom annotation source.
+:::
+
+
+
+## Understanding the VEP Variant Annotation File
+
+The Variant Effect Predictor (VEP) annotates genetic variants by predicting their consequences on genes, transcripts, and proteins. It can also provide population allele frequencies, clinical annotations, and computational predictions of variant effects.
+
+The output file `breast_cancer_candidates.txt` is a tab-delimited text file. Each row represents an annotated variant consequence, and each column contains a specific piece of information about the variant.
+
+### 1. Variant Identification and Consequence
+
+| Column | Description | Example |
+|---|---|---|
+| `#Uploaded_variation` | Identifier of the submitted variant. A dot (`.`) indicates that no identifier is available in this field. | `.` |
+| `Location` | Genomic position of the variant, including chromosome and coordinates. | `1:14455-14455` |
+| `Allele` | Alternate allele associated with the annotation. | `AAGAG` |
+| `Consequence` | Predicted effect of the variant on the annotated transcript. | `non_coding_transcript_exon_variant` |
+| `IMPACT` | General predicted impact category. | `MODIFIER` |
+
+VEP commonly uses four impact categories:
+
+- **HIGH:** A consequence likely to disrupt gene or protein function substantially.
+- **MODERATE:** A consequence that may alter protein function.
+- **LOW:** A consequence generally expected to have a limited effect.
+- **MODIFIER:** A consequence for which the functional impact is uncertain or not usually classified as a direct protein-disrupting effect.
+
+These categories are computational annotations. They do not establish whether a variant is pathogenic.
+
+
+### 2. Gene and Transcript Information
+
+| Column | Description |
+|---|---|
+| `SYMBOL` | Official gene symbol, such as `BRCA1` or `TP53`. |
+| `Gene` | Stable Ensembl gene identifier. |
+| `Feature_type` | Type of genomic feature being annotated, such as a transcript. |
+| `Feature` | Identifier of the annotated transcript. |
+| `BIOTYPE` | Biological classification of the transcript, such as protein-coding or pseudogene. |
+| `EXON` | Exon number and total number of exons in the transcript. |
+| `INTRON` | Intron number, when applicable. |
+
+
+### 3. Transcript and Protein Consequences
+
+These columns describe how a variant maps to a transcript and, when applicable, how it may affect a protein.
+
+| Column | Description |
+|---|---|
+| `HGVSc` | HGVS description of the variant at the coding DNA or transcript level. |
+| `HGVSp` | HGVS description of the predicted protein-level change. |
+| `cDNA_position` | Position of the variant within the transcript's cDNA sequence. |
+| `CDS_position` | Position within the coding DNA sequence, when applicable. |
+| `Protein_position` | Position of the affected amino acid in the protein. |
+| `Amino_acids` | Predicted amino acid change. |
+| `Codons` | Predicted codon change. |
+| `Existing_variation` | Identifier of a known variant, when available. |
+| `REF_ALLELE` | Reference allele used for the annotation. |
+| `UPLOADED_ALLELE` | Allele representation corresponding to the submitted variant. |
+| `DISTANCE` | Distance to a relevant genomic feature, when applicable. |
+| `STRAND` | Strand orientation of the annotated gene or transcript. |
+| `FLAGS` | Additional annotation flags or warnings. |
+
+A dash (`-`) generally indicates that a value is unavailable or not applicable for that annotation. It does not mean that the variant has no biological effect.
+
+For a non-coding transcript, protein-related fields such as `HGVSp`, `Protein_position`, `Amino_acids`, and `Codons` may be unavailable.
+
+### 4. Transcript Selection and Protein Identifiers
+
+| Column | Description |
+|---|---|
+| `SYMBOL_SOURCE` | Source of the gene symbol, such as HGNC. |
+| `HGNC_ID` | Gene identifier from the HUGO Gene Nomenclature Committee. |
+| `MANE` | Information about the transcript's MANE status. |
+| `MANE_SELECT` | Indicates the MANE Select transcript, when applicable. |
+| `MANE_PLUS_CLINICAL` | Indicates a MANE Plus Clinical transcript, when applicable. |
+| `TSL` | Transcript Support Level. |
+| `APPRIS` | Transcript annotation related to protein isoform relevance. |
+| `ENSP` | Ensembl protein identifier. |
+| `SWISSPROT` | UniProt/Swiss-Prot identifier, when available. |
+| `TREMBL` | UniProt/TrEMBL identifier, when available. |
+| `UNIPARC` | UniParc sequence identifier. |
+| `UNIPROT_ISOFORM` | UniProt protein isoform identifier, when available. |
+
+Transcript selection matters because a variant may have different predicted consequences across transcripts. For breast cancer predisposition genes, check whether the annotation corresponds to a biologically relevant transcript, including MANE transcripts where appropriate.
+
+### 5. Computational Predictions of Functional Effects
+
+| Column | Description |
+|---|---|
+| `SIFT` | Predicts whether an amino acid substitution may affect protein function. |
+| `PolyPhen` | Predicts the potential impact of an amino acid substitution on protein structure or function. |
+| `REVEL` | Ensemble score designed to help predict the pathogenicity of missense variants. |
+| `CADD_PHRED` | Phred-scaled CADD score; higher scores indicate greater predicted deleteriousness. |
+| `CADD_RAW` | Raw CADD score. |
+| `ClinPred` | Computational prediction score for variant pathogenicity, particularly for missense variants. |
+
+These scores provide supporting evidence rather than definitive classifications. Many are most informative for missense variants and may not be appropriate for every variant type.
+
+Do not interpret an unavailable score as evidence that a variant is benign.
+
+### 6. Population Allele Frequencies
+
+Population frequency annotations help assess how common a variant is in the reference datasets.
+
+| Column or prefix | Description |
+|---|---|
+| `AF` | Allele frequency from the source associated with this field in the annotation. |
+| `gnomADe_AF` | Overall allele frequency in gnomAD exomes. |
+| `gnomADe_AFR_AF` | Frequency in the African ancestry category in gnomAD exomes. |
+| `gnomADe_AMR_AF` | Frequency in the Admixed American category. |
+| `gnomADe_ASJ_AF` | Frequency in the Ashkenazi Jewish category. |
+| `gnomADe_EAS_AF` | Frequency in the East Asian category. |
+| `gnomADe_FIN_AF` | Frequency in the Finnish category. |
+| `gnomADe_MID_AF` | Frequency in the Middle Eastern category, when provided by the annotation dataset. |
+| `gnomADe_NFE_AF` | Frequency in the non-Finnish European category. |
+| `gnomADe_REMAINING_AF` | Frequency in the remaining population category. |
+| `gnomADe_SAS_AF` | Frequency in the South Asian category. |
+| `gnomADg_AF` | Overall allele frequency in gnomAD genomes. |
+| `gnomADg_*_AF` | Population-specific frequencies in gnomAD genomes, with the suffix identifying the population category. |
+
+For a study involving Senegalese patients, African population frequencies can provide useful context. However, the African ancestry category in gnomAD does not necessarily represent Senegalese population diversity.
+
+A missing frequency does not mean that the variant is absent from the population. It may simply not be represented in the reference dataset or annotation.
+
+### 7. Clinical Annotations
+
+| Column | Description |
+|---|---|
+| `CLIN_SIG` | Clinical significance annotation from the relevant VEP data source. |
+| `clinvar_clnsig` | Clinical significance annotation associated with the ClinVar field or plugin output. |
+| `SOMATIC` | Information about somatic variant status, when available. |
+| `PHENO` | Associated phenotype information, when available. |
+| `PUBMED` | PubMed identifiers for relevant publications, when available. |
+
+Clinical annotations can help identify previously classified variants. However, clinical significance should be interpreted in context, including the classification criteria, submission date, evidence, and any conflicting interpretations.
+
+An unannotated variant should not automatically be classified as benign or pathogenic.
+
+### 8. Splicing and Regulatory Annotations
+
+The following columns provide predictions about splice effects and regulatory motifs.
+
+| Column | Description |
+|---|---|
+| `SpliceAI_pred_DP_AG` | Predicted distance for an acceptor-gain event. |
+| `SpliceAI_pred_DP_AL` | Predicted distance for an acceptor-loss event. |
+| `SpliceAI_pred_DP_DG` | Predicted distance for a donor-gain event. |
+| `SpliceAI_pred_DP_DL` | Predicted distance for a donor-loss event. |
+| `SpliceAI_pred_DS_AG` | Predicted score for an acceptor-gain event. |
+| `SpliceAI_pred_DS_AL` | Predicted score for an acceptor-loss event. |
+| `SpliceAI_pred_DS_DG` | Predicted score for a donor-gain event. |
+| `SpliceAI_pred_DS_DL` | Predicted score for a donor-loss event. |
+| `SpliceAI_pred_SYMBOL` | Gene associated with the SpliceAI prediction. |
+| `MOTIF_NAME` | Name of a regulatory motif, when identified. |
+| `MOTIF_POS` | Variant position within the motif. |
+| `HIGH_INF_POS` | Indicator related to a high-information motif position. |
+| `MOTIF_SCORE_CHANGE` | Predicted change in the motif score. |
+| `TRANSCRIPTION_FACTORS` | Associated transcription factors, when available. |
+
+SpliceAI predictions can help prioritize variants that may affect RNA splicing. They should be interpreted alongside the variant type, gene, transcript, and other evidence.
+
+### 9. Molecular Interaction Annotations
+
+| Column | Description |
+|---|---|
+| `IntAct_ap_ac` | Accession associated with an IntAct interaction feature, according to the annotation plugin. |
+| `IntAct_feature_type` | Type of interaction-related feature. |
+| `IntAct_interaction_ac` | Interaction accession from IntAct. |
+
+These fields may provide additional molecular interaction context, but they may not be populated for every variant.
+
+##  Practical Workflow for Breast Cancer Variant Prioritization
+
+For this study, the annotation file can be used as an initial filtering and prioritization resource.
+
+1. **Filter by gene:** retain variants in the genes targeted by the study.
+2. **Review consequences:** identify potentially relevant coding, splice-site, and other variants. Do not rely exclusively on the `IMPACT` column.
+3. **Assess population frequencies:** review global and population-specific frequencies, while recognizing the limitations of available reference populations.
+4. **Review clinical annotations:** inspect ClinVar classifications and supporting evidence where available.
+5. **Examine prediction scores:** use SIFT, PolyPhen, REVEL, CADD, ClinPred, and SpliceAI where appropriate for the variant type.
+6. **Validate technical quality:** review read depth, allele balance, mapping quality, and other relevant sequencing metrics.
+7. **Confirm the reference assembly:** ensure that the VCF and VEP annotation use compatible genome assemblies before interpreting coordinates or consequences.
+
+**Important:** VEP annotation and computational predictions do not, by themselves, establish that a variant causes breast cancer. They support variant prioritization for further investigation.
+
+---
+title: "Variant Filtering, Prioritization and Inspection"
+description: "Filter breast cancer candidate variants and inspect variant-level evidence with bcftools."
+format: html
+execute:
+  echo: true
+---
+
+## 1. Extract variants in breast cancer susceptibility genes
+
+After annotating variants with VEP, we can extract variants in a set of breast cancer susceptibility genes.
+
+The following command identifies the `SYMBOL` column by its header and retains variants in the selected genes.
+
+```bash
+awk -F '\t' '
+BEGIN {
+    split("BRCA1 BRCA2 PALB2 TP53 ATM CHEK2 CDH1", genes, " ")
+    for (i in genes) wanted[genes[i]] = 1
+}
+NR == 1 {
+    print
+    for (i = 1; i <= NF; i++) {
+        if ($i == "SYMBOL") gene_col = i
+    }
+    next
+}
+wanted[$gene_col] {
+    print
+}
+' breast_cancer_candidates.txt > breast_cancer_genes.txt
+```
+
+**Input:** `breast_cancer_candidates.txt`
+
+**Output:** `breast_cancer_genes.txt`
+
+The output contains the header and annotation rows associated with the selected genes.
+
+## 2. Filter variants by allele frequency
+
+Rare variants may be relevant when investigating inherited cancer susceptibility. The following command retains variants with a non-missing `gnomADe_AF` value below 0.01 (1%).
+
+```bash
+awk -F '\t' '
+NR == 1 {
+    for (i = 1; i <= NF; i++) {
+        col[$i] = i
+    }
+    print
+    next
+}
+{
+    af = $(col["gnomADe_AF"])
+    if (af != "" && af != "-" && af + 0 < 0.01)
+        print
+}
+' breast_cancer_genes.txt > breast_cancer_rare.txt
+```
+
+**Input:** `breast_cancer_genes.txt`
+
+**Output:** `breast_cancer_rare.txt`
+
+The `gnomADe_AF` field represents the overall allele frequency in gnomAD exomes. A frequency below 1% is a broad rarity threshold, not proof that a variant is pathogenic. Depending on the research question, a stricter threshold may be appropriate.
+
+## 3. Prioritize variants by consequence and clinical annotation
+
+The next command retains variants annotated with `HIGH` or `MODERATE` impact and a non-empty `clinvar_clnsig` field.
+
+```bash
+awk -F '\t' '
+NR == 1 {
+    for (i = 1; i <= NF; i++)
+        col[$i] = i
+    print
+    next
+}
+{
+    impact = $(col["IMPACT"])
+    clin = $(col["clinvar_clnsig"])
+
+    if ((impact == "HIGH" || impact == "MODERATE") &&
+        clin != "" && clin != "-")
+        print
+}
+' breast_cancer_rare.txt > breast_cancer_prioritized.txt
+```
+
+**Input:** `breast_cancer_rare.txt`
+
+**Output:** `breast_cancer_prioritized.txt`
+
+This is a preliminary prioritization step. It retains any non-empty ClinVar classification, including potentially benign or conflicting classifications. It does **not** specifically select pathogenic variants. Inspect the actual classification before interpreting a candidate.
+
+For example, you can review the distinct values present in the output:
+
+```bash
+awk -F '\t' '
+NR == 1 {
+    for (i = 1; i <= NF; i++)
+        col[$i] = i
+    next
+}
+{
+    print $(col["clinvar_clnsig"])
+}
+' breast_cancer_prioritized.txt | sort | uniq -c
+```
+
+## 4. Compress and index the annotated VCF
+
+To inspect a specific variant efficiently, `bcftools` works best with a BGZF-compressed and indexed VCF.
+
+If `SRR37849526.annotated.vcf` is an uncompressed VCF, run:
+
+```bash
+bgzip -c SRR37849526.annotated.vcf > SRR37849526.annotated.vcf.gz
+bcftools index -t SRR37849526.annotated.vcf.gz
+```
+
+The first command creates a compressed VCF. The second creates a tabix index (`.tbi`) that enables rapid access to genomic regions.
+
+Run these commands only once for this file, unless you regenerate the VCF. If the compressed file already exists, do not overwrite it without checking that it corresponds to the latest annotation.
+
+## 5. Inspect a specific variant with bcftools
+
+For this example, we inspect genomic position `17:41209095`.
+
+First, check the chromosome naming convention in the VCF:
+
+```bash
+bcftools view -h SRR37849526.annotated.vcf.gz | grep '^##contig'
+```
+
+If the chromosome is named `17`, use:
+
+```bash
+bcftools query \
+  -r 17:41209095-41209095 \
+  -f '%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t%FILTER[\tGT=%GT\tDP=%DP\tAD=%AD\tGQ=%GQ]\n' \
+  SRR37849526.annotated.vcf.gz
+```
+
+If it is named `chr17`, replace the region with `chr17:41209095-41209095`.
+
+The command reports:
+
+| Field | Meaning |
+|---|---|
+| `CHROM` | Chromosome |
+| `POS` | Genomic position |
+| `REF` | Reference allele |
+| `ALT` | Alternate allele |
+| `QUAL` | Variant-level quality score |
+| `FILTER` | Whether the variant passed the recorded filters |
+| `GT` | Sample genotype |
+| `DP` | Read depth |
+| `AD` | Read counts supporting the reference and alternate alleles |
+| `GQ` | Genotype quality |
+
+If the command returns no rows, the variant may not be present at that position in this VCF. Check the chromosome naming convention and the genome assembly before drawing conclusions.
+
+## 6. Important interpretation considerations
+
+- **Transcript-level annotations:** VEP can produce multiple rows for the same genomic variant because it annotates the variant against multiple transcripts. These rows do not necessarily represent different variants.
+- **Variant consequence:** `HIGH` impact and `stop_gained` indicate a predicted severe consequence for the relevant transcript, but they do not independently confirm pathogenicity.
+- **Clinical classification:** A ClinVar annotation such as `Pathogenic` should be interpreted alongside its evidence, review status and the exact variant identity.
+- **Call quality:** Check genotype, depth, allele balance, genotype quality and filter status in the original VCF.
+- **Genome assembly:** Confirm that the VCF and VEP annotation use compatible genome assemblies, such as GRCh37 or GRCh38.
+- **Coverage limitations:** Poor exome coverage can make variant calls unreliable and means that failure to detect a variant cannot reliably establish its absence.
+
+These commands support exploratory research and candidate prioritization. They do not constitute a clinical classification or a diagnosis.
+
+## Candidate variant prioritization
+
+**Objective:** Reduce a list of variants to a manageable set of candidates by combining technical quality, population frequency, molecular consequence, clinical evidence, and biological relevance.
+
+### 1. A prioritization funnel
+
+| Step | Criteria to examine | Rationale |
+|---|---|---|
+| 1. Quality | `FILTER`, read depth (`DP`), genotype quality (`GQ`), alignment quality | Identify potentially unreliable calls |
+| 2. Frequency | Global and population-specific gnomAD allele frequencies | Assess compatibility with a rare disease |
+| 3. Consequence | HIGH or MODERATE impact, splice-site consequences, and other relevant annotations | Identify variants that may affect gene function |
+| 4. Predictions | CADD, REVEL, SIFT, PolyPhen, and SpliceAI when available | Add predictive evidence without treating it as definitive |
+| 5. Gene and phenotype | Disease-associated genes, phenotype relevance, ClinGen or OMIM evidence | Assess biological plausibility |
+| 6. Inheritance | Zygosity, inheritance model, and segregation evidence when available | Assess consistency with the genetic hypothesis |
+
+Frequency and prediction thresholds are not universal. They must be adapted to the gene, disease, inheritance pattern, and relevant guidance.
+
+
+### 2. Candidate prioritization table
+
+For each candidate, record the evidence used in the decision.
+
+| Field | Information to record |
+|---|---|
+| Variant | Chromosome, position, REF, ALT, and assembly |
+| Gene / transcript | Gene symbol and transcript identifier |
+| HGVS | Coding and protein notation, when available |
+| Genotype | Zygosity, DP, and GQ |
+| Consequence | Molecular consequence and VEP impact |
+| Frequency | Global and available population-specific frequencies |
+| Predictions | Available scores and their limitations |
+| Clinical significance | Reported clinical significance, evidence/review status if available, and associated condition |
+| Biological relevance | Gene–phenotype consistency and inheritance model |
+| Priority | Proposed research priority with a documented rationale |
+
+A variant not found in ClinVar must not automatically be described as novel. Likewise, an existing ClinVar annotation should not automatically be treated as definitive.
+
+### 3. ACMG/AMP classification
+
+The ACMG/AMP framework distinguishes five classes:
+
+1. Pathogenic
+2. Likely pathogenic
+3. Variant of uncertain significance (VUS)
+4. Likely benign
+5. Benign
+
+Classification combines different types of evidence, including population frequency, functional studies, clinical observations, segregation, computational predictions, and other relevant information.
+
+Automated interpretation tools can help organize evidence, but they do not replace expert review. Prioritizing a variant for research is not equivalent to assigning a clinically validated classification.
+
+### 4. Good practices
+
+- Keep filtering parameters in a version-controlled script.
+- Do not rely on a single computational predictor.
+- Inspect important candidate variants in IGV.
+- Check call quality and coverage in the relevant regions.
+- Record the transcript used for each interpretation.
+- Examine population-specific frequencies, not only global frequencies.
+- Distinguish missing annotations from negative evidence.
+- Document the rationale for each prioritization decision.
+
+##  Interpretation and limitations
+
+**Objective:** Understand what the results can establish and what they cannot establish.
+
+### 1. Technical limitations
+
+- Exome sequencing covers only a limited fraction of the genome. Deep intronic, regulatory, and intergenic variants are not comprehensively assessed.
+- Coverage is uneven. An uncovered region does not support a conclusion that no variant is present.
+- Structural variants and copy-number changes may require dedicated analysis.
+- Regions with segmental duplications, repetitive sequences, or pseudogenes can be difficult to analyze.
+- Results depend on the reference assembly, DRAGEN settings, VEP version, and annotation resources.
+- Predicted consequences can differ by transcript.
+- In silico predictions provide supporting information but are not sufficient proof of pathogenicity.
+
+::: {.callout-warning title="For this sample"}
+The coverage metrics reported in the alignment section show a mean coverage of about 4.09× and only about 4.15% of target bases at 20× or higher. These values are unusually low for an exome intended for comprehensive germline variant analysis. Verify the DRAGEN report, the target regions, and the coverage definitions before interpreting any variant, and do not interpret the absence of a variant as evidence that it is not present.
+:::
+
+### 2. Biological limitations
+
+- A VUS should not be treated as causal based solely on its presence.
+- Penetrance may be incomplete and expressivity variable.
+- Inheritance patterns and family context can change interpretation.
+- Somatic variants, mosaicism, and differences between cell lines and tissues can complicate the analysis.
+- An association between a variant and a phenotype does not by itself demonstrate causality.
+
+### 3. Representation of populations in reference databases
+
+African populations remain underrepresented in several genomic resources relative to their genetic diversity.
+
+Potential consequences include:
+
+- A benign variant in an underrepresented population may appear rare or absent.
+- VUS interpretation may be more difficult.
+- Frequency data and predictors may be less informative for some populations.
+- Published classifications may reflect differences in data availability and research coverage.
+
+Good practices:
+
+- Examine population-specific frequencies when available (for example the AFR fields in section 4.7).
+- Consider the quality and representativeness of the reference databases.
+- Use relevant African and regional resources when available.
+- Document limitations related to population representation.
+- Never infer pathogenicity solely from an absent or low population frequency.
+
+### 4. Data protection and responsible interpretation
+
+- Human genomic data can be identifying and may also reveal information about relatives.
+- Confirm that consent and ethics approvals cover the intended use and sharing.
+- Restrict access and use appropriate storage.
+- Do not share human VCF files through unauthorized channels.
+- Follow institutional policies and applicable data-protection regulations.
+- Define in advance how secondary findings will be handled.
+- Clearly distinguish research findings from diagnostic results.
+
+::: {.callout-important title="Research is not diagnosis"}
+Results from this training exercise must not be used alone to make medical decisions. Clinical interpretation requires an appropriate framework, suitable validation, and genetic counseling where indicated.
+:::
+
+
+## References
+
+- Ensembl Variant Effect Predictor: <https://www.ensembl.org/info/docs/tools/vep/>
+- VEP documentation for GRCh37: <https://grch37.ensembl.org/info/docs/tools/vep/>
+- VEP command-line options: <https://grch37.ensembl.org/info/docs/tools/vep/script/vep_options.html>
+- VEP cache documentation: <https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html>
+- ClinVar: <https://www.ncbi.nlm.nih.gov/clinvar/>
+- Richards et al. (2015), *Standards and guidelines for the interpretation of sequence variants*, Genetics in Medicine.
+- Karczewski et al. (2020), *The mutational constraint spectrum quantified from variation in 141,456 humans*, Nature.
