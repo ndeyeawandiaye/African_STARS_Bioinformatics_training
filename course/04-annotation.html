@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Filter breast cancer candidate variants and inspect variant-level evidence with bcftools.">
 
-<title>annotation – African STRAS Fellowship - Bioinformatics Training</title>
+<title>Variant Filtering, Prioritization and Inspection – African STRAS Fellowship - Bioinformatics Training</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -26,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -36,6 +72,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../course/04-alignement-variant-calling.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -113,7 +150,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-annotation.html">Variant Filtering, Prioritization and Inspection</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -279,13 +316,13 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Human genomic</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../course/04-sequencing-data-QC.html" class="sidebar-item-text sidebar-link">
@@ -298,6 +335,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Alignment and Variant Calling</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-annotation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Variant Filtering, Prioritization and Inspection</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -305,17 +348,1261 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#variant-annotation-with-ensembl-vep" id="toc-variant-annotation-with-ensembl-vep" class="nav-link active" data-scroll-target="#variant-annotation-with-ensembl-vep">Variant annotation with Ensembl VEP</a>
+  <ul class="collapse">
+  <li><a href="#inspect-the-input-vcf" id="toc-inspect-the-input-vcf" class="nav-link" data-scroll-target="#inspect-the-input-vcf">1. Inspect the input VCF</a></li>
+  <li><a href="#prepare-the-vcf" id="toc-prepare-the-vcf" class="nav-link" data-scroll-target="#prepare-the-vcf">2. Prepare the VCF</a></li>
+  <li><a href="#install-vep-and-prepare-the-cache" id="toc-install-vep-and-prepare-the-cache" class="nav-link" data-scroll-target="#install-vep-and-prepare-the-cache">3. Install VEP and prepare the cache</a></li>
+  <li><a href="#run-vep" id="toc-run-vep" class="nav-link" data-scroll-target="#run-vep">4. Run VEP</a></li>
+  <li><a href="#known-variants-and-clinical-significance-without-a-separate-clinvar-download" id="toc-known-variants-and-clinical-significance-without-a-separate-clinvar-download" class="nav-link" data-scroll-target="#known-variants-and-clinical-significance-without-a-separate-clinvar-download">5. Known variants and clinical significance without a separate ClinVar download</a></li>
+  </ul></li>
+  <li><a href="#understanding-the-vep-variant-annotation-file" id="toc-understanding-the-vep-variant-annotation-file" class="nav-link" data-scroll-target="#understanding-the-vep-variant-annotation-file">Understanding the VEP Variant Annotation File</a>
+  <ul class="collapse">
+  <li><a href="#variant-identification-and-consequence" id="toc-variant-identification-and-consequence" class="nav-link" data-scroll-target="#variant-identification-and-consequence">1. Variant Identification and Consequence</a></li>
+  <li><a href="#gene-and-transcript-information" id="toc-gene-and-transcript-information" class="nav-link" data-scroll-target="#gene-and-transcript-information">2. Gene and Transcript Information</a></li>
+  <li><a href="#transcript-and-protein-consequences" id="toc-transcript-and-protein-consequences" class="nav-link" data-scroll-target="#transcript-and-protein-consequences">3. Transcript and Protein Consequences</a></li>
+  <li><a href="#transcript-selection-and-protein-identifiers" id="toc-transcript-selection-and-protein-identifiers" class="nav-link" data-scroll-target="#transcript-selection-and-protein-identifiers">4. Transcript Selection and Protein Identifiers</a></li>
+  <li><a href="#computational-predictions-of-functional-effects" id="toc-computational-predictions-of-functional-effects" class="nav-link" data-scroll-target="#computational-predictions-of-functional-effects">5. Computational Predictions of Functional Effects</a></li>
+  <li><a href="#population-allele-frequencies" id="toc-population-allele-frequencies" class="nav-link" data-scroll-target="#population-allele-frequencies">6. Population Allele Frequencies</a></li>
+  <li><a href="#clinical-annotations" id="toc-clinical-annotations" class="nav-link" data-scroll-target="#clinical-annotations">7. Clinical Annotations</a></li>
+  <li><a href="#splicing-and-regulatory-annotations" id="toc-splicing-and-regulatory-annotations" class="nav-link" data-scroll-target="#splicing-and-regulatory-annotations">8. Splicing and Regulatory Annotations</a></li>
+  <li><a href="#molecular-interaction-annotations" id="toc-molecular-interaction-annotations" class="nav-link" data-scroll-target="#molecular-interaction-annotations">9. Molecular Interaction Annotations</a></li>
+  </ul></li>
+  <li><a href="#practical-workflow-for-breast-cancer-variant-prioritization" id="toc-practical-workflow-for-breast-cancer-variant-prioritization" class="nav-link" data-scroll-target="#practical-workflow-for-breast-cancer-variant-prioritization">Practical Workflow for Breast Cancer Variant Prioritization</a></li>
+  <li><a href="#extract-variants-in-breast-cancer-susceptibility-genes" id="toc-extract-variants-in-breast-cancer-susceptibility-genes" class="nav-link" data-scroll-target="#extract-variants-in-breast-cancer-susceptibility-genes">1. Extract variants in breast cancer susceptibility genes</a></li>
+  <li><a href="#filter-variants-by-allele-frequency" id="toc-filter-variants-by-allele-frequency" class="nav-link" data-scroll-target="#filter-variants-by-allele-frequency">2. Filter variants by allele frequency</a></li>
+  <li><a href="#prioritize-variants-by-consequence-and-clinical-annotation" id="toc-prioritize-variants-by-consequence-and-clinical-annotation" class="nav-link" data-scroll-target="#prioritize-variants-by-consequence-and-clinical-annotation">3. Prioritize variants by consequence and clinical annotation</a></li>
+  <li><a href="#compress-and-index-the-annotated-vcf" id="toc-compress-and-index-the-annotated-vcf" class="nav-link" data-scroll-target="#compress-and-index-the-annotated-vcf">4. Compress and index the annotated VCF</a></li>
+  <li><a href="#inspect-a-specific-variant-with-bcftools" id="toc-inspect-a-specific-variant-with-bcftools" class="nav-link" data-scroll-target="#inspect-a-specific-variant-with-bcftools">5. Inspect a specific variant with bcftools</a></li>
+  <li><a href="#important-interpretation-considerations" id="toc-important-interpretation-considerations" class="nav-link" data-scroll-target="#important-interpretation-considerations">6. Important interpretation considerations</a></li>
+  <li><a href="#candidate-variant-prioritization" id="toc-candidate-variant-prioritization" class="nav-link" data-scroll-target="#candidate-variant-prioritization">Candidate variant prioritization</a>
+  <ul class="collapse">
+  <li><a href="#a-prioritization-funnel" id="toc-a-prioritization-funnel" class="nav-link" data-scroll-target="#a-prioritization-funnel">1. A prioritization funnel</a></li>
+  <li><a href="#candidate-prioritization-table" id="toc-candidate-prioritization-table" class="nav-link" data-scroll-target="#candidate-prioritization-table">2. Candidate prioritization table</a></li>
+  <li><a href="#acmgamp-classification" id="toc-acmgamp-classification" class="nav-link" data-scroll-target="#acmgamp-classification">3. ACMG/AMP classification</a></li>
+  <li><a href="#good-practices" id="toc-good-practices" class="nav-link" data-scroll-target="#good-practices">4. Good practices</a></li>
+  </ul></li>
+  <li><a href="#interpretation-and-limitations" id="toc-interpretation-and-limitations" class="nav-link" data-scroll-target="#interpretation-and-limitations">Interpretation and limitations</a>
+  <ul class="collapse">
+  <li><a href="#technical-limitations" id="toc-technical-limitations" class="nav-link" data-scroll-target="#technical-limitations">1. Technical limitations</a></li>
+  <li><a href="#biological-limitations" id="toc-biological-limitations" class="nav-link" data-scroll-target="#biological-limitations">2. Biological limitations</a></li>
+  <li><a href="#representation-of-populations-in-reference-databases" id="toc-representation-of-populations-in-reference-databases" class="nav-link" data-scroll-target="#representation-of-populations-in-reference-databases">3. Representation of populations in reference databases</a></li>
+  <li><a href="#data-protection-and-responsible-interpretation" id="toc-data-protection-and-responsible-interpretation" class="nav-link" data-scroll-target="#data-protection-and-responsible-interpretation">4. Data protection and responsible interpretation</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../course/04-sequencing-data-QC.html">Human genomic</a></li><li class="breadcrumb-item"><a href="../course/04-annotation.html">Variant Filtering, Prioritization and Inspection</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Variant Filtering, Prioritization and Inspection</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">human-genomics</div>
+    <div class="quarto-category">annotation</div>
+    <div class="quarto-category">vep</div>
+    <div class="quarto-category">variant-prioritization</div>
+    <div class="quarto-category">interpretation</div>
+    <div class="quarto-category">clinvar</div>
+    <div class="quarto-category">acmg</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Filter breast cancer candidate variants and inspect variant-level evidence with bcftools.
+  </div>
+</div>
 
 
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<p>Pipeline overview: <strong>FASTQ → DRAGEN (BaseSpace) → Germline VCF → Variant annotation → Prioritization and interpretation</strong>.</p>
+<p>This page covers steps 4–6 using the case-study file <code>SRR37849526.hard-filtered.vcf.gz</code>.</p>
+<p>Assumptions:</p>
+<ul>
+<li>Human whole-exome sequencing (WES).</li>
+<li>Germline variant calls produced by DRAGEN.</li>
+<li>The reference assembly is assumed to be hg19/GRCh37 and must be confirmed from the analysis metadata (see section 4.1).</li>
+<li>The commands are educational examples. Adjust paths, reference files, and parameters to your environment.</li>
+</ul>
+<section id="variant-annotation-with-ensembl-vep" class="level2">
+<h2 class="anchored" data-anchor-id="variant-annotation-with-ensembl-vep">Variant annotation with Ensembl VEP</h2>
+<p><strong>Objective:</strong> Enrich variant calls with biological information, including genes, transcripts, predicted molecular consequences, protein changes, population allele frequencies, and available clinical significance annotations.</p>
+<section id="inspect-the-input-vcf" class="level3">
+<h3 class="anchored" data-anchor-id="inspect-the-input-vcf">1. Inspect the input VCF</h3>
+<p>The input file for this exercise is:</p>
+<pre class="text"><code>SRR37849526.hard-filtered.vcf.gz</code></pre>
+<p>The suffix <code>hard-filtered</code> does not guarantee that every variant is reliable or clinically relevant. Variants should also be assessed using read depth, genotype quality, alignment quality, and coverage information.</p>
+<p>Inspect the reference and contig lines of the header (the reference line can be far down in a DRAGEN header, so a <code>head</code> on the header may not reach it), then look at a few records:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference assembly and chromosome names declared in the header</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-h</span> SRR37849526.hard-filtered.vcf.gz <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^##(reference|contig)'</span> <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># A few variant records</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> SRR37849526.hard-filtered.vcf.gz <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check:</p>
+<ul>
+<li>The reference assembly used by DRAGEN.</li>
+<li>Chromosome naming conventions, such as <code>chr1</code> versus <code>1</code>.</li>
+<li>Available filter and quality fields.</li>
+<li>Genotype and allele information.</li>
+</ul>
+<p>The reference assembly, FASTA, and VEP cache must be compatible.</p>
+<p>Use the same naming convention in the FASTA, the BED file, and the VCF. The mitochondrial contig differs between UCSC (<code>chrM</code>) and Ensembl (<code>MT</code>) references; it is not relevant for this exome exercise. :::</p>
+</section>
+<section id="prepare-the-vcf" class="level3">
+<h3 class="anchored" data-anchor-id="prepare-the-vcf">2. Prepare the VCF</h3>
+<p>If the file has not already been inspected and prepared, create a working directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> VEP_training</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> VEP_training</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Place the input VCF and its index in this directory, or adjust the paths below.</p>
+<p><strong>Keep variants with <code>PASS</code></strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> PASS <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  SRR37849526.hard-filtered.vcf.gz <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-Oz</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> SRR37849526.pass.vcf.gz</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">tabix</span> <span class="at">-p</span> vcf SRR37849526.pass.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This keeps records whose <code>FILTER</code> field is <code>PASS</code>. It does not guarantee that each retained variant is reliable or relevant to a disease.</p>
+</section>
+<section id="install-vep-and-prepare-the-cache" class="level3">
+<h3 class="anchored" data-anchor-id="install-vep-and-prepare-the-cache">3. Install VEP and prepare the cache</h3>
+<p>Ensembl Variant Effect Predictor (VEP) can run offline using a local cache. The cache includes transcript models and other annotation data required for variant interpretation.</p>
+<p>Example installation in a compatible Linux environment:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> vep <span class="at">-c</span> conda-forge <span class="at">-c</span> bioconda ensembl-vep</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate vep</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">vep</span> <span class="at">--version</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">vep_install</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Consult the installer help for the options supported by the installed VEP version, then install the human GRCh37 cache.</p>
+<p>Example command to verify against your installation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vep_install</span> <span class="at">-a</span> cf <span class="at">-s</span> homo_sapiens <span class="at">-y</span> GRCh37</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The cache must match the VEP version and reference assembly. A FASTA file may also be required for HGVS annotation and reference-allele checking.</p>
+<p>Documentation:</p>
+<ul>
+<li><a href="https://grch37.ensembl.org/info/docs/tools/vep/" class="uri">https://grch37.ensembl.org/info/docs/tools/vep/</a></li>
+<li><a href="https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html" class="uri">https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html</a></li>
+</ul>
+</section>
+<section id="run-vep" class="level3">
+<h3 class="anchored" data-anchor-id="run-vep">4. Run VEP</h3>
+<p>For this example, use the normalized file created above. The command below is the complete command used in this exercise. It also requests known-variant and clinical-significance annotations (section 4.5) and writes the HTML summary report.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vep</span> <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input_file</span> SRR37849526.norm.vcf.gz <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output_file</span> SRR37849526.vep.vcf <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stats_file</span> SRR37849526.vep_summary.html <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--format</span> vcf <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--vcf</span> <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--force_overwrite</span> <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--offline</span> <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cache</span> <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--assembly</span> GRCh37 <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fasta</span> hg19.fa <span class="dt">\</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--symbol</span> <span class="dt">\</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hgvs</span> <span class="dt">\</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--canonical</span> <span class="dt">\</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--biotype</span> <span class="dt">\</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--numbers</span> <span class="dt">\</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--domains</span> <span class="dt">\</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sift</span> b <span class="dt">\</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">--polyphen</span> b <span class="dt">\</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--af</span> <span class="dt">\</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--af_1kg</span> <span class="dt">\</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">--af_gnomade</span> <span class="dt">\</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--af_gnomadg</span> <span class="dt">\</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--max_af</span> <span class="dt">\</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pick_allele</span> <span class="dt">\</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">--check_ref</span> <span class="dt">\</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">--check_existing</span> <span class="dt">\</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">--clin_sig_allele</span> 1 <span class="dt">\</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fork</span> 4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If you have not created a normalized file, replace <code>SRR37849526.norm.vcf.gz</code> with <code>SRR37849526.hard-filtered.vcf.gz</code> after checking that the input is appropriate for annotation.</p>
+<p>Check whether all frequency options are supported by your installed VEP version and cache. The available population-frequency fields depend on the installed data.</p>
+<section id="what-do-the-main-options-do" class="level4">
+<h4 class="anchored" data-anchor-id="what-do-the-main-options-do">What do the main options do?</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--offline --cache</code></td>
+<td>Uses local annotation data without connecting to Ensembl during annotation</td>
+</tr>
+<tr class="even">
+<td><code>--assembly GRCh37</code></td>
+<td>Specifies the reference assembly</td>
+</tr>
+<tr class="odd">
+<td><code>--fasta hg19.fa</code></td>
+<td>Provides the reference sequence</td>
+</tr>
+<tr class="even">
+<td><code>--stats_file</code></td>
+<td>Names the HTML summary report (otherwise VEP names it after the output file, for example <code>SRR37849526.vep.vcf_summary.html</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>--symbol</code></td>
+<td>Adds the gene symbol</td>
+</tr>
+<tr class="even">
+<td><code>--hgvs</code></td>
+<td>Requests available HGVS coding and protein notations</td>
+</tr>
+<tr class="odd">
+<td><code>--canonical</code></td>
+<td>Marks canonical transcripts</td>
+</tr>
+<tr class="even">
+<td><code>--biotype</code></td>
+<td>Adds the transcript biotype</td>
+</tr>
+<tr class="odd">
+<td><code>--numbers</code></td>
+<td>Adds exon and intron numbers when available</td>
+</tr>
+<tr class="even">
+<td><code>--domains</code></td>
+<td>Adds available protein-domain annotations</td>
+</tr>
+<tr class="odd">
+<td><code>--sift b --polyphen b</code></td>
+<td>Requests SIFT and PolyPhen-2 predictions when available</td>
+</tr>
+<tr class="even">
+<td><code>--af --af_1kg</code></td>
+<td>Requests available allele-frequency annotations, including 1000 Genomes frequencies</td>
+</tr>
+<tr class="odd">
+<td><code>--af_gnomade --af_gnomadg</code></td>
+<td>Requests gnomAD exome and genome frequencies, including per-population fields, if supported by the installed version and cache</td>
+</tr>
+<tr class="even">
+<td><code>--max_af</code></td>
+<td>Reports the maximum available allele frequency from supported sources</td>
+</tr>
+<tr class="odd">
+<td><code>--pick_allele</code></td>
+<td>Selects one transcript annotation per allele according to VEP’s selection rules (see the note below)</td>
+</tr>
+<tr class="even">
+<td><code>--check_ref</code></td>
+<td>Checks whether the reference allele matches the supplied FASTA</td>
+</tr>
+<tr class="odd">
+<td><code>--check_existing</code>, <code>--clin_sig_allele 1</code></td>
+<td>Report known variants and allele-specific clinical significance (section 4.5)</td>
+</tr>
+<tr class="even">
+<td><code>--fork 4</code></td>
+<td>Uses four worker processes, where supported by the environment</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled" title="What --pick_allele hides">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What –pick_allele hides
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>With <code>--pick_allele</code>, VEP keeps a single transcript annotation per allele. This keeps the output simple for teaching, but it hides the consequences on the other transcripts, and the chosen transcript is not always the one you would cite. Always record which transcript an interpretation refers to. For a full analysis, remove <code>--pick_allele</code> (all transcripts are then reported) or use <code>--pick</code> or <code>--per_gene</code> with a documented ordering.</p>
+</div>
+</div>
+<p>For a tabular output rather than a VCF, VEP also supports <code>--tab</code>. In this exercise, we retain VCF output to preserve the original variant records and add annotations to the file.</p>
+</section>
+</section>
+<section id="known-variants-and-clinical-significance-without-a-separate-clinvar-download" class="level3">
+<h3 class="anchored" data-anchor-id="known-variants-and-clinical-significance-without-a-separate-clinvar-download">5. Known variants and clinical significance without a separate ClinVar download</h3>
+<p>For this training, the two options added to the command above, <code>--check_existing</code> and <code>--clin_sig_allele 1</code>, report known variants and available clinical-significance annotations from the local cache:</p>
+<ul>
+<li><code>--check_existing</code>: checks whether variants are already known in the variation data available to VEP.</li>
+<li><code>--clin_sig_allele 1</code>: requests allele-specific clinical significance annotations.</li>
+</ul>
+<p><strong>This avoids downloading a separate ClinVar VCF and its index.</strong> However, it still requires the appropriate VEP cache. The clinical annotations available depend on the cache release and its contents; they may not include the latest ClinVar submissions. Some frequency options (<code>--af</code>, <code>--af_1kg</code>, <code>--max_af</code>) may already enable <code>--check_existing</code>, in which case adding it explicitly is redundant but harmless.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Field names">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Field names
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>VEP commonly reports clinical significance in a field named <code>CLIN_SIG</code>, while <code>CLNSIG</code> is the field name commonly used in the original ClinVar VCF. Do not assume that VEP will output a field literally named <code>CLNSIG</code>.</p>
+</div>
+</div>
+<p>The output may also include known variant identifiers, phenotype information, or somatic annotations, depending on the available data and options.</p>
+<section id="check-the-output" class="level4">
+<h4 class="anchored" data-anchor-id="check-the-output">Check the output</h4>
+<p>Inspect the VCF header:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-h</span> SRR37849526.vep.vcf <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'CSQ|CLIN_SIG|Existing_variation'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then inspect a few records:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-H</span> SRR37849526.vep.vcf <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clinical significance is reported inside the <code>CSQ</code> field. Use <code>bcftools +split-vep</code> to read it, after checking in the <code>CSQ</code> header that the field exists:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> +split-vep <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> <span class="st">'%CHROM\t%POS\t%REF\t%ALT\t%SYMBOL\t%CLIN_SIG\n'</span> <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  SRR37849526.vep.vcf <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If the field is not present, check the VEP run log, installed version, cache, and supported options. A missing clinical annotation does not mean that the variant is benign or absent from ClinVar.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="Limitations">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Limitations
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This approach is useful for an offline teaching exercise, but it is not a guarantee that every ClinVar variant will be found or that the newest classification will be reported. For an analysis requiring the latest ClinVar release or specific fields such as <code>CLNREVSTAT</code> and <code>CLNDN</code>, use a versioned ClinVar VCF as a custom annotation source.</p>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="understanding-the-vep-variant-annotation-file" class="level2">
+<h2 class="anchored" data-anchor-id="understanding-the-vep-variant-annotation-file">Understanding the VEP Variant Annotation File</h2>
+<p>The Variant Effect Predictor (VEP) annotates genetic variants by predicting their consequences on genes, transcripts, and proteins. It can also provide population allele frequencies, clinical annotations, and computational predictions of variant effects.</p>
+<p>The output file <code>breast_cancer_candidates.txt</code> is a tab-delimited text file. Each row represents an annotated variant consequence, and each column contains a specific piece of information about the variant.</p>
+<section id="variant-identification-and-consequence" class="level3">
+<h3 class="anchored" data-anchor-id="variant-identification-and-consequence">1. Variant Identification and Consequence</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>#Uploaded_variation</code></td>
+<td>Identifier of the submitted variant. A dot (<code>.</code>) indicates that no identifier is available in this field.</td>
+<td><code>.</code></td>
+</tr>
+<tr class="even">
+<td><code>Location</code></td>
+<td>Genomic position of the variant, including chromosome and coordinates.</td>
+<td><code>1:14455-14455</code></td>
+</tr>
+<tr class="odd">
+<td><code>Allele</code></td>
+<td>Alternate allele associated with the annotation.</td>
+<td><code>AAGAG</code></td>
+</tr>
+<tr class="even">
+<td><code>Consequence</code></td>
+<td>Predicted effect of the variant on the annotated transcript.</td>
+<td><code>non_coding_transcript_exon_variant</code></td>
+</tr>
+<tr class="odd">
+<td><code>IMPACT</code></td>
+<td>General predicted impact category.</td>
+<td><code>MODIFIER</code></td>
+</tr>
+</tbody>
+</table>
+<p>VEP commonly uses four impact categories:</p>
+<ul>
+<li><strong>HIGH:</strong> A consequence likely to disrupt gene or protein function substantially.</li>
+<li><strong>MODERATE:</strong> A consequence that may alter protein function.</li>
+<li><strong>LOW:</strong> A consequence generally expected to have a limited effect.</li>
+<li><strong>MODIFIER:</strong> A consequence for which the functional impact is uncertain or not usually classified as a direct protein-disrupting effect.</li>
+</ul>
+<p>These categories are computational annotations. They do not establish whether a variant is pathogenic.</p>
+</section>
+<section id="gene-and-transcript-information" class="level3">
+<h3 class="anchored" data-anchor-id="gene-and-transcript-information">2. Gene and Transcript Information</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SYMBOL</code></td>
+<td>Official gene symbol, such as <code>BRCA1</code> or <code>TP53</code>.</td>
+</tr>
+<tr class="even">
+<td><code>Gene</code></td>
+<td>Stable Ensembl gene identifier.</td>
+</tr>
+<tr class="odd">
+<td><code>Feature_type</code></td>
+<td>Type of genomic feature being annotated, such as a transcript.</td>
+</tr>
+<tr class="even">
+<td><code>Feature</code></td>
+<td>Identifier of the annotated transcript.</td>
+</tr>
+<tr class="odd">
+<td><code>BIOTYPE</code></td>
+<td>Biological classification of the transcript, such as protein-coding or pseudogene.</td>
+</tr>
+<tr class="even">
+<td><code>EXON</code></td>
+<td>Exon number and total number of exons in the transcript.</td>
+</tr>
+<tr class="odd">
+<td><code>INTRON</code></td>
+<td>Intron number, when applicable.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="transcript-and-protein-consequences" class="level3">
+<h3 class="anchored" data-anchor-id="transcript-and-protein-consequences">3. Transcript and Protein Consequences</h3>
+<p>These columns describe how a variant maps to a transcript and, when applicable, how it may affect a protein.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>HGVSc</code></td>
+<td>HGVS description of the variant at the coding DNA or transcript level.</td>
+</tr>
+<tr class="even">
+<td><code>HGVSp</code></td>
+<td>HGVS description of the predicted protein-level change.</td>
+</tr>
+<tr class="odd">
+<td><code>cDNA_position</code></td>
+<td>Position of the variant within the transcript’s cDNA sequence.</td>
+</tr>
+<tr class="even">
+<td><code>CDS_position</code></td>
+<td>Position within the coding DNA sequence, when applicable.</td>
+</tr>
+<tr class="odd">
+<td><code>Protein_position</code></td>
+<td>Position of the affected amino acid in the protein.</td>
+</tr>
+<tr class="even">
+<td><code>Amino_acids</code></td>
+<td>Predicted amino acid change.</td>
+</tr>
+<tr class="odd">
+<td><code>Codons</code></td>
+<td>Predicted codon change.</td>
+</tr>
+<tr class="even">
+<td><code>Existing_variation</code></td>
+<td>Identifier of a known variant, when available.</td>
+</tr>
+<tr class="odd">
+<td><code>REF_ALLELE</code></td>
+<td>Reference allele used for the annotation.</td>
+</tr>
+<tr class="even">
+<td><code>UPLOADED_ALLELE</code></td>
+<td>Allele representation corresponding to the submitted variant.</td>
+</tr>
+<tr class="odd">
+<td><code>DISTANCE</code></td>
+<td>Distance to a relevant genomic feature, when applicable.</td>
+</tr>
+<tr class="even">
+<td><code>STRAND</code></td>
+<td>Strand orientation of the annotated gene or transcript.</td>
+</tr>
+<tr class="odd">
+<td><code>FLAGS</code></td>
+<td>Additional annotation flags or warnings.</td>
+</tr>
+</tbody>
+</table>
+<p>A dash (<code>-</code>) generally indicates that a value is unavailable or not applicable for that annotation. It does not mean that the variant has no biological effect.</p>
+<p>For a non-coding transcript, protein-related fields such as <code>HGVSp</code>, <code>Protein_position</code>, <code>Amino_acids</code>, and <code>Codons</code> may be unavailable.</p>
+</section>
+<section id="transcript-selection-and-protein-identifiers" class="level3">
+<h3 class="anchored" data-anchor-id="transcript-selection-and-protein-identifiers">4. Transcript Selection and Protein Identifiers</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SYMBOL_SOURCE</code></td>
+<td>Source of the gene symbol, such as HGNC.</td>
+</tr>
+<tr class="even">
+<td><code>HGNC_ID</code></td>
+<td>Gene identifier from the HUGO Gene Nomenclature Committee.</td>
+</tr>
+<tr class="odd">
+<td><code>MANE</code></td>
+<td>Information about the transcript’s MANE status.</td>
+</tr>
+<tr class="even">
+<td><code>MANE_SELECT</code></td>
+<td>Indicates the MANE Select transcript, when applicable.</td>
+</tr>
+<tr class="odd">
+<td><code>MANE_PLUS_CLINICAL</code></td>
+<td>Indicates a MANE Plus Clinical transcript, when applicable.</td>
+</tr>
+<tr class="even">
+<td><code>TSL</code></td>
+<td>Transcript Support Level.</td>
+</tr>
+<tr class="odd">
+<td><code>APPRIS</code></td>
+<td>Transcript annotation related to protein isoform relevance.</td>
+</tr>
+<tr class="even">
+<td><code>ENSP</code></td>
+<td>Ensembl protein identifier.</td>
+</tr>
+<tr class="odd">
+<td><code>SWISSPROT</code></td>
+<td>UniProt/Swiss-Prot identifier, when available.</td>
+</tr>
+<tr class="even">
+<td><code>TREMBL</code></td>
+<td>UniProt/TrEMBL identifier, when available.</td>
+</tr>
+<tr class="odd">
+<td><code>UNIPARC</code></td>
+<td>UniParc sequence identifier.</td>
+</tr>
+<tr class="even">
+<td><code>UNIPROT_ISOFORM</code></td>
+<td>UniProt protein isoform identifier, when available.</td>
+</tr>
+</tbody>
+</table>
+<p>Transcript selection matters because a variant may have different predicted consequences across transcripts. For breast cancer predisposition genes, check whether the annotation corresponds to a biologically relevant transcript, including MANE transcripts where appropriate.</p>
+</section>
+<section id="computational-predictions-of-functional-effects" class="level3">
+<h3 class="anchored" data-anchor-id="computational-predictions-of-functional-effects">5. Computational Predictions of Functional Effects</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SIFT</code></td>
+<td>Predicts whether an amino acid substitution may affect protein function.</td>
+</tr>
+<tr class="even">
+<td><code>PolyPhen</code></td>
+<td>Predicts the potential impact of an amino acid substitution on protein structure or function.</td>
+</tr>
+<tr class="odd">
+<td><code>REVEL</code></td>
+<td>Ensemble score designed to help predict the pathogenicity of missense variants.</td>
+</tr>
+<tr class="even">
+<td><code>CADD_PHRED</code></td>
+<td>Phred-scaled CADD score; higher scores indicate greater predicted deleteriousness.</td>
+</tr>
+<tr class="odd">
+<td><code>CADD_RAW</code></td>
+<td>Raw CADD score.</td>
+</tr>
+<tr class="even">
+<td><code>ClinPred</code></td>
+<td>Computational prediction score for variant pathogenicity, particularly for missense variants.</td>
+</tr>
+</tbody>
+</table>
+<p>These scores provide supporting evidence rather than definitive classifications. Many are most informative for missense variants and may not be appropriate for every variant type.</p>
+<p>Do not interpret an unavailable score as evidence that a variant is benign.</p>
+</section>
+<section id="population-allele-frequencies" class="level3">
+<h3 class="anchored" data-anchor-id="population-allele-frequencies">6. Population Allele Frequencies</h3>
+<p>Population frequency annotations help assess how common a variant is in the reference datasets.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column or prefix</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>AF</code></td>
+<td>Allele frequency from the source associated with this field in the annotation.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADe_AF</code></td>
+<td>Overall allele frequency in gnomAD exomes.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADe_AFR_AF</code></td>
+<td>Frequency in the African ancestry category in gnomAD exomes.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADe_AMR_AF</code></td>
+<td>Frequency in the Admixed American category.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADe_ASJ_AF</code></td>
+<td>Frequency in the Ashkenazi Jewish category.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADe_EAS_AF</code></td>
+<td>Frequency in the East Asian category.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADe_FIN_AF</code></td>
+<td>Frequency in the Finnish category.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADe_MID_AF</code></td>
+<td>Frequency in the Middle Eastern category, when provided by the annotation dataset.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADe_NFE_AF</code></td>
+<td>Frequency in the non-Finnish European category.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADe_REMAINING_AF</code></td>
+<td>Frequency in the remaining population category.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADe_SAS_AF</code></td>
+<td>Frequency in the South Asian category.</td>
+</tr>
+<tr class="even">
+<td><code>gnomADg_AF</code></td>
+<td>Overall allele frequency in gnomAD genomes.</td>
+</tr>
+<tr class="odd">
+<td><code>gnomADg_*_AF</code></td>
+<td>Population-specific frequencies in gnomAD genomes, with the suffix identifying the population category.</td>
+</tr>
+</tbody>
+</table>
+<p>For a study involving Senegalese patients, African population frequencies can provide useful context. However, the African ancestry category in gnomAD does not necessarily represent Senegalese population diversity.</p>
+<p>A missing frequency does not mean that the variant is absent from the population. It may simply not be represented in the reference dataset or annotation.</p>
+</section>
+<section id="clinical-annotations" class="level3">
+<h3 class="anchored" data-anchor-id="clinical-annotations">7. Clinical Annotations</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CLIN_SIG</code></td>
+<td>Clinical significance annotation from the relevant VEP data source.</td>
+</tr>
+<tr class="even">
+<td><code>clinvar_clnsig</code></td>
+<td>Clinical significance annotation associated with the ClinVar field or plugin output.</td>
+</tr>
+<tr class="odd">
+<td><code>SOMATIC</code></td>
+<td>Information about somatic variant status, when available.</td>
+</tr>
+<tr class="even">
+<td><code>PHENO</code></td>
+<td>Associated phenotype information, when available.</td>
+</tr>
+<tr class="odd">
+<td><code>PUBMED</code></td>
+<td>PubMed identifiers for relevant publications, when available.</td>
+</tr>
+</tbody>
+</table>
+<p>Clinical annotations can help identify previously classified variants. However, clinical significance should be interpreted in context, including the classification criteria, submission date, evidence, and any conflicting interpretations.</p>
+<p>An unannotated variant should not automatically be classified as benign or pathogenic.</p>
+</section>
+<section id="splicing-and-regulatory-annotations" class="level3">
+<h3 class="anchored" data-anchor-id="splicing-and-regulatory-annotations">8. Splicing and Regulatory Annotations</h3>
+<p>The following columns provide predictions about splice effects and regulatory motifs.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SpliceAI_pred_DP_AG</code></td>
+<td>Predicted distance for an acceptor-gain event.</td>
+</tr>
+<tr class="even">
+<td><code>SpliceAI_pred_DP_AL</code></td>
+<td>Predicted distance for an acceptor-loss event.</td>
+</tr>
+<tr class="odd">
+<td><code>SpliceAI_pred_DP_DG</code></td>
+<td>Predicted distance for a donor-gain event.</td>
+</tr>
+<tr class="even">
+<td><code>SpliceAI_pred_DP_DL</code></td>
+<td>Predicted distance for a donor-loss event.</td>
+</tr>
+<tr class="odd">
+<td><code>SpliceAI_pred_DS_AG</code></td>
+<td>Predicted score for an acceptor-gain event.</td>
+</tr>
+<tr class="even">
+<td><code>SpliceAI_pred_DS_AL</code></td>
+<td>Predicted score for an acceptor-loss event.</td>
+</tr>
+<tr class="odd">
+<td><code>SpliceAI_pred_DS_DG</code></td>
+<td>Predicted score for a donor-gain event.</td>
+</tr>
+<tr class="even">
+<td><code>SpliceAI_pred_DS_DL</code></td>
+<td>Predicted score for a donor-loss event.</td>
+</tr>
+<tr class="odd">
+<td><code>SpliceAI_pred_SYMBOL</code></td>
+<td>Gene associated with the SpliceAI prediction.</td>
+</tr>
+<tr class="even">
+<td><code>MOTIF_NAME</code></td>
+<td>Name of a regulatory motif, when identified.</td>
+</tr>
+<tr class="odd">
+<td><code>MOTIF_POS</code></td>
+<td>Variant position within the motif.</td>
+</tr>
+<tr class="even">
+<td><code>HIGH_INF_POS</code></td>
+<td>Indicator related to a high-information motif position.</td>
+</tr>
+<tr class="odd">
+<td><code>MOTIF_SCORE_CHANGE</code></td>
+<td>Predicted change in the motif score.</td>
+</tr>
+<tr class="even">
+<td><code>TRANSCRIPTION_FACTORS</code></td>
+<td>Associated transcription factors, when available.</td>
+</tr>
+</tbody>
+</table>
+<p>SpliceAI predictions can help prioritize variants that may affect RNA splicing. They should be interpreted alongside the variant type, gene, transcript, and other evidence.</p>
+</section>
+<section id="molecular-interaction-annotations" class="level3">
+<h3 class="anchored" data-anchor-id="molecular-interaction-annotations">9. Molecular Interaction Annotations</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>IntAct_ap_ac</code></td>
+<td>Accession associated with an IntAct interaction feature, according to the annotation plugin.</td>
+</tr>
+<tr class="even">
+<td><code>IntAct_feature_type</code></td>
+<td>Type of interaction-related feature.</td>
+</tr>
+<tr class="odd">
+<td><code>IntAct_interaction_ac</code></td>
+<td>Interaction accession from IntAct.</td>
+</tr>
+</tbody>
+</table>
+<p>These fields may provide additional molecular interaction context, but they may not be populated for every variant.</p>
+</section>
+</section>
+<section id="practical-workflow-for-breast-cancer-variant-prioritization" class="level2">
+<h2 class="anchored" data-anchor-id="practical-workflow-for-breast-cancer-variant-prioritization">Practical Workflow for Breast Cancer Variant Prioritization</h2>
+<p>For this study, the annotation file can be used as an initial filtering and prioritization resource.</p>
+<ol type="1">
+<li><strong>Filter by gene:</strong> retain variants in the genes targeted by the study.</li>
+<li><strong>Review consequences:</strong> identify potentially relevant coding, splice-site, and other variants. Do not rely exclusively on the <code>IMPACT</code> column.</li>
+<li><strong>Assess population frequencies:</strong> review global and population-specific frequencies, while recognizing the limitations of available reference populations.</li>
+<li><strong>Review clinical annotations:</strong> inspect ClinVar classifications and supporting evidence where available.</li>
+<li><strong>Examine prediction scores:</strong> use SIFT, PolyPhen, REVEL, CADD, ClinPred, and SpliceAI where appropriate for the variant type.</li>
+<li><strong>Validate technical quality:</strong> review read depth, allele balance, mapping quality, and other relevant sequencing metrics.</li>
+<li><strong>Confirm the reference assembly:</strong> ensure that the VCF and VEP annotation use compatible genome assemblies before interpreting coordinates or consequences.</li>
+</ol>
+<p><strong>Important:</strong> VEP annotation and computational predictions do not, by themselves, establish that a variant causes breast cancer. They support variant prioritization for further investigation.</p>
+</section>
+<section id="extract-variants-in-breast-cancer-susceptibility-genes" class="level2">
+<h2 class="anchored" data-anchor-id="extract-variants-in-breast-cancer-susceptibility-genes">1. Extract variants in breast cancer susceptibility genes</h2>
+<p>After annotating variants with VEP, we can extract variants in a set of breast cancer susceptibility genes.</p>
+<p>The following command identifies the <code>SYMBOL</code> column by its header and retains variants in the selected genes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span> <span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">BEGIN {</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">    split("BRCA1 BRCA2 PALB2 TP53 ATM CHEK2 CDH1", genes, " ")</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in genes) wanted[genes[i]] = 1</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="st">NR == 1 {</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="st">        if ($i == "SYMBOL") gene_col = i</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="st">    next</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="st">wanted[$gene_col] {</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> breast_cancer_candidates.txt <span class="op">&gt;</span> breast_cancer_genes.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Input:</strong> <code>breast_cancer_candidates.txt</code></p>
+<p><strong>Output:</strong> <code>breast_cancer_genes.txt</code></p>
+<p>The output contains the header and annotation rows associated with the selected genes.</p>
+</section>
+<section id="filter-variants-by-allele-frequency" class="level2">
+<h2 class="anchored" data-anchor-id="filter-variants-by-allele-frequency">2. Filter variants by allele frequency</h2>
+<p>Rare variants may be relevant when investigating inherited cancer susceptibility. The following command retains variants with a non-missing <code>gnomADe_AF</code> value below 0.01 (1%).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span> <span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">NR == 1 {</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">        col[$i] = i</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="st">    next</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="st">{</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="st">    af = $(col["gnomADe_AF"])</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="st">    if (af != "" &amp;&amp; af != "-" &amp;&amp; af + 0 &lt; 0.01)</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="st">        print</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> breast_cancer_genes.txt <span class="op">&gt;</span> breast_cancer_rare.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Input:</strong> <code>breast_cancer_genes.txt</code></p>
+<p><strong>Output:</strong> <code>breast_cancer_rare.txt</code></p>
+<p>The <code>gnomADe_AF</code> field represents the overall allele frequency in gnomAD exomes. A frequency below 1% is a broad rarity threshold, not proof that a variant is pathogenic. Depending on the research question, a stricter threshold may be appropriate.</p>
+</section>
+<section id="prioritize-variants-by-consequence-and-clinical-annotation" class="level2">
+<h2 class="anchored" data-anchor-id="prioritize-variants-by-consequence-and-clinical-annotation">3. Prioritize variants by consequence and clinical annotation</h2>
+<p>The next command retains variants annotated with <code>HIGH</code> or <code>MODERATE</code> impact and a non-empty <code>clinvar_clnsig</code> field.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span> <span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="st">NR == 1 {</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="st">        col[$i] = i</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="st">    next</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="st">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="st">    impact = $(col["IMPACT"])</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="st">    clin = $(col["clinvar_clnsig"])</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="st">    if ((impact == "HIGH" || impact == "MODERATE") &amp;&amp;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="st">        clin != "" &amp;&amp; clin != "-")</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="st">        print</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> breast_cancer_rare.txt <span class="op">&gt;</span> breast_cancer_prioritized.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Input:</strong> <code>breast_cancer_rare.txt</code></p>
+<p><strong>Output:</strong> <code>breast_cancer_prioritized.txt</code></p>
+<p>This is a preliminary prioritization step. It retains any non-empty ClinVar classification, including potentially benign or conflicting classifications. It does <strong>not</strong> specifically select pathogenic variants. Inspect the actual classification before interpreting a candidate.</p>
+<p>For example, you can review the distinct values present in the output:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span> <span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="st">NR == 1 {</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="st">        col[$i] = i</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">    next</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">{</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="st">    print $(col["clinvar_clnsig"])</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> breast_cancer_prioritized.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="compress-and-index-the-annotated-vcf" class="level2">
+<h2 class="anchored" data-anchor-id="compress-and-index-the-annotated-vcf">4. Compress and index the annotated VCF</h2>
+<p>To inspect a specific variant efficiently, <code>bcftools</code> works best with a BGZF-compressed and indexed VCF.</p>
+<p>If <code>SRR37849526.annotated.vcf</code> is an uncompressed VCF, run:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bgzip</span> <span class="at">-c</span> SRR37849526.annotated.vcf <span class="op">&gt;</span> SRR37849526.annotated.vcf.gz</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> index <span class="at">-t</span> SRR37849526.annotated.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The first command creates a compressed VCF. The second creates a tabix index (<code>.tbi</code>) that enables rapid access to genomic regions.</p>
+<p>Run these commands only once for this file, unless you regenerate the VCF. If the compressed file already exists, do not overwrite it without checking that it corresponds to the latest annotation.</p>
+</section>
+<section id="inspect-a-specific-variant-with-bcftools" class="level2">
+<h2 class="anchored" data-anchor-id="inspect-a-specific-variant-with-bcftools">5. Inspect a specific variant with bcftools</h2>
+<p>For this example, we inspect genomic position <code>17:41209095</code>.</p>
+<p>First, check the chromosome naming convention in the VCF:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> view <span class="at">-h</span> SRR37849526.annotated.vcf.gz <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'^##contig'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If the chromosome is named <code>17</code>, use:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> query <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-r</span> 17:41209095-41209095 <span class="dt">\</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> <span class="st">'%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t%FILTER[\tGT=%GT\tDP=%DP\tAD=%AD\tGQ=%GQ]\n'</span> <span class="dt">\</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  SRR37849526.annotated.vcf.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If it is named <code>chr17</code>, replace the region with <code>chr17:41209095-41209095</code>.</p>
+<p>The command reports:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CHROM</code></td>
+<td>Chromosome</td>
+</tr>
+<tr class="even">
+<td><code>POS</code></td>
+<td>Genomic position</td>
+</tr>
+<tr class="odd">
+<td><code>REF</code></td>
+<td>Reference allele</td>
+</tr>
+<tr class="even">
+<td><code>ALT</code></td>
+<td>Alternate allele</td>
+</tr>
+<tr class="odd">
+<td><code>QUAL</code></td>
+<td>Variant-level quality score</td>
+</tr>
+<tr class="even">
+<td><code>FILTER</code></td>
+<td>Whether the variant passed the recorded filters</td>
+</tr>
+<tr class="odd">
+<td><code>GT</code></td>
+<td>Sample genotype</td>
+</tr>
+<tr class="even">
+<td><code>DP</code></td>
+<td>Read depth</td>
+</tr>
+<tr class="odd">
+<td><code>AD</code></td>
+<td>Read counts supporting the reference and alternate alleles</td>
+</tr>
+<tr class="even">
+<td><code>GQ</code></td>
+<td>Genotype quality</td>
+</tr>
+</tbody>
+</table>
+<p>If the command returns no rows, the variant may not be present at that position in this VCF. Check the chromosome naming convention and the genome assembly before drawing conclusions.</p>
+</section>
+<section id="important-interpretation-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="important-interpretation-considerations">6. Important interpretation considerations</h2>
+<ul>
+<li><strong>Transcript-level annotations:</strong> VEP can produce multiple rows for the same genomic variant because it annotates the variant against multiple transcripts. These rows do not necessarily represent different variants.</li>
+<li><strong>Variant consequence:</strong> <code>HIGH</code> impact and <code>stop_gained</code> indicate a predicted severe consequence for the relevant transcript, but they do not independently confirm pathogenicity.</li>
+<li><strong>Clinical classification:</strong> A ClinVar annotation such as <code>Pathogenic</code> should be interpreted alongside its evidence, review status and the exact variant identity.</li>
+<li><strong>Call quality:</strong> Check genotype, depth, allele balance, genotype quality and filter status in the original VCF.</li>
+<li><strong>Genome assembly:</strong> Confirm that the VCF and VEP annotation use compatible genome assemblies, such as GRCh37 or GRCh38.</li>
+<li><strong>Coverage limitations:</strong> Poor exome coverage can make variant calls unreliable and means that failure to detect a variant cannot reliably establish its absence.</li>
+</ul>
+<p>These commands support exploratory research and candidate prioritization. They do not constitute a clinical classification or a diagnosis.</p>
+</section>
+<section id="candidate-variant-prioritization" class="level2">
+<h2 class="anchored" data-anchor-id="candidate-variant-prioritization">Candidate variant prioritization</h2>
+<p><strong>Objective:</strong> Reduce a list of variants to a manageable set of candidates by combining technical quality, population frequency, molecular consequence, clinical evidence, and biological relevance.</p>
+<section id="a-prioritization-funnel" class="level3">
+<h3 class="anchored" data-anchor-id="a-prioritization-funnel">1. A prioritization funnel</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Criteria to examine</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Quality</td>
+<td><code>FILTER</code>, read depth (<code>DP</code>), genotype quality (<code>GQ</code>), alignment quality</td>
+<td>Identify potentially unreliable calls</td>
+</tr>
+<tr class="even">
+<td>2. Frequency</td>
+<td>Global and population-specific gnomAD allele frequencies</td>
+<td>Assess compatibility with a rare disease</td>
+</tr>
+<tr class="odd">
+<td>3. Consequence</td>
+<td>HIGH or MODERATE impact, splice-site consequences, and other relevant annotations</td>
+<td>Identify variants that may affect gene function</td>
+</tr>
+<tr class="even">
+<td>4. Predictions</td>
+<td>CADD, REVEL, SIFT, PolyPhen, and SpliceAI when available</td>
+<td>Add predictive evidence without treating it as definitive</td>
+</tr>
+<tr class="odd">
+<td>5. Gene and phenotype</td>
+<td>Disease-associated genes, phenotype relevance, ClinGen or OMIM evidence</td>
+<td>Assess biological plausibility</td>
+</tr>
+<tr class="even">
+<td>6. Inheritance</td>
+<td>Zygosity, inheritance model, and segregation evidence when available</td>
+<td>Assess consistency with the genetic hypothesis</td>
+</tr>
+</tbody>
+</table>
+<p>Frequency and prediction thresholds are not universal. They must be adapted to the gene, disease, inheritance pattern, and relevant guidance.</p>
+</section>
+<section id="candidate-prioritization-table" class="level3">
+<h3 class="anchored" data-anchor-id="candidate-prioritization-table">2. Candidate prioritization table</h3>
+<p>For each candidate, record the evidence used in the decision.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Information to record</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Variant</td>
+<td>Chromosome, position, REF, ALT, and assembly</td>
+</tr>
+<tr class="even">
+<td>Gene / transcript</td>
+<td>Gene symbol and transcript identifier</td>
+</tr>
+<tr class="odd">
+<td>HGVS</td>
+<td>Coding and protein notation, when available</td>
+</tr>
+<tr class="even">
+<td>Genotype</td>
+<td>Zygosity, DP, and GQ</td>
+</tr>
+<tr class="odd">
+<td>Consequence</td>
+<td>Molecular consequence and VEP impact</td>
+</tr>
+<tr class="even">
+<td>Frequency</td>
+<td>Global and available population-specific frequencies</td>
+</tr>
+<tr class="odd">
+<td>Predictions</td>
+<td>Available scores and their limitations</td>
+</tr>
+<tr class="even">
+<td>Clinical significance</td>
+<td>Reported clinical significance, evidence/review status if available, and associated condition</td>
+</tr>
+<tr class="odd">
+<td>Biological relevance</td>
+<td>Gene–phenotype consistency and inheritance model</td>
+</tr>
+<tr class="even">
+<td>Priority</td>
+<td>Proposed research priority with a documented rationale</td>
+</tr>
+</tbody>
+</table>
+<p>A variant not found in ClinVar must not automatically be described as novel. Likewise, an existing ClinVar annotation should not automatically be treated as definitive.</p>
+</section>
+<section id="acmgamp-classification" class="level3">
+<h3 class="anchored" data-anchor-id="acmgamp-classification">3. ACMG/AMP classification</h3>
+<p>The ACMG/AMP framework distinguishes five classes:</p>
+<ol type="1">
+<li>Pathogenic</li>
+<li>Likely pathogenic</li>
+<li>Variant of uncertain significance (VUS)</li>
+<li>Likely benign</li>
+<li>Benign</li>
+</ol>
+<p>Classification combines different types of evidence, including population frequency, functional studies, clinical observations, segregation, computational predictions, and other relevant information.</p>
+<p>Automated interpretation tools can help organize evidence, but they do not replace expert review. Prioritizing a variant for research is not equivalent to assigning a clinically validated classification.</p>
+</section>
+<section id="good-practices" class="level3">
+<h3 class="anchored" data-anchor-id="good-practices">4. Good practices</h3>
+<ul>
+<li>Keep filtering parameters in a version-controlled script.</li>
+<li>Do not rely on a single computational predictor.</li>
+<li>Inspect important candidate variants in IGV.</li>
+<li>Check call quality and coverage in the relevant regions.</li>
+<li>Record the transcript used for each interpretation.</li>
+<li>Examine population-specific frequencies, not only global frequencies.</li>
+<li>Distinguish missing annotations from negative evidence.</li>
+<li>Document the rationale for each prioritization decision.</li>
+</ul>
+</section>
+</section>
+<section id="interpretation-and-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation-and-limitations">Interpretation and limitations</h2>
+<p><strong>Objective:</strong> Understand what the results can establish and what they cannot establish.</p>
+<section id="technical-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="technical-limitations">1. Technical limitations</h3>
+<ul>
+<li>Exome sequencing covers only a limited fraction of the genome. Deep intronic, regulatory, and intergenic variants are not comprehensively assessed.</li>
+<li>Coverage is uneven. An uncovered region does not support a conclusion that no variant is present.</li>
+<li>Structural variants and copy-number changes may require dedicated analysis.</li>
+<li>Regions with segmental duplications, repetitive sequences, or pseudogenes can be difficult to analyze.</li>
+<li>Results depend on the reference assembly, DRAGEN settings, VEP version, and annotation resources.</li>
+<li>Predicted consequences can differ by transcript.</li>
+<li>In silico predictions provide supporting information but are not sufficient proof of pathogenicity.</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled" title="For this sample">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>For this sample
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The coverage metrics reported in the alignment section show a mean coverage of about 4.09× and only about 4.15% of target bases at 20× or higher. These values are unusually low for an exome intended for comprehensive germline variant analysis. Verify the DRAGEN report, the target regions, and the coverage definitions before interpreting any variant, and do not interpret the absence of a variant as evidence that it is not present.</p>
+</div>
+</div>
+</section>
+<section id="biological-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="biological-limitations">2. Biological limitations</h3>
+<ul>
+<li>A VUS should not be treated as causal based solely on its presence.</li>
+<li>Penetrance may be incomplete and expressivity variable.</li>
+<li>Inheritance patterns and family context can change interpretation.</li>
+<li>Somatic variants, mosaicism, and differences between cell lines and tissues can complicate the analysis.</li>
+<li>An association between a variant and a phenotype does not by itself demonstrate causality.</li>
+</ul>
+</section>
+<section id="representation-of-populations-in-reference-databases" class="level3">
+<h3 class="anchored" data-anchor-id="representation-of-populations-in-reference-databases">3. Representation of populations in reference databases</h3>
+<p>African populations remain underrepresented in several genomic resources relative to their genetic diversity.</p>
+<p>Potential consequences include:</p>
+<ul>
+<li>A benign variant in an underrepresented population may appear rare or absent.</li>
+<li>VUS interpretation may be more difficult.</li>
+<li>Frequency data and predictors may be less informative for some populations.</li>
+<li>Published classifications may reflect differences in data availability and research coverage.</li>
+</ul>
+<p>Good practices:</p>
+<ul>
+<li>Examine population-specific frequencies when available (for example the AFR fields in section 4.7).</li>
+<li>Consider the quality and representativeness of the reference databases.</li>
+<li>Use relevant African and regional resources when available.</li>
+<li>Document limitations related to population representation.</li>
+<li>Never infer pathogenicity solely from an absent or low population frequency.</li>
+</ul>
+</section>
+<section id="data-protection-and-responsible-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="data-protection-and-responsible-interpretation">4. Data protection and responsible interpretation</h3>
+<ul>
+<li>Human genomic data can be identifying and may also reveal information about relatives.</li>
+<li>Confirm that consent and ethics approvals cover the intended use and sharing.</li>
+<li>Restrict access and use appropriate storage.</li>
+<li>Do not share human VCF files through unauthorized channels.</li>
+<li>Follow institutional policies and applicable data-protection regulations.</li>
+<li>Define in advance how secondary findings will be handled.</li>
+<li>Clearly distinguish research findings from diagnostic results.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled" title="Research is not diagnosis">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Research is not diagnosis
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Results from this training exercise must not be used alone to make medical decisions. Clinical interpretation requires an appropriate framework, suitable validation, and genetic counseling where indicated.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ul>
+<li>Ensembl Variant Effect Predictor: <a href="https://www.ensembl.org/info/docs/tools/vep/" class="uri">https://www.ensembl.org/info/docs/tools/vep/</a></li>
+<li>VEP documentation for GRCh37: <a href="https://grch37.ensembl.org/info/docs/tools/vep/" class="uri">https://grch37.ensembl.org/info/docs/tools/vep/</a></li>
+<li>VEP command-line options: <a href="https://grch37.ensembl.org/info/docs/tools/vep/script/vep_options.html" class="uri">https://grch37.ensembl.org/info/docs/tools/vep/script/vep_options.html</a></li>
+<li>VEP cache documentation: <a href="https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html" class="uri">https://grch37.ensembl.org/info/docs/tools/vep/script/vep_cache.html</a></li>
+<li>ClinVar: <a href="https://www.ncbi.nlm.nih.gov/clinvar/" class="uri">https://www.ncbi.nlm.nih.gov/clinvar/</a></li>
+<li>Richards et al.&nbsp;(2015), <em>Standards and guidelines for the interpretation of sequence variants</em>, Genetics in Medicine.</li>
+<li>Karczewski et al.&nbsp;(2020), <em>The mutational constraint spectrum quantified from variation in 141,456 humans</em>, Nature.</li>
+</ul>
+
+
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -723,6 +2010,15 @@ ul.task-list li input[type="checkbox"] {
     }
   });
   </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../course/04-alignement-variant-calling.html" class="pagination-link" aria-label="Alignment and Variant Calling">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Alignment and Variant Calling</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
 </div> <!-- /content -->
 <footer class="footer">
   <div class="nav-footer">

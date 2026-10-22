@@ -37,6 +37,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../course/04-annotation.html" rel="next">
 <link href="../course/04-sequencing-data-QC.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -300,6 +301,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Alignment and Variant Calling</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../course/04-annotation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Variant Filtering, Prioritization and Inspection</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -331,6 +338,23 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#sec-advanced" id="toc-sec-advanced" class="nav-link" data-scroll-target="#sec-advanced">3.8 CRAM, compute and advanced fields</a></li>
   </ul></li>
   <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary">4. Settings for the case study</a></li>
+  <li><a href="#understanding-the-dragen-metrics" id="toc-understanding-the-dragen-metrics" class="nav-link" data-scroll-target="#understanding-the-dragen-metrics">5. Understanding the DRAGEN Metrics</a>
+  <ul class="collapse">
+  <li><a href="#a.-sample-and-ploidy-estimation-metrics" id="toc-a.-sample-and-ploidy-estimation-metrics" class="nav-link" data-scroll-target="#a.-sample-and-ploidy-estimation-metrics">a. Sample and Ploidy Estimation Metrics</a></li>
+  <li><a href="#b.-read-trimming-metrics" id="toc-b.-read-trimming-metrics" class="nav-link" data-scroll-target="#b.-read-trimming-metrics">b. Read Trimming Metrics</a></li>
+  <li><a href="#c.-fastqc-metrics" id="toc-c.-fastqc-metrics" class="nav-link" data-scroll-target="#c.-fastqc-metrics">c.&nbsp;FastQC Metrics</a></li>
+  <li><a href="#e.-mapping-metrics" id="toc-e.-mapping-metrics" class="nav-link" data-scroll-target="#e.-mapping-metrics">e. Mapping Metrics</a></li>
+  <li><a href="#f.-sequencing-yield-and-base-quality" id="toc-f.-sequencing-yield-and-base-quality" class="nav-link" data-scroll-target="#f.-sequencing-yield-and-base-quality">f.&nbsp;Sequencing Yield and Base Quality</a></li>
+  <li><a href="#g.-coverage-metrics" id="toc-g.-coverage-metrics" class="nav-link" data-scroll-target="#g.-coverage-metrics">g. Coverage Metrics</a></li>
+  <li><a href="#h.-small-variant-calling-vc-metrics" id="toc-h.-small-variant-calling-vc-metrics" class="nav-link" data-scroll-target="#h.-small-variant-calling-vc-metrics">h. Small Variant Calling (VC Metrics)</a></li>
+  <li><a href="#i.-structural-variants-sv-metrics" id="toc-i.-structural-variants-sv-metrics" class="nav-link" data-scroll-target="#i.-structural-variants-sv-metrics">i. Structural Variants (SV Metrics)</a></li>
+  <li><a href="#j.-copy-number-variation-cnv-metrics" id="toc-j.-copy-number-variation-cnv-metrics" class="nav-link" data-scroll-target="#j.-copy-number-variation-cnv-metrics">j. Copy Number Variation (CNV Metrics)</a></li>
+  <li><a href="#k.-zygosity-and-chromosome-level-metrics" id="toc-k.-zygosity-and-chromosome-level-metrics" class="nav-link" data-scroll-target="#k.-zygosity-and-chromosome-level-metrics">k. Zygosity and Chromosome-Level Metrics</a></li>
+  <li><a href="#l.-hla-typing" id="toc-l.-hla-typing" class="nav-link" data-scroll-target="#l.-hla-typing">l. HLA Typing</a></li>
+  <li><a href="#m.-repeat-expansion-metrics" id="toc-m.-repeat-expansion-metrics" class="nav-link" data-scroll-target="#m.-repeat-expansion-metrics">m. Repeat-Expansion Metrics</a></li>
+  <li><a href="#n.-targeted-caller-results" id="toc-n.-targeted-caller-results" class="nav-link" data-scroll-target="#n.-targeted-caller-results">n.&nbsp;Targeted Caller Results</a></li>
+  <li><a href="#o.-how-to-interpret-the-report-as-a-whole" id="toc-o.-how-to-interpret-the-report-as-a-whole" class="nav-link" data-scroll-target="#o.-how-to-interpret-the-report-as-a-whole">o. How to Interpret the Report as a Whole</a></li>
+  </ul></li>
   <li><a href="#sec-results" id="toc-sec-results" class="nav-link" data-scroll-target="#sec-results">5. Read the results</a>
   <ul class="collapse">
   <li><a href="#alignment-and-coverage-metrics" id="toc-alignment-and-coverage-metrics" class="nav-link" data-scroll-target="#alignment-and-coverage-metrics">Alignment and coverage metrics</a></li>
@@ -1131,6 +1155,679 @@ ul.task-list li input[type="checkbox"] {
 </div>
 <p><strong>Common mistakes:</strong> an hg19 BED with an hg38 reference; names with and without <code>chr</code> mixed; the wrong sample selected; modules enabled “because they are there”.</p>
 </section>
+<section id="understanding-the-dragen-metrics" class="level2">
+<h2 class="anchored" data-anchor-id="understanding-the-dragen-metrics">5. Understanding the DRAGEN Metrics</h2>
+<p>The DRAGEN metrics report summarizes the quality of sequencing reads, their alignment to the reference genome, coverage, and the variants detected. These metrics help assess the reliability of the analysis and identify regions or results that require further investigation.</p>
+<p><strong>Important:</strong> A metric should not be interpreted in isolation. Its expected value depends on the sequencing technology, library preparation, sequencing depth, reference genome, and analysis settings.</p>
+<section id="a.-sample-and-ploidy-estimation-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="a.-sample-and-ploidy-estimation-metrics">a. Sample and Ploidy Estimation Metrics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Sample</code></td>
+<td>Identifier of the sequencing sample.</td>
+<td>Used to associate metrics and results with the correct sample.</td>
+</tr>
+<tr class="even">
+<td><code>Sex</code></td>
+<td>Sex or ploidy-related estimate inferred from genomic data.</td>
+<td>Compare with the expected sample information. <code>X0</code> may indicate one X chromosome and no Y chromosome, but verify the caller’s convention and sample metadata.</td>
+</tr>
+<tr class="odd">
+<td><code>chrX</code>, <code>chrY</code></td>
+<td>Chromosome-specific metrics, in this report represented by chromosome-level values.</td>
+<td>Can help investigate sex-chromosome coverage and possible sample discrepancies.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b.-read-trimming-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="b.-read-trimming-metrics">b. Read Trimming Metrics</h3>
+<p>These metrics describe read preprocessing, including trimming and filtering when these operations are performed by the workflow.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Input Reads</code></td>
+<td>Number of reads entering the relevant processing stage.</td>
+<td>Indicates the amount of sequencing data available.</td>
+</tr>
+<tr class="even">
+<td><code>Masked</code></td>
+<td>Reads or bases masked according to the tool’s definition.</td>
+<td>Masking may affect downstream analysis; consult the DRAGEN report definition to determine the exact unit.</td>
+</tr>
+<tr class="odd">
+<td><code>Trimmed</code></td>
+<td>Reads or bases affected by trimming, depending on the metric definition.</td>
+<td>Helps assess how much data was modified to remove unwanted sequence.</td>
+</tr>
+<tr class="even">
+<td><code>Filtered</code></td>
+<td>Reads removed by filtering.</td>
+<td>A high value may indicate quality issues or restrictive filtering settings.</td>
+</tr>
+<tr class="odd">
+<td><code>Fixed-Length</code></td>
+<td>Reads processed to a fixed length.</td>
+<td>Depends on the selected preprocessing options.</td>
+</tr>
+<tr class="even">
+<td><code>Poly-G</code></td>
+<td>Poly-G sequence trimming or filtering.</td>
+<td>Particularly relevant to certain Illumina two-color sequencing systems.</td>
+</tr>
+<tr class="odd">
+<td><code>Quality</code></td>
+<td>Quality-based trimming or filtering.</td>
+<td>Helps identify processing caused by low-quality bases.</td>
+</tr>
+<tr class="even">
+<td><code>Adapter</code></td>
+<td>Adapter-related trimming or filtering.</td>
+<td>High adapter content can indicate short inserts or incomplete adapter removal.</td>
+</tr>
+<tr class="odd">
+<td><code>Bisulfite</code></td>
+<td>Bisulfite-related processing, if applicable.</td>
+<td>Usually relevant to bisulfite sequencing workflows.</td>
+</tr>
+<tr class="even">
+<td><code>N-base</code></td>
+<td>Processing associated with ambiguous <code>N</code> bases.</td>
+<td>Many ambiguous bases may reduce mapping or variant-calling reliability.</td>
+</tr>
+<tr class="odd">
+<td><code>Minimum-Length</code></td>
+<td>Reads affected by a minimum-length rule.</td>
+<td>Very short reads can map ambiguously.</td>
+</tr>
+<tr class="even">
+<td><code>Cut-End</code></td>
+<td>Processing associated with read ends.</td>
+<td>Interpret according to the configured trimming options.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> DRAGEN metric names do not always specify whether the reported quantity represents reads, bases, or events. Check the documentation for the exact DRAGEN version and report that generated these values.</p>
+</section>
+<section id="c.-fastqc-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="c.-fastqc-metrics">c.&nbsp;FastQC Metrics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Max Read Length</code></td>
+<td>Maximum read length observed.</td>
+<td>Describes the longest reads in the dataset.</td>
+</tr>
+<tr class="even">
+<td><code>Read Length</code></td>
+<td>Read length reported for the sample.</td>
+<td>Compare with the expected sequencing configuration, such as 2 × 100 bp.</td>
+</tr>
+<tr class="odd">
+<td><code>QC-failed</code></td>
+<td>Reads or records failing the relevant quality criteria.</td>
+<td>Check the metric definition and FastQC report before interpreting the count.</td>
+</tr>
+<tr class="even">
+<td><code>% QC-failed</code></td>
+<td>Percentage associated with QC failures.</td>
+<td>A high percentage may warrant investigation of read quality.</td>
+</tr>
+</tbody>
+</table>
+<p>FastQC quality-control results should be reviewed together with per-base quality, adapter content, sequence duplication, GC distribution, and overrepresented sequences when those plots are available.</p>
+</section>
+<section id="e.-mapping-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="e.-mapping-metrics">e. Mapping Metrics</h3>
+<p>Mapping metrics measure how successfully the reads align to the reference genome.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Unique Reads</code></td>
+<td>Reads classified as uniquely mapped by the reporting tool.</td>
+<td>A high proportion generally indicates that reads can be assigned to a single genomic location.</td>
+</tr>
+<tr class="even">
+<td><code>% Unique</code></td>
+<td>Percentage of reads classified as unique.</td>
+<td>Low values may reflect repetitive regions, read length, or reference-related issues.</td>
+</tr>
+<tr class="odd">
+<td><code>Duplicate Aligned Reads</code></td>
+<td>Aligned reads identified as duplicates under the tool’s definition.</td>
+<td>High duplication can reflect PCR duplicates or biological/library characteristics.</td>
+</tr>
+<tr class="even">
+<td><code>% Duplicate Aligned Reads</code></td>
+<td>Percentage of aligned reads classified as duplicates.</td>
+<td>Interpret in relation to library preparation and sequencing depth.</td>
+</tr>
+<tr class="odd">
+<td><code>Mapped Reads</code></td>
+<td>Number of reads aligned to the reference.</td>
+<td>Indicates alignment yield, not necessarily the proportion of the genome adequately covered.</td>
+</tr>
+<tr class="even">
+<td><code>% Mapped</code></td>
+<td>Percentage of reads that mapped.</td>
+<td>A low value can indicate contamination, poor read quality, or a reference mismatch.</td>
+</tr>
+<tr class="odd">
+<td><code>Abundant Reads</code></td>
+<td>Reads assigned to an abundant-read category defined by the pipeline.</td>
+<td>Consult the corresponding DRAGEN report documentation before assigning a biological meaning.</td>
+</tr>
+<tr class="even">
+<td><code>% Abundant</code></td>
+<td>Percentage associated with abundant reads.</td>
+<td>Interpret according to the pipeline’s definition.</td>
+</tr>
+<tr class="odd">
+<td><code>% Prop Pair</code></td>
+<td>Pair-related alignment metric.</td>
+<td>Review the report definition to establish whether it represents properly paired reads or another paired-read statistic.</td>
+</tr>
+<tr class="even">
+<td><code>% Contam</code></td>
+<td>Estimated contamination percentage.</td>
+<td>An elevated estimate may require sample identity and contamination checks.</td>
+</tr>
+<tr class="odd">
+<td><code>% Chimeric</code></td>
+<td>Percentage of reads or alignments classified as chimeric.</td>
+<td>Elevated values may reflect library artifacts or genuine structural variation, depending on context.</td>
+</tr>
+<tr class="even">
+<td><code>% Soft-Clipped</code></td>
+<td>Percentage of aligned sequence that is soft-clipped.</td>
+<td>Elevated values can indicate local mismatches, structural variation, or alignment artifacts.</td>
+</tr>
+<tr class="odd">
+<td><code>Mean IS</code></td>
+<td>Mean insert size for paired-end fragments.</td>
+<td>Compare with the expected library insert-size distribution.</td>
+</tr>
+<tr class="even">
+<td><code>Median IS</code></td>
+<td>Median insert size.</td>
+<td>Less sensitive than the mean to extreme insert-size values.</td>
+</tr>
+<tr class="odd">
+<td><code>Standard Deviation</code></td>
+<td>Dispersion of insert-size measurements.</td>
+<td>A high value indicates greater variability in fragment lengths.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="f.-sequencing-yield-and-base-quality" class="level3">
+<h3 class="anchored" data-anchor-id="f.-sequencing-yield-and-base-quality">f.&nbsp;Sequencing Yield and Base Quality</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Input Bases</code></td>
+<td>Total number of bases entering the relevant analysis stage.</td>
+<td>Represents the amount of sequence data, not the number of bases covering the target regions.</td>
+</tr>
+<tr class="even">
+<td><code>% Mapped Bases</code></td>
+<td>Percentage of bases associated with mapped reads, according to the report definition.</td>
+<td>Complements read-level mapping statistics.</td>
+</tr>
+<tr class="odd">
+<td><code>% Q30</code></td>
+<td>Percentage of bases with Phred quality score ≥ 30.</td>
+<td>Q30 corresponds to an estimated base-call error probability of 0.1%. Higher percentages generally indicate better base-call quality.</td>
+</tr>
+<tr class="even">
+<td><code>Mapped R1</code>, <code>Mapped R2</code></td>
+<td>Mapping-related counts for read 1 and read 2.</td>
+<td>Compare the two mates for unexpected differences.</td>
+</tr>
+<tr class="odd">
+<td><code>% Mapped R1</code>, <code>% Mapped R2</code></td>
+<td>Mapping percentages for each mate.</td>
+<td>Low or imbalanced values may warrant investigation.</td>
+</tr>
+<tr class="even">
+<td><code>% Q30 R1</code>, <code>% Q30 R2</code></td>
+<td>Percentage of Q30 bases in each mate.</td>
+<td>Read 2 may have different quality characteristics from read 1.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="g.-coverage-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="g.-coverage-metrics">g. Coverage Metrics</h3>
+<p>Coverage measures how many sequencing reads support each genomic position. It is essential for evaluating whether a region has enough evidence for reliable variant detection.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Average Coverage</code></td>
+<td>Mean sequencing depth across the genomic territory included in the calculation.</td>
+<td>Higher average depth can improve sensitivity, but does not guarantee uniform coverage.</td>
+</tr>
+<tr class="even">
+<td><code>Median Coverage</code></td>
+<td>Median depth across the assessed territory.</td>
+<td>Less influenced by extremely high-depth regions than the mean.</td>
+</tr>
+<tr class="odd">
+<td><code>Mean / Median Ratio</code></td>
+<td>Ratio of mean coverage to median coverage.</td>
+<td>A large ratio may indicate a skewed depth distribution.</td>
+</tr>
+<tr class="even">
+<td><code>Uniformity of Coverage</code></td>
+<td>Coverage-uniformity statistic defined by the reporting tool.</td>
+<td>Check the DRAGEN definition and threshold before comparing samples.</td>
+</tr>
+<tr class="odd">
+<td><code>% &gt;=1x</code></td>
+<td>Percentage of assessed bases covered by at least one read.</td>
+<td>Measures basic coverage breadth.</td>
+</tr>
+<tr class="even">
+<td><code>% &gt;=10x</code></td>
+<td>Percentage of bases with depth of at least 10 reads.</td>
+<td>Indicates how much of the territory has moderate coverage.</td>
+</tr>
+<tr class="odd">
+<td><code>% &gt;=20x</code></td>
+<td>Percentage of bases with depth of at least 20 reads.</td>
+<td>A useful depth benchmark for many germline analyses, but not a universal guarantee of variant-calling sensitivity.</td>
+</tr>
+<tr class="even">
+<td><code>% &gt;=50x</code></td>
+<td>Percentage of bases with depth of at least 50 reads.</td>
+<td>Indicates the proportion of the territory with higher coverage.</td>
+</tr>
+<tr class="odd">
+<td><code>% &gt;=100x</code></td>
+<td>Percentage of bases with depth of at least 100 reads.</td>
+<td>Can help assess high-depth sequencing targets.</td>
+</tr>
+<tr class="even">
+<td><code>% &gt;=500x</code>, <code>% &gt;=1000x</code>, <code>% &gt;=1500x</code></td>
+<td>Percentages of bases exceeding very high depth thresholds.</td>
+<td>More relevant to particular high-depth or targeted applications than to routine WES.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important distinction:</strong> Average depth and coverage breadth are different. A few highly covered regions can increase the average even when many bases have insufficient coverage.</p>
+<p>For whole-exome sequencing (WES), coverage should be assessed over the appropriate capture targets, with attention to clinically or scientifically relevant exons and their flanking regions.</p>
+</section>
+<section id="h.-small-variant-calling-vc-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="h.-small-variant-calling-vc-metrics">h. Small Variant Calling (VC Metrics)</h3>
+<p>These metrics describe single-nucleotide variants (SNVs) and small insertions or deletions (indels) reported by the variant caller.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Variants</code></td>
+<td>Total number of variants reported under the metric’s definition.</td>
+<td>Confirm whether filtered and multiallelic records are included.</td>
+</tr>
+<tr class="even">
+<td><code>Multiallelic Variants</code></td>
+<td>Variant records with more than one alternate allele.</td>
+<td>May require normalization or decomposition for downstream analyses.</td>
+</tr>
+<tr class="odd">
+<td><code>SNP</code></td>
+<td>Number of single-nucleotide polymorphism/variant records.</td>
+<td>The report may use <code>SNP</code> as a general label for single-base substitutions.</td>
+</tr>
+<tr class="even">
+<td><code>Mosaic SNPs</code></td>
+<td>Single-nucleotide variants classified as mosaic by the caller.</td>
+<td>Requires careful review of allele fractions, depth, and caller-specific criteria.</td>
+</tr>
+<tr class="odd">
+<td><code>Ti/Tv</code></td>
+<td>Transition-to-transversion ratio for single-nucleotide substitutions.</td>
+<td>A broad QC statistic; expected values depend on assay, genomic territory, and variant filtering.</td>
+</tr>
+<tr class="even">
+<td><code>Ins</code></td>
+<td>Number of insertion records.</td>
+<td>Review representation, quality, and genomic context.</td>
+</tr>
+<tr class="odd">
+<td><code>Del</code></td>
+<td>Number of deletion records.</td>
+<td>Review representation, quality, and genomic context.</td>
+</tr>
+<tr class="even">
+<td><code>Mosaic Indels</code></td>
+<td>Indels classified as mosaic by the caller.</td>
+<td>Interpret with the caller’s detection limits and supporting evidence.</td>
+</tr>
+<tr class="odd">
+<td><code>Het/Hom ratio</code></td>
+<td>Ratio of heterozygous to homozygous variant calls.</td>
+<td>Can help investigate sample characteristics or QC anomalies; ancestry, ploidy, and territory affect expectations.</td>
+</tr>
+<tr class="even">
+<td><code>Callability</code></td>
+<td>Measure of the fraction or amount of genomic territory considered callable by the pipeline.</td>
+<td>Consult the precise definition and units in the report.</td>
+</tr>
+</tbody>
+</table>
+<p>Variant counts alone do not establish that a sample is good quality or that a variant is disease-causing. For cancer-gene analysis, inspect read depth, allele fraction, genotype quality, filters, annotation, and supporting reads.</p>
+</section>
+<section id="i.-structural-variants-sv-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="i.-structural-variants-sv-metrics">i. Structural Variants (SV Metrics)</h3>
+<p>Structural variants are larger genomic changes, including deletions, insertions, duplications, and rearrangements.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Total SVs</code></td>
+<td>Total number of structural-variant calls.</td>
+<td>Depends on the caller, detection limits, and filtering.</td>
+</tr>
+<tr class="even">
+<td><code>Deletions</code></td>
+<td>Number of deletion calls.</td>
+<td>Indicates candidate regions where sequence may be absent.</td>
+</tr>
+<tr class="odd">
+<td><code>Insertions</code></td>
+<td>Number of insertion calls.</td>
+<td>Indicates candidate inserted sequence.</td>
+</tr>
+<tr class="even">
+<td><code>Duplications</code></td>
+<td>Number of duplication calls.</td>
+<td>May indicate additional copies of a genomic segment.</td>
+</tr>
+<tr class="odd">
+<td><code>Breakend Pairs</code></td>
+<td>Pairs of breakend records associated with rearrangements.</td>
+<td>Require interpretation of the linked breakpoints and event representation.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="j.-copy-number-variation-cnv-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="j.-copy-number-variation-cnv-metrics">j. Copy Number Variation (CNV Metrics)</h3>
+<p>Copy-number analysis estimates gains or losses of genomic material.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Amplifications</code></td>
+<td>Candidate copy-number gains.</td>
+<td>Can indicate additional copies of a genomic region.</td>
+</tr>
+<tr class="even">
+<td><code>Passing Amplifications</code></td>
+<td>Amplifications passing the caller’s filters.</td>
+<td>Review supporting evidence and filtering criteria.</td>
+</tr>
+<tr class="odd">
+<td><code>Deletions</code></td>
+<td>Candidate copy-number losses.</td>
+<td>May indicate loss of genomic material.</td>
+</tr>
+<tr class="even">
+<td><code>Passing Deletions</code></td>
+<td>Deletions passing the caller’s filters.</td>
+<td>Passing status does not replace biological validation.</td>
+</tr>
+<tr class="odd">
+<td><code>cnLOHs</code></td>
+<td>Candidate copy-neutral loss-of-heterozygosity events.</td>
+<td>Heterozygosity may be lost without a net change in copy number.</td>
+</tr>
+<tr class="even">
+<td><code>Passing cnLOHs</code></td>
+<td>cnLOH events passing the caller’s filters.</td>
+<td>Interpret in the context of the sample and analysis method.</td>
+</tr>
+<tr class="odd">
+<td><code>Coverage Uniformity</code></td>
+<td>Uniformity statistic used by the CNV workflow.</td>
+<td>Uneven depth can complicate copy-number estimation.</td>
+</tr>
+<tr class="even">
+<td><code>Homozygosity</code></td>
+<td>A metric related to homozygous genomic regions or the caller’s homozygosity analysis.</td>
+<td>Confirm the precise report definition.</td>
+</tr>
+<tr class="odd">
+<td><code>PMAD</code></td>
+<td>Median-based measure of absolute deviation in normalized coverage.</td>
+<td>Lower values generally indicate less dispersion in normalized depth.</td>
+</tr>
+<tr class="even">
+<td><code>Coverage MAD</code></td>
+<td>Median absolute deviation of coverage, according to the tool’s definition.</td>
+<td>Helps characterize depth variability.</td>
+</tr>
+<tr class="odd">
+<td><code>Median Bin Count</code></td>
+<td>Median count or coverage-related value across analysis bins, as defined by the report.</td>
+<td>Check the exact units and binning strategy before interpretation.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="k.-zygosity-and-chromosome-level-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="k.-zygosity-and-chromosome-level-metrics">k. Zygosity and Chromosome-Level Metrics</h3>
+<p>The chromosome columns (<code>chr1</code>–<code>chr22</code>, <code>chrX</code>, and <code>chrY</code>) contain chromosome-level values. They should not automatically be interpreted as raw read counts or percentages.</p>
+<p>Zygosity describes whether a variant is present in one or both homologous copies of a genomic region. A heterozygous call typically has one reference and one alternate allele; a homozygous alternate call has alternate alleles on both copies, subject to ploidy and caller conventions.</p>
+<p>Review the relevant DRAGEN report definition before assigning a biological meaning to the chromosome-level values or the <code>Homozygosity</code> metric.</p>
+</section>
+<section id="l.-hla-typing" class="level3">
+<h3 class="anchored" data-anchor-id="l.-hla-typing">l. HLA Typing</h3>
+<p>The HLA columns report inferred HLA types for loci such as <code>HLA-A</code>, <code>HLA-B</code>, <code>HLA-C</code>, <code>HLA-DQA1</code>, and <code>HLA-DRB1</code>.</p>
+<p>HLA typing estimates alleles in the highly polymorphic human leukocyte antigen region. Interpretation depends on the typing resolution, reference database, and confidence of the call. <code>N/A</code> indicates that a value is not available in this report; it does not establish that the gene is absent.</p>
+</section>
+<section id="m.-repeat-expansion-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="m.-repeat-expansion-metrics">m. Repeat-Expansion Metrics</h3>
+<p>The repeat-related columns report results for loci associated with short tandem repeats or repeat expansions, including <code>FMR1</code>, <code>HTT</code>, <code>DMPK</code>, <code>C9ORF72</code>, and <code>RFC1</code>.</p>
+<p>Interpret these results using the locus-specific repeat motif, estimated repeat length, caller limitations, and relevant quality metrics. Repeat expansion detection is method-dependent, and a missing result is not equivalent to a negative result.</p>
+</section>
+<section id="n.-targeted-caller-results" class="level3">
+<h3 class="anchored" data-anchor-id="n.-targeted-caller-results">n.&nbsp;Targeted Caller Results</h3>
+<p>The report includes specialized results for loci such as <code>CYP21A2</code>, <code>CYP2B6</code>, <code>CYP2D6</code>, <code>GBA</code>, <code>HBA</code>, <code>LPA</code>, <code>RH</code>, and <code>SMN</code>.</p>
+<p>These callers address genes or regions that can require specialized methods because of pseudogenes, highly homologous sequences, complex copy-number variation, or repetitive structure.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Copy Number</code>, <code>Total CN</code></td>
+<td>Estimated number of copies of a gene or genomic region.</td>
+</tr>
+<tr class="even">
+<td><code>Genotype</code></td>
+<td>Genotype or diplotype inferred by the targeted caller.</td>
+</tr>
+<tr class="odd">
+<td><code>Haplotypes</code></td>
+<td>Inferred combinations of alleles on the two chromosome copies, where supported.</td>
+</tr>
+<tr class="even">
+<td><code>Deletion Breakpoint</code></td>
+<td>Estimated breakpoint associated with a deletion.</td>
+</tr>
+<tr class="odd">
+<td><code>Variants</code></td>
+<td>Variants detected by the targeted caller.</td>
+</tr>
+<tr class="even">
+<td><code>Filter</code></td>
+<td>Caller-specific filtering status.</td>
+</tr>
+<tr class="odd">
+<td><code>Quality</code></td>
+<td>Caller-specific quality measure.</td>
+</tr>
+<tr class="even">
+<td><code>Metabolism Status</code></td>
+<td>Predicted metabolic phenotype for relevant pharmacogenes, based on the caller’s rules.</td>
+</tr>
+<tr class="odd">
+<td><code>KIV-2 Variants</code></td>
+<td>Variants reported in the KIV-2 repeat region of <code>LPA</code>.</td>
+</tr>
+<tr class="even">
+<td><code>KIV-2 Total CN</code></td>
+<td>Estimated total copy number of the KIV-2 region.</td>
+</tr>
+<tr class="odd">
+<td><code>KIV-2 Reference CN</code>, <code>KIV-2 Alternate CN</code></td>
+<td>Copy-number estimates associated with reference and alternate configurations, according to the caller.</td>
+</tr>
+<tr class="even">
+<td><code>RHD CN</code>, <code>RHCE CN</code></td>
+<td>Estimated copy numbers for the RHD and RHCE genes.</td>
+</tr>
+<tr class="odd">
+<td><code>SMN1 Allele Count</code>, <code>SMN2 Allele Count</code></td>
+<td>Estimated allele counts for SMN1 and SMN2.</td>
+</tr>
+<tr class="even">
+<td><code>SMN2delta7-8 Allele Count</code></td>
+<td>Estimated count for the reported SMN2 deletion-related configuration.</td>
+</tr>
+</tbody>
+</table>
+<p>For specialized callers, always consult the locus-specific documentation. The same metric name can have different technical implications across different genes and algorithms.</p>
+</section>
+<section id="o.-how-to-interpret-the-report-as-a-whole" class="level3">
+<h3 class="anchored" data-anchor-id="o.-how-to-interpret-the-report-as-a-whole">o. How to Interpret the Report as a Whole</h3>
+<p>Use the following order when reviewing a sample:</p>
+<ol type="1">
+<li><strong>Read quality:</strong> verify read length, Q30, adapter content, and trimming.</li>
+<li><strong>Alignment:</strong> review mapping rate, unique mapping, contamination, and insert size.</li>
+<li><strong>Coverage:</strong> examine mean and median depth, breadth, and coverage over the regions of interest.</li>
+<li><strong>Variant calling:</strong> review counts, filters, genotype quality, allele fraction, and callability.</li>
+<li><strong>Specialized analyses:</strong> assess CNVs, structural variants, repeats, HLA, and targeted gene results only where relevant.</li>
+<li><strong>Validation:</strong> confirm important findings using appropriate evidence and, where necessary, an independent method.</li>
+</ol>
+<p>A high mapping rate does not guarantee adequate coverage. Likewise, a high average depth does not guarantee that every exon is adequately covered.</p>
+<p><strong>For cancer-gene analysis:</strong> prioritize the quality and coverage of the specific regions of interest, and review each candidate variant’s evidence before interpreting its biological significance.</p>
+</section>
+</section>
 <section id="sec-results" class="level2">
 <h2 class="anchored" data-anchor-id="sec-results">5. Read the results</h2>
 <p>In the project, open <strong>Analyses</strong>, then the DRAGEN Germline analysis, then <strong>Files</strong> and the summary or metrics.</p>
@@ -1647,6 +2344,9 @@ ul.task-list li input[type="checkbox"] {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="../course/04-annotation.html" class="pagination-link" aria-label="Variant Filtering, Prioritization and Inspection">
+        <span class="nav-page-text">Variant Filtering, Prioritization and Inspection</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->
